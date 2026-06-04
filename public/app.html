@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bztel - Premium Bulk SMS Portal</title>
+  <!-- Google Fonts: Outfit and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- Loading Overlay -->
+  <div id="app-loader" class="loader-overlay">
+    <div class="spinner-container">
+      <div class="spinner"></div>
+      <div class="spinner-text">Initializing Bztel...</div>
+    </div>
+  </div>
+
+  <!-- Main App Container (hidden by default during auth checks) -->
+  <div id="app-container" class="app-layout hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <span class="brand-text">Bztel <span class="accent-dot">.</span></span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="dashboard">
+          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
+          </svg>
+          Dashboard
+        </button>
+
+        <button class="nav-item" data-view="sms">
+          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          Send SMS
+        </button>
+
+        <button class="nav-item" data-view="contacts">
+          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Contacts
+        </button>
+
+        <button class="nav-item" data-view="developer">
+          <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Developer API
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <span class="user-initials" id="user-initials">U</span>
+          <div class="user-details">
+            <span class="user-email" id="sidebar-user-email">user@email.com</span>
+            <span class="user-role">Premium Account</span>
+          </div>
+        </div>
+        <button id="logout-btn" class="logout-btn">
+          <svg class="logout-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      <!-- Top Action Bar -->
+      <header class="top-bar">
+        <div class="view-title-container">
+          <h1 id="view-title" class="view-title">Dashboard</h1>
+        </div>
+        <div class="top-bar-actions">
+          <div class="balance-display">
+            <span class="balance-label">SMS Credits</span>
+            <span class="balance-amount" id="balance-count">100</span>
+          </div>
+          <button id="topup-trigger-btn" class="btn btn-primary topup-btn">
+            <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Add Credits
+          </button>
+        </div>
+      </header>
+
+      <!-- Viewport for dynamic content -->
+      <div id="app-root" class="content-viewport">
+        <!-- Rendered view content goes here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Auth Container (Registration & Sign In) -->
+  <div id="auth-container" class="auth-layout hidden">
+    <!-- Auth screen rendered dynamically via views/auth.js -->
+  </div>
+
+  <!-- Buy Credits Modal (Simulated Payment) -->
+  <div id="topup-modal" class="modal-overlay hidden">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h2>Refill SMS Credits</h2>
+        <button id="close-topup-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">Top up your balance instantly. Select a package below to add credits to your account.</p>
+        
+        <div class="pricing-grid">
+          <div class="pricing-card" data-credits="1000" data-price="9.99">
+            <span class="pricing-badge">Basic</span>
+            <div class="credits-count">1,000</div>
+            <span class="credits-label">SMS Credits</span>
+            <div class="price">$9.99</div>
+            <span class="price-per-sms">0.99¢ / SMS</span>
+          </div>
+          <div class="pricing-card popular" data-credits="5000" data-price="39.99">
+            <span class="pricing-badge">Growth</span>
+            <div class="credits-count">5,000</div>
+            <span class="credits-label">SMS Credits</span>
+            <div class="price">$39.99</div>
+            <span class="price-per-sms">0.79¢ / SMS</span>
+          </div>
+          <div class="pricing-card" data-credits="25000" data-price="149.99">
+            <span class="pricing-badge">Pro</span>
+            <div class="credits-count">25,000</div>
+            <span class="credits-label">SMS Credits</span>
+            <div class="price">$149.99</div>
+            <span class="price-per-sms">0.59¢ / SMS</span>
+          </div>
+        </div>
+
+        <form id="topup-form" class="topup-payment-form mt-4">
+          <input type="hidden" id="selected-credits" value="5000">
+          <div class="form-group">
+            <label for="card-name">Cardholder Name</label>
+            <input type="text" id="card-name" class="form-control" required placeholder="John Doe" value="John Doe">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="card-number">Card Number</label>
+              <input type="text" id="card-number" class="form-control" required placeholder="4111 2222 3333 4444" value="4111 2222 3333 4444">
+            </div>
+            <div class="form-group flex-1">
+              <label for="card-expiry">Expiry</label>
+              <input type="text" id="card-expiry" class="form-control" required placeholder="MM/YY" value="12/28">
+            </div>
+            <div class="form-group flex-1">
+              <label for="card-cvc">CVC</label>
+              <input type="password" id="card-cvc" class="form-control" required placeholder="123" value="123">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block mt-4" id="pay-submit-btn">
+            Pay $39.99 & Add Credits
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- SPA Logic Script -->
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

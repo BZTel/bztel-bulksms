@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "tester@bztel.com",
+      "password_hash": "$2a$10$oboXKWNJx2Gxy2lhObYkCO/8rm0jXq2WG/tj1bQ6jDnAHIgcd7/Mi",
+      "balance": 100,
+      "created_at": "2026-06-04T15:26:40.752Z"
+    },
+    {
+      "id": 2,
+      "email": "tester3@bztel.com",
+      "password_hash": "$2a$10$PGZ9X4siVQ1a2OTfj5rOUOsIfSzyBKMIgFdIjvy8yQkBVvVGfoDJC",
+      "balance": 100,
+      "created_at": "2026-06-04T15:36:18.752Z"
+    }
+  ],
+  "contacts": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "name": "Alice",
+      "phone": "+1234567890",
+      "group_name": "Marketing",
+      "created_at": "2026-06-04T15:30:55.699Z"
+    }
+  ],
+  "sms_logs": [],
+  "templates": [],
+  "api_keys": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "key": "bztel_live_3743f988749b91a80485184e1f40e22875fcb644",
+      "name": "Main API",
+      "created_at": "2026-06-04T15:33:59.840Z"
+    }
+  ]
+}

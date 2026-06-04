@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BZTel - Pricing Plans for Communications and Custom Engineering</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/css/landing.css">
+  <style>
+    /* Slider Custom styling */
+    .slider-container {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 30px;
+      max-width: 600px;
+      margin: 40px auto 0;
+      box-shadow: var(--shadow-lg);
+    }
+    .slider-range {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+      -webkit-appearance: none;
+      margin: 20px 0;
+    }
+    .slider-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent-purple);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-purple-glow);
+      transition: var(--transition);
+    }
+    .slider-range::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar-l">
+    <div class="logo-l" onclick="location.href='/'" style="cursor:pointer;">
+      <svg class="logo-l-icon" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
+      </svg>
+      <span class="logo-l-text">BZTel</span>
+    </div>
+
+    <ul class="nav-menu-l">
+      <li><a href="/" class="nav-link-l">Home</a></li>
+      <li><a href="/bulk-sms" class="nav-link-l">Bulk SMS</a></li>
+      <li><a href="/software-development" class="nav-link-l">Software Development</a></li>
+      <li><a href="/pricing" class="nav-link-l active">Pricing</a></li>
+      <li><a href="/contact" class="nav-link-l">Contact Us</a></li>
+    </ul>
+
+    <div class="nav-actions-l">
+      <a href="/app" class="nav-login-btn">Log in</a>
+      <a href="/app" class="btn-l btn-l-primary" style="border-radius: var(--border-radius-sm); padding: 8px 18px;">Sign Up</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 50%), var(--bg-light);">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+      <span class="sect-tag-l">BILLING SCHEMES</span>
+      <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Simple, Transparent Pricing</h1>
+      <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">No setup fees, lock-in contracts, or hidden billing. Pay only for the messages you broadcast and the custom engineering resources you consume.</p>
+    </div>
+  </section>
+
+  <!-- SMS API Pricing grid -->
+  <section class="sect-l sect-l-offset">
+    <div class="sect-header-l">
+      <h2 class="sect-title-l">Communications API Rates</h2>
+    </div>
+
+    <div class="pricing-grid-l">
+      <!-- SMS card -->
+      <div class="pricing-card-l">
+        <span class="pricing-card-lbl-l">SMS</span>
+        <div class="pricing-card-val-l">$0.005</div>
+        <div class="pricing-card-sub-l">Per SMS</div>
+        <p class="pricing-card-desc-l" style="margin-top:6px;">Worldwide SMS Delivery</p>
+        <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
+      </div>
+
+      <!-- WhatsApp Card -->
+      <div class="pricing-card-l">
+        <span class="pricing-card-lbl-l">WhatsApp API</span>
+        <div class="pricing-card-val-l">$0.03</div>
+        <div class="pricing-card-sub-l">Per Conversation</div>
+        <p class="pricing-card-desc-l" style="margin-top:6px;">24-hour session window</p>
+        <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
+      </div>
+
+      <!-- OTP Card -->
+      <div class="pricing-card-l">
+        <span class="pricing-card-lbl-l">OTP SMS</span>
+        <div class="pricing-card-val-l">$0.01</div>
+        <div class="pricing-card-sub-l">Per OTP</div>
+        <p class="pricing-card-desc-l" style="margin-top:6px;">Fast & Secure Delivery</p>
+        <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
+      </div>
+
+      <!-- Voice Card -->
+      <div class="pricing-card-l">
+        <span class="pricing-card-lbl-l">Voice Call</span>
+        <div class="pricing-card-val-l">$0.02</div>
+        <div class="pricing-card-sub-l">Per Minute</div>
+        <p class="pricing-card-desc-l" style="margin-top:6px;">High Quality Voice</p>
+        <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
+      </div>
+
+      <!-- Email Card -->
+      <div class="pricing-card-l">
+        <span class="pricing-card-lbl-l">Email API</span>
+        <div class="pricing-card-val-l">$0.001</div>
+        <div class="pricing-card-sub-l">Per Email</div>
+        <p class="pricing-card-desc-l" style="margin-top:6px;">Inbox Delivery</p>
+        <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
+      </div>
+    </div>
+
+    <!-- Volume Calculator Slider -->
+    <div class="slider-container">
+      <h3 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px; text-align:center;">Bulk Volume Discount Estimator</h3>
+      <p style="font-size:0.75rem; color:var(--text-muted); text-align:center;">Slide to adjust your estimated monthly SMS campaign volume.</p>
+      
+      <input type="range" id="vol-slider" class="slider-range" min="1000" max="250000" step="5000" value="25000">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top: 1px solid var(--border-color); padding-top:16px;">
+        <div>
+          <span style="font-size:0.65rem; color:var(--text-muted); display:block; text-transform:uppercase;">Volume / Month</span>
+          <strong style="font-size:1.35rem; color:var(--text-dark); font-family:var(--font-heading);" id="vol-label">25,000 SMS</strong>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:0.65rem; color:var(--text-muted); display:block; text-transform:uppercase;">Estimated Rate</span>
+          <strong style="font-size:1.35rem; color:var(--accent-purple); font-family:var(--font-heading);" id="rate-label">0.79¢ / SMS</strong>
+        </div>
+      </div>
+      
+      <div style="background:rgba(79,70,229,0.05); border:1px solid rgba(79,70,229,0.15); padding:12px; border-radius:6px; margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:0.8rem; font-weight:600;">Estimated Monthly Cost:</span>
+        <strong style="font-size:1.2rem; color:var(--text-dark); font-family:var(--font-heading);" id="cost-calc-label">$197.50</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Software Development consulting packages rates -->
+  <section class="sect-l">
+    <div class="sect-header-l">
+      <span class="sect-tag-l">CONSULTING FEES</span>
+      <h2 class="sect-title-l">Custom Software Development Rates</h2>
+      <p class="sect-subtitle-l">Professional custom software engineering billed under transparent package agreements.</p>
+    </div>
+
+    <div class="api-grid-l" style="max-width:1100px;">
+      <!-- MVP Package -->
+      <div class="api-card-l" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <h3 class="api-card-title-l" style="font-size:1.25rem;">MVP Startup Pack</h3>
+          <div style="font-size:2rem; font-weight:800; color:var(--text-dark); font-family:var(--font-heading); margin: 16px 0 8px;">$5,000+</div>
+          <p class="api-card-desc-l" style="font-size:0.85rem; line-height:1.5;">Ideal for early stage validation. Built in 3 to 5 weeks. Includes core database design, authentication dashboard, and mobile-responsive layouts.</p>
+        </div>
+        <a href="/software-development#consult-form" class="btn-l btn-l-primary btn-block">Discuss MVP</a>
+      </div>
+
+      <!-- Growth Package -->
+      <div class="api-card-l" style="position:relative; border-color:var(--accent-purple); display:flex; flex-direction:column; justify-content:space-between; box-shadow:var(--shadow-md);">
+        <div>
+          <h3 class="api-card-title-l" style="font-size:1.25rem; color:var(--accent-purple);">Growth & SaaS</h3>
+          <div style="font-size:2rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin: 16px 0 8px;">$15,000+</div>
+          <p class="api-card-desc-l" style="font-size:0.85rem; line-height:1.5;">Ideal for businesses launching multitenant platforms. Billed under fixed sprints. Includes payment gateways, Stripe billing, role permissions, and metrics tracking.</p>
+        </div>
+        <a href="/software-development#consult-form" class="btn-l btn-l-primary btn-block">Discuss Growth</a>
+      </div>
+
+      <!-- Custom Enterprise -->
+      <div class="api-card-l" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <h3 class="api-card-title-l" style="font-size:1.25rem;">Custom Enterprise</h3>
+          <div style="font-size:2rem; font-weight:800; color:var(--text-dark); font-family:var(--font-heading); margin: 16px 0 8px;">$50,000+</div>
+          <p class="api-card-desc-l" style="font-size:0.85rem; line-height:1.5;">Dedicated engineering squads. Custom SLA support timelines, legacy database system migration, custom microservices mesh integration, and load scaling audits.</p>
+        </div>
+        <a href="/software-development#consult-form" class="btn-l btn-l-outline btn-block">Contact Architecture Team</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer-l">
+    <div class="footer-grid-l">
+      <div class="footer-logo-box-l">
+        <div class="logo-l" style="color: #ffffff;">
+          <svg class="logo-l-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
+          </svg>
+          <span style="font-size: 1.25rem;">BZTel</span>
+        </div>
+        <p class="footer-logo-text-l">Empowering businesses with reliable communication APIs and custom software solutions that connect the world.</p>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Products</h4>
+        <ul class="footer-links-l">
+          <li><a href="/bulk-sms">SMS API</a></li>
+          <li><a href="/app">WhatsApp API</a></li>
+          <li><a href="/app">OTP API</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Software Development</h4>
+        <ul class="footer-links-l">
+          <li><a href="/software-development">Web Development</a></li>
+          <li><a href="/software-development">Mobile Apps</a></li>
+          <li><a href="/software-development">SaaS Development</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Developers</h4>
+        <ul class="footer-links-l">
+          <li><a href="/#developers">API Docs</a></li>
+          <li><a href="/#developers">SDKs & Libraries</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Company</h4>
+        <ul class="footer-links-l">
+          <li><a href="/contact">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom-l">
+      <span>&copy; 2026 BZTel. All rights reserved.</span>
+      <div class="footer-bottom-links-l">
+        <a href="#">Terms of Service</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const slider = document.getElementById('vol-slider');
+    const volLbl = document.getElementById('vol-label');
+    const rateLbl = document.getElementById('rate-label');
+    const costLbl = document.getElementById('cost-calc-label');
+
+    function updateVal() {
+      const vol = parseInt(slider.value);
+      volLbl.innerText = `${vol.toLocaleString()} SMS`;
+      
+      let rate = 0.0099; // 0.99c
+      if (vol >= 10000 && vol < 50000) {
+        rate = 0.0079; // 0.79c
+      } else if (vol >= 50000 && vol < 200000) {
+        rate = 0.0069; // 0.69c
+      } else if (vol >= 200000) {
+        rate = 0.0059; // 0.59c
+      }
+      
+      rateLbl.innerText = `${(rate * 100).toFixed(2)}¢ / SMS`;
+      
+      const cost = vol * rate;
+      costLbl.innerText = `$${cost.toLocaleString([], {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    slider.addEventListener('input', updateVal);
+    updateVal();
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BZTel - Contact Us & Office Directory</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/css/landing.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar-l">
+    <div class="logo-l" onclick="location.href='/'" style="cursor:pointer;">
+      <svg class="logo-l-icon" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
+      </svg>
+      <span class="logo-l-text">BZTel</span>
+    </div>
+
+    <ul class="nav-menu-l">
+      <li><a href="/" class="nav-link-l">Home</a></li>
+      <li><a href="/bulk-sms" class="nav-link-l">Bulk SMS</a></li>
+      <li><a href="/software-development" class="nav-link-l">Software Development</a></li>
+      <li><a href="/pricing" class="nav-link-l">Pricing</a></li>
+      <li><a href="/contact" class="nav-link-l active">Contact Us</a></li>
+    </ul>
+
+    <div class="nav-actions-l">
+      <a href="/app" class="nav-login-btn">Log in</a>
+      <a href="/app" class="btn-l btn-l-primary" style="border-radius: var(--border-radius-sm); padding: 8px 18px;">Sign Up</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%), var(--bg-light);">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+      <span class="sect-tag-l">GET IN TOUCH</span>
+      <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Let's Start a Conversation</h1>
+      <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">Have questions about our simulated gateway, credit pricing, or need an enterprise custom software proposal? Our teams are here to help.</p>
+    </div>
+  </section>
+
+  <!-- Contact Us Split Layout -->
+  <section class="sect-l sect-l-offset">
+    <div class="software-l" style="max-width: 1100px;">
+      <!-- Left: Contact Form -->
+      <div class="contact-container" style="background:#ffffff; border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); width:100%; box-shadow: var(--shadow-lg);">
+        <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:24px;">Send us a message</h3>
+        
+        <form id="general-contact-form">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="g-name" class="form-control" required placeholder="John Doe" style="background:var(--bg-offset);">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="g-email" class="form-control" required placeholder="john@company.com" style="background:var(--bg-offset);">
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" id="g-subject" class="form-control" required placeholder="API Pricing inquiry" style="background:var(--bg-offset);">
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="g-message" class="form-control" required placeholder="Type your message details..." style="background:var(--bg-offset); min-height:100px;"></textarea>
+          </div>
+          <button type="submit" class="btn-l btn-l-primary btn-block" style="border:none; padding:12px; margin-top:20px;">Send Message</button>
+        </form>
+        <div id="contact-success-msg" class="hidden" style="color: var(--success-color); font-weight:700; text-align:center; font-size:0.95rem;">
+          ✓ Thank you! Your message has been sent successfully. Our support desk will reach out within 12 hours.
+        </div>
+      </div>
+
+      <!-- Right: Office Info & Hours -->
+      <div class="software-content-l" style="padding-left:20px; gap:24px;">
+        <div>
+          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:12px;">Office Locations</h3>
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="border-left: 2px solid var(--accent-purple); padding-left:12px;">
+              <strong style="color:var(--text-dark); font-size:0.9rem; display:block;">San Francisco (Headquarters)</strong>
+              <span style="color:var(--text-muted); font-size:0.8rem;">100 Pine Street, San Francisco, CA 94111, USA</span>
+            </div>
+            <div style="border-left: 2px solid var(--accent-purple); padding-left:12px;">
+              <strong style="color:var(--text-dark); font-size:0.9rem; display:block;">London Office</strong>
+              <span style="color:var(--text-muted); font-size:0.8rem;">25 Ropemaker Street, London, EC2Y 9LY, UK</span>
+            </div>
+            <div style="border-left: 2px solid var(--accent-purple); padding-left:12px;">
+              <strong style="color:var(--text-dark); font-size:0.9rem; display:block;">Accra Office</strong>
+              <span style="color:var(--text-muted); font-size:0.8rem;">15 Liberation Road, Accra, Ghana</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:12px;">Helpdesk & Support</h3>
+          <p style="font-size:0.88rem; color:var(--text-slate); line-height:1.5;">For general issues and developer questions, email our dispatch desk:</p>
+          <a href="mailto:support@bztel.com" style="color:var(--accent-purple); font-weight:700; font-size:0.95rem; margin-top:4px; display:inline-block;">support@bztel.com</a>
+        </div>
+
+        <div>
+          <strong style="color:var(--text-dark); font-size:0.9rem; display:block;">Business Hours</strong>
+          <span style="color:var(--text-muted); font-size:0.8rem;">Monday - Friday, 9:00 AM - 6:00 PM (GMT)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer-l">
+    <div class="footer-grid-l">
+      <div class="footer-logo-box-l">
+        <div class="logo-l" style="color: #ffffff;">
+          <svg class="logo-l-icon" fill="currentColor" viewBox="0 0 24 24" style="width:24px; height:24px;">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
+          </svg>
+          <span style="font-size: 1.25rem;">BZTel</span>
+        </div>
+        <p class="footer-logo-text-l">Empowering businesses with reliable communication APIs and custom software solutions that connect the world.</p>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Products</h4>
+        <ul class="footer-links-l">
+          <li><a href="/bulk-sms">SMS API</a></li>
+          <li><a href="/app">WhatsApp API</a></li>
+          <li><a href="/app">OTP API</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Software Development</h4>
+        <ul class="footer-links-l">
+          <li><a href="/software-development">Web Development</a></li>
+          <li><a href="/software-development">Mobile Apps</a></li>
+          <li><a href="/software-development">SaaS Development</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Developers</h4>
+        <ul class="footer-links-l">
+          <li><a href="/#developers">API Docs</a></li>
+          <li><a href="/#developers">SDKs & Libraries</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-column-l">
+        <h4>Company</h4>
+        <ul class="footer-links-l">
+          <li><a href="/contact">Contact Us</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom-l">
+      <span>&copy; 2026 BZTel. All rights reserved.</span>
+      <div class="footer-bottom-links-l">
+        <a href="#">Terms of Service</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('general-contact-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.getElementById('general-contact-form').classList.add('hidden');
+      document.getElementById('contact-success-msg').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
