@@ -4,6 +4,7 @@ import { renderDashboardView } from './views/dashboard.js';
 import { renderSMSView } from './views/sms.js';
 import { renderContactsView } from './views/contacts.js';
 import { renderDeveloperView } from './views/developer.js';
+import { renderWalletView } from './views/wallet.js';
 
 // Global Application State
 const state = {
@@ -192,6 +193,7 @@ export function navigateTo(viewName) {
     dashboard: 'Dashboard Overview',
     sms: 'Bulk SMS Composer',
     contacts: 'Contacts Directory',
+    wallet: 'Wallet & Billing',
     developer: 'Developer Resources'
   };
   document.getElementById('view-title').innerText = titleMap[viewName] || 'Bztel App';
@@ -214,6 +216,9 @@ export function navigateTo(viewName) {
       break;
     case 'contacts':
       renderContactsView(root, state);
+      break;
+    case 'wallet':
+      renderWalletView(root, state);
       break;
     case 'developer':
       renderDeveloperView(root, state);

@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════════════
+   admin.css — Bztel Admin Portal Overrides & Components
+   ═══════════════════════════════════════════════════════════ */
+
+/* Admin Sidebar Branding */
+.admin-sidebar .sidebar-brand {
+  border-bottom-color: rgba(245, 158, 11, 0.15);
+}
+
+.brand-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #000;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'Outfit', sans-serif;
+  width: fit-content;
+}
+
+.admin-initials {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #000 !important;
+}
+
+.admin-role-tag {
+  color: #f59e0b !important;
+}
+
+/* Admin login card */
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+/* ─── Status Badges ────────────────────────────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.status-badge::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-active::before {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.status-suspended {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status-suspended::before {
+  background: #ef4444;
+}
+
+/* ─── Platform Stats Grid ──────────────────────────────────── */
+.platform-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+  .platform-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius);
+  padding: 20px 22px;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  right: 0; height: 2px;
+  background: var(--stat-accent, var(--accent-color));
+  opacity: 0.7;
+}
+
+.stat-card.green  { --stat-accent: #10b981; }
+.stat-card.amber  { --stat-accent: #f59e0b; }
+.stat-card.red    { --stat-accent: #ef4444; }
+.stat-card.purple { --stat-accent: #a855f7; }
+
+.stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.stat-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ─── Admin Table Actions ──────────────────────────────────── */
+.action-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-icon-only {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-credits {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-color);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+.btn-credits:hover {
+  background: rgba(99, 102, 241, 0.22);
+}
+
+.btn-suspend {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.btn-suspend:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.btn-reactivate {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+.btn-reactivate:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.btn-delete-sm {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+.btn-delete-sm:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ─── Credits Modal Toggle ─────────────────────────────────── */
+.admin-toggle-row {
+  display: flex;
+  gap: 0;
+  border-radius: var(--border-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+.admin-toggle-btn {
+  flex: 1;
+  padding: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-toggle-btn.active {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+/* ─── User Row Avatar ──────────────────────────────────────── */
+.user-avatar-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar-sm {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-color), #7c3aed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ─── Search + Filters bar ─────────────────────────────────── */
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.admin-toolbar .form-control {
+  flex: 1;
+  padding: 9px 14px;
+  font-size: 0.85rem;
+}
+
+/* ─── Error message in login form ──────────────────────────── */
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+/* ─── Danger button ────────────────────────────────────────── */
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  border: none;
+}
+.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+}

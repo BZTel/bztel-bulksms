@@ -119,6 +119,16 @@ router.post('/send', authenticateToken, async (req, res) => {
     // Deduct credits from user
     await queryRun('UPDATE users SET balance = balance - ? WHERE id = ?', [totalCreditsNeeded, req.user.id]);
 
+    // Write sms_debit transaction
+    await queryRun(
+      'INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        req.user.id, 'sms_debit', -totalCreditsNeeded,
+        user.balance, user.balance - totalCreditsNeeded,
+        `SMS Batch \u2014 ${recipientList.length} recipient${recipientList.length !== 1 ? 's' : ''} via ${cleanSenderId}`
+      ]
+    );
+
     const logIds = [];
 
     // Queue messages in DB as pending

@@ -44,7 +44,13 @@ router.post('/signup', async (req, res) => {
     );
 
     // Create JWT
-    const token = jwt.sign({ id: result.id, email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: result.id, email, is_admin: false }, JWT_SECRET, { expiresIn: '7d' });
+
+    // Write signup bonus transaction
+    await queryRun(
+      'INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [result.id, 'signup_bonus', 100, 0, 100, 'Account signup — welcome bonus credits']
+    );
 
     res.status(201).json({
       message: 'User registered successfully',
@@ -83,7 +89,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Create JWT
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user.id, email: user.email, is_admin: user.is_admin || false }, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       message: 'Login successful',
@@ -124,6 +130,14 @@ router.post('/topup', authenticateToken, async (req, res) => {
   try {
     await queryRun('UPDATE users SET balance = balance + ? WHERE id = ?', [Number(credits), req.user.id]);
     const user = await queryGet('SELECT balance FROM users WHERE id = ?', [req.user.id]);
+
+    // Write purchase transaction
+    const balanceBefore = user.balance - Number(credits);
+    await queryRun(
+      'INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.user.id, 'purchase', Number(credits), balanceBefore, user.balance, `Credit Top-Up — ${Number(credits).toLocaleString()} SMS Credits`]
+    );
+
     res.json({
       message: `Successfully added ${credits} credits to your account!`,
       balance: user.balance

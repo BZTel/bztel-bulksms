@@ -12,7 +12,8 @@ let data = {
   contacts: [],
   sms_logs: [],
   templates: [],
-  api_keys: []
+  api_keys: [],
+  transactions: []
 };
 
 // Load existing data if present
@@ -26,6 +27,14 @@ if (fs.existsSync(dbFile)) {
     data.sms_logs = data.sms_logs || [];
     data.templates = data.templates || [];
     data.api_keys = data.api_keys || [];
+    data.transactions = data.transactions || [];
+    // Migrate: add is_admin and status fields to existing users
+    data.users = data.users.map(u => ({
+      ...u,
+      is_admin: u.is_admin || false,
+      status: u.status || 'active'
+    }));
+    saveDB();
   } catch (err) {
     console.error('Failed to parse database file, starting clean.', err);
   }
@@ -57,14 +66,16 @@ export const queryRun = async (sql, params = []) => {
     return { id: 0, changes: 0 };
   }
 
-  // INSERT INTO users (email, password_hash) VALUES (?, ?)
+  // INSERT INTO users (email, password_hash[, is_admin]) VALUES (?, ?[, ?])
   if (/^INSERT INTO users/i.test(sqlClean)) {
-    const [email, password_hash] = params;
+    const [email, password_hash, is_admin] = params;
     const newUser = {
       id: getNextId('users'),
       email,
       password_hash,
-      balance: 100,
+      is_admin: is_admin || false,
+      status: 'active',
+      balance: is_admin ? 0 : 100,
       created_at: new Date().toISOString()
     };
     data.users.push(newUser);
@@ -91,6 +102,42 @@ export const queryRun = async (sql, params = []) => {
       return { id: userId, changes: 1 };
     }
     return { id: 0, changes: 0 };
+  }
+
+  // UPDATE users SET status = ? WHERE id = ?
+  if (/^UPDATE users SET status = \? WHERE id = \?/i.test(sqlClean)) {
+    const [status, id] = params;
+    const user = data.users.find(u => u.id === Number(id));
+    if (user) {
+      user.status = status;
+      saveDB();
+      return { id: Number(id), changes: 1 };
+    }
+    return { id: 0, changes: 0 };
+  }
+
+  // UPDATE users SET balance = ? WHERE id = ? (admin direct set)
+  if (/^UPDATE users SET balance = \? WHERE id = \?/i.test(sqlClean)) {
+    const [balance, id] = params;
+    const user = data.users.find(u => u.id === Number(id));
+    if (user) {
+      user.balance = Number(balance);
+      saveDB();
+      return { id: Number(id), changes: 1 };
+    }
+    return { id: 0, changes: 0 };
+  }
+
+  // DELETE FROM users WHERE id = ?
+  if (/^DELETE FROM users WHERE id = \?/i.test(sqlClean)) {
+    const id = Number(params[0]);
+    const initialLength = data.users.length;
+    data.users = data.users.filter(u => u.id !== id);
+    if (data.users.length !== initialLength) {
+      saveDB();
+      return { id, changes: 1 };
+    }
+    return { id, changes: 0 };
   }
 
   // INSERT INTO contacts (user_id, name, phone, group_name) VALUES (?, ?, ?, ?)
@@ -205,6 +252,24 @@ export const queryRun = async (sql, params = []) => {
     return { id, changes: 0 };
   }
 
+  // INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)
+  if (/^INSERT INTO transactions/i.test(sqlClean)) {
+    const [user_id, type, amount, balance_before, balance_after, description] = params;
+    const newTx = {
+      id: getNextId('transactions'),
+      user_id: Number(user_id),
+      type,
+      amount: Number(amount),
+      balance_before: Number(balance_before),
+      balance_after: Number(balance_after),
+      description,
+      created_at: new Date().toISOString()
+    };
+    data.transactions.push(newTx);
+    saveDB();
+    return { id: newTx.id, changes: 1 };
+  }
+
   console.warn('Unhandled queryRun statement:', sqlClean);
   return { id: 0, changes: 0 };
 };
@@ -266,6 +331,20 @@ export const queryGet = async (sql, params = []) => {
     const id = Number(params[0]);
     const user = data.users.find(u => u.id === id);
     return user ? { balance: user.balance } : null;
+  }
+
+  // SELECT id, status FROM users WHERE id = ? (auth middleware check)
+  if (/^SELECT id, status FROM users WHERE id = \?/i.test(sqlClean)) {
+    const id = Number(params[0]);
+    const user = data.users.find(u => u.id === id);
+    return user ? { id: user.id, status: user.status } : null;
+  }
+
+  // SELECT * FROM users WHERE id = ? (admin full user detail)
+  if (/^SELECT \* FROM users WHERE id = \?/i.test(sqlClean)) {
+    const id = Number(params[0]);
+    const user = data.users.find(u => u.id === id);
+    return user || null;
   }
 
   console.warn('Unhandled queryGet statement:', sqlClean);
@@ -376,8 +455,39 @@ export const queryAll = async (sql, params = []) => {
     }));
   }
 
+  // SELECT * FROM users ORDER BY created_at DESC (admin list all users)
+  if (/^SELECT \* FROM users ORDER BY created_at DESC/i.test(sqlClean)) {
+    const list = [...data.users];
+    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return list;
+  }
+
+  // SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC
+  if (/^SELECT \* FROM transactions WHERE user_id = \?/i.test(sqlClean)) {
+    const userId = Number(params[0]);
+    const list = data.transactions.filter(t => t.user_id === userId);
+    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return list;
+  }
+
   console.warn('Unhandled queryAll statement:', sqlClean);
   return [];
+};
+
+// Admin cascade delete: removes user and all related data
+export const deleteUserCascade = (userId) => {
+  const id = Number(userId);
+  data.contacts = data.contacts.filter(c => c.user_id !== id);
+  data.sms_logs = data.sms_logs.filter(l => l.user_id !== id);
+  data.templates = data.templates.filter(t => t.user_id !== id);
+  data.api_keys = data.api_keys.filter(k => k.user_id !== id);
+  const initialLength = data.users.length;
+  data.users = data.users.filter(u => u.id !== id);
+  if (data.users.length !== initialLength) {
+    saveDB();
+    return { changes: 1 };
+  }
+  return { changes: 0 };
 };
 
 const db = { data };
