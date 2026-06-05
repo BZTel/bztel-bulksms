@@ -845,11 +845,46 @@ func <span class="syntax-function">main</span>() {
       });
     });
 
-    // Contact expert form mock submit
-    document.getElementById('contact-expert-form').addEventListener('submit', function(e) {
+    // Contact expert form submit
+    document.getElementById('contact-expert-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      document.getElementById('contact-expert-form').classList.add('hidden');
-      document.getElementById('contact-success-msg').classList.remove('hidden');
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const name = document.getElementById('c-name').value;
+      const email = document.getElementById('c-email').value;
+      const message = document.getElementById('c-project').value;
+      const subject = "Expert Consulting Intake Request";
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Submitting...';
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('contact-expert-form').classList.add('hidden');
+          const successMsg = document.getElementById('contact-success-msg');
+          successMsg.innerText = '✓ ' + (data.message || 'Thank you! We received your message.');
+          successMsg.classList.remove('hidden');
+        } else {
+          alert(data.error || 'Failed to submit message. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Submit Project Request';
+        }
+      } catch (err) {
+        console.error('Contact expert form error:', err);
+        alert('An error occurred. Please try again later.');
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit Project Request';
+      }
     });
 
     // Newsletter mock submit

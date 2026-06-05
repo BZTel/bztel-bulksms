@@ -1,5 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import { queryGet, queryAll, queryRun } from '../db.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
@@ -177,6 +178,100 @@ router.post('/v1/sms/send', apiRateLimiter, async (req, res) => {
   } catch (error) {
     console.error('Public API send SMS error:', error);
     res.status(500).json({ error: 'Failed to process SMS request' });
+  }
+});
+
+// SMTP Email Notification helper for Contact Form
+async function sendContactNotificationEmail(senderName, senderEmail, subject, bodyText) {
+  const host = process.env.SMTP_HOST;
+  const port = parseInt(process.env.SMTP_PORT || '587');
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  const from = process.env.SMTP_FROM || 'no-reply@bztel.com';
+  const recipient = 'info@bztel.net';
+
+  if (!host || !user || !pass) {
+    console.log(`[SMTP Mailer] SMTP not configured. Simulating Contact Form Notification:`);
+    console.log(`----------------------------------------`);
+    console.log(`To: ${recipient}`);
+    console.log(`From: ${from}`);
+    console.log(`Subject: [New Contact Inquiry] ${subject}`);
+    console.log(`Sender Name: ${senderName}`);
+    console.log(`Sender Email: ${senderEmail}`);
+    console.log(`Message:\n${bodyText}`);
+    console.log(`----------------------------------------`);
+    return false;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass }
+    });
+
+    const html = `
+      <h2>New Public Contact Form Submission</h2>
+      <p>A new contact inquiry has been received from the Bztel website:</p>
+      <ul>
+        <li><strong>Sender Name:</strong> ${senderName}</li>
+        <li><strong>Sender Email:</strong> ${senderEmail}</li>
+        <li><strong>Subject:</strong> ${subject}</li>
+      </ul>
+      <p><strong>Message:</strong></p>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; white-space: pre-wrap;">
+        ${bodyText}
+      </div>
+      <br>
+      <p>This message has been persisted in the database.</p>
+    `;
+
+    await transporter.sendMail({
+      from,
+      to: recipient,
+      subject: `[New Contact Inquiry] ${subject}`,
+      html
+    });
+    console.log(`[SMTP Mailer] Contact notification email sent successfully to ${recipient}`);
+    return true;
+  } catch (err) {
+    console.error(`[SMTP Mailer] Failed to dispatch contact notification email:`, err);
+    return false;
+  }
+}
+
+// POST /api/contact - Public contact form submission
+router.post('/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  if (!name || !email || !subject || !message) {
+    return res.status(400).json({ error: 'All fields (name, email, subject, message) are required.' });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    return res.status(400).json({ error: 'Please provide a valid email address.' });
+  }
+
+  try {
+    // 1. Insert into database
+    await queryRun(
+      `INSERT INTO contact_messages (name, email, subject, message)
+       VALUES (?, ?, ?, ?)`,
+      [name.trim(), email.trim(), subject.trim(), message.trim()]
+    );
+
+    // 2. Dispatch email notification to info@bztel.net
+    await sendContactNotificationEmail(name.trim(), email.trim(), subject.trim(), message.trim());
+
+    res.status(200).json({
+      success: true,
+      message: 'Your message has been sent successfully. Our support desk will reach out within 12 hours.'
+    });
+  } catch (error) {
+    console.error('Contact submission error:', error);
+    res.status(500).json({ error: 'Failed to submit contact message. Please try again later.' });
   }
 });
 

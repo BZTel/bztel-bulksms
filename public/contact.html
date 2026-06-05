@@ -168,10 +168,45 @@
   </footer>
 
   <script>
-    document.getElementById('general-contact-form').addEventListener('submit', function(e) {
+    document.getElementById('general-contact-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      document.getElementById('general-contact-form').classList.add('hidden');
-      document.getElementById('contact-success-msg').classList.remove('hidden');
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const name = document.getElementById('g-name').value;
+      const email = document.getElementById('g-email').value;
+      const subject = document.getElementById('g-subject').value;
+      const message = document.getElementById('g-message').value;
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Sending...';
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, email, subject, message })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          document.getElementById('general-contact-form').classList.add('hidden');
+          const successMsg = document.getElementById('contact-success-msg');
+          successMsg.innerText = '✓ ' + (data.message || 'Thank you! Your message has been sent successfully.');
+          successMsg.classList.remove('hidden');
+        } else {
+          alert(data.error || 'Failed to submit message. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Send Message';
+        }
+      } catch (err) {
+        console.error('Contact form submission error:', err);
+        alert('An error occurred. Please try again later.');
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Send Message';
+      }
     });
   </script>
 </body>

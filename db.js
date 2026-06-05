@@ -191,6 +191,24 @@ async function initializeDatabase(pool) {
     } else {
       console.log("[Database] Database tables verified. Ready.");
     }
+
+    // Dynamic schema migration for contact_messages
+    const checkContactMessages = await pool.request().query("SELECT * FROM sys.tables WHERE name = 'contact_messages'");
+    if (checkContactMessages.recordset.length === 0) {
+      console.log("[Database] Initializing contact_messages table...");
+      await pool.request().query(`
+        CREATE TABLE contact_messages (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          subject VARCHAR(255) NOT NULL,
+          message NVARCHAR(MAX) NOT NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+      await pool.request().query("CREATE INDEX idx_contact_messages_created ON contact_messages(created_at DESC)");
+      console.log("[Database] contact_messages table and index created successfully.");
+    }
   } catch (err) {
     console.error("[Database] Failed to initialize database tables:", err);
   }
