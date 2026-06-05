@@ -72,6 +72,19 @@
         <option value="GHS">GHS (GH₵)</option>
         <option value="NGN">NGN (₦)</option>
       </select>
+      
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle" class="theme-toggle-l" title="Toggle Light/Dark Theme" style="margin-right: 12px; outline: none;">
+        <!-- Moon Icon -->
+        <svg id="theme-toggle-moon" class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+        <!-- Sun Icon -->
+        <svg id="theme-toggle-sun" class="nav-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px; color: #f59e0b;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+      </button>
+
       <a href="/app" class="nav-login-btn">Log in</a>
       <a href="/app" class="btn-l btn-l-primary" style="border-radius: var(--border-radius-sm); padding: 8px 18px;">Sign Up</a>
     </div>
@@ -201,6 +214,50 @@
           <p class="api-card-desc-l" style="font-size:0.85rem; line-height:1.5;">Dedicated engineering squads. Custom SLA support timelines, legacy database system migration, custom microservices mesh integration, and load scaling audits.</p>
         </div>
         <a href="/software-development#consult-form" class="btn-l btn-l-outline btn-block">Contact Architecture Team</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Accordion Section -->
+  <section class="sect-l sect-l-offset" id="faq" style="border-top: 1px solid var(--border-color);">
+    <div class="sect-header-l reveal">
+      <span class="sect-tag-l">QUESTIONS</span>
+      <h2 class="sect-title-l" style="text-align: center;">Frequently Asked Questions</h2>
+      <p class="sect-subtitle-l">Find answers to common questions about billing, credits, and setup.</p>
+    </div>
+
+    <div class="faq-container" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;">
+      <!-- FAQ item 1 -->
+      <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow: hidden; background: var(--bg-light); transition: var(--transition);">
+        <button class="faq-question" style="width: 100%; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; background: transparent; border: none; font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: var(--text-dark); cursor: pointer; text-align: left; outline: none;">
+          <span>How are Bztel credits calculated?</span>
+          <span class="faq-icon" style="font-size: 1.25rem; font-weight: 400; transition: var(--transition);">&plus;</span>
+        </button>
+        <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); padding: 0 24px;">
+          <p style="padding-bottom: 20px; font-size: 0.92rem; color: var(--text-slate); line-height: 1.6;">SMS credits are calculated based on standard 160-character boundaries. 1 credit covers 1 SMS text globally. For voice broadcasting campaigns, calls are calculated at 2 credits per minute per recipient. WhatsApp conversation sessions last 24 hours per credit ticket.</p>
+        </div>
+      </div>
+
+      <!-- FAQ item 2 -->
+      <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow: hidden; background: var(--bg-light); transition: var(--transition);">
+        <button class="faq-question" style="width: 100%; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; background: transparent; border: none; font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: var(--text-dark); cursor: pointer; text-align: left; outline: none;">
+          <span>Do purchased balance credits expire?</span>
+          <span class="faq-icon" style="font-size: 1.25rem; font-weight: 400; transition: var(--transition);">&plus;</span>
+        </button>
+        <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); padding: 0 24px;">
+          <p style="padding-bottom: 20px; font-size: 0.92rem; color: var(--text-slate); line-height: 1.6;">No, Bztel balance credits never expire. Any SMS, voice, or conversation credits loaded onto your organization account remain active in your shared wallet indefinitely, allowing you to use them at your own convenience.</p>
+        </div>
+      </div>
+
+      <!-- FAQ item 3 -->
+      <div class="faq-item" style="border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow: hidden; background: var(--bg-light); transition: var(--transition);">
+        <button class="faq-question" style="width: 100%; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; background: transparent; border: none; font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: var(--text-dark); cursor: pointer; text-align: left; outline: none;">
+          <span>Are there any setup fees or hidden subscription costs?</span>
+          <span class="faq-icon" style="font-size: 1.25rem; font-weight: 400; transition: var(--transition);">&plus;</span>
+        </button>
+        <div class="faq-answer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); padding: 0 24px;">
+          <p style="padding-bottom: 20px; font-size: 0.92rem; color: var(--text-slate); line-height: 1.6;">No. Bztel is purely pay-as-you-go. There are no registration fees, monthly subscription retainers, or hidden lock-in contracts. You pay only for the communications you broadcast or custom engineering resources you purchase.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -362,6 +419,60 @@
       setCurrency(e.target.value);
     });
     slider.addEventListener('input', updateVal);
+
+    // FAQ Accordion logic
+    document.querySelectorAll('.faq-question').forEach(button => {
+      button.addEventListener('click', () => {
+        const item = button.parentElement;
+        const answer = button.nextElementSibling;
+        const icon = button.querySelector('.faq-icon');
+        
+        const isOpen = item.classList.contains('active');
+        
+        // Close other items
+        document.querySelectorAll('.faq-item').forEach(i => {
+          i.classList.remove('active');
+          i.querySelector('.faq-answer').style.maxHeight = '0px';
+          i.querySelector('.faq-icon').innerHTML = '&plus;';
+        });
+        
+        if (!isOpen) {
+          item.classList.add('active');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+          icon.innerHTML = '&minus;';
+        }
+      });
+    });
+
+    // Theme Toggle Logic
+    const themeToggle = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('theme-toggle-moon');
+    const sunIcon = document.getElementById('theme-toggle-sun');
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('bztel-theme') || 'light';
+      setTheme(savedTheme);
+    }
+
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        moonIcon.classList.add('hidden');
+        sunIcon.classList.remove('hidden');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        sunIcon.classList.add('hidden');
+        moonIcon.classList.remove('hidden');
+      }
+      localStorage.setItem('bztel-theme', theme);
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      setTheme(current);
+    });
+
+    initTheme();
 
     // Run auto detect sequence
     autoDetectCurrency();

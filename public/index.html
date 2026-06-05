@@ -39,6 +39,19 @@
         <option value="GHS">GHS (GH₵)</option>
         <option value="NGN">NGN (₦)</option>
       </select>
+      
+      <!-- Theme Toggle Button -->
+      <button id="theme-toggle" class="theme-toggle-l" title="Toggle Light/Dark Theme" style="margin-right: 12px; outline: none;">
+        <!-- Moon Icon -->
+        <svg id="theme-toggle-moon" class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+        <!-- Sun Icon -->
+        <svg id="theme-toggle-sun" class="nav-icon hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 20px; height: 20px; color: #f59e0b;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+        </svg>
+      </button>
+
       <a href="/app" class="nav-login-btn">Log in</a>
       <a href="/app" class="btn-l btn-l-primary" style="border-radius: var(--border-radius-sm); padding: 8px 18px;">Sign Up</a>
     </div>
@@ -97,7 +110,7 @@
     </div>
 
     <!-- Code Block -->
-    <div class="code-editor-l reveal reveal-right">
+    <div class="code-editor-l reveal reveal-right" style="display: flex; flex-direction: column;">
       <div class="editor-header-l">
         <ul class="editor-tabs-l" id="hero-tabs">
           <li class="editor-tab-l active" data-lang="curl">cURL</li>
@@ -107,8 +120,8 @@
           <li class="editor-tab-l" data-lang="go">Go</li>
         </ul>
       </div>
-      <div class="editor-body-l">
-        <pre id="hero-code-block"><span class="hl-keyword">curl</span> -X POST https://api.bztel.com/v1/sms/send \\
+      <div class="editor-body-l" style="display: flex; flex-direction: column; justify-content: space-between; min-height: 290px;">
+        <pre id="hero-code-block" style="flex: 1;"><span class="hl-keyword">curl</span> -X POST https://api.bztel.com/v1/sms/send \\
   -H <span class="hl-string">"Authorization: Bearer YOUR_API_KEY"</span> \\
   -H <span class="hl-string">"Content-Type: application/json"</span> \\
   -d <span class="hl-string">'{
@@ -117,7 +130,17 @@
     "sender_id": "BZTel",
     "type": "text"
   }'</span></pre>
-        <button class="try-btn-editor" onclick="location.href='/app'">Try It Now</button>
+        
+        <!-- Interactive Sandbox Controls -->
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--code-border); display: flex; gap: 10px; align-items: center;">
+          <div style="flex: 1;">
+            <input type="text" id="sandbox-phone" class="form-control" placeholder="Recipient Phone" value="+233545678901" style="padding: 6px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid var(--code-border); border-radius: 4px; color: #fff; font-family: monospace; outline: none; width: 100%;">
+          </div>
+          <div style="flex: 2;">
+            <input type="text" id="sandbox-msg" class="form-control" placeholder="SMS Message" value="Hello from BzTel 🚀" style="padding: 6px 10px; font-size: 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid var(--code-border); border-radius: 4px; color: #fff; font-family: monospace; outline: none; width: 100%;">
+          </div>
+          <button id="sandbox-send-btn" class="btn-l btn-l-primary" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 4px; white-space: nowrap; border: none; cursor: pointer; height: 32px;">Send Test</button>
+        </div>
       </div>
     </div>
   </section>
@@ -910,8 +933,194 @@ func <span class="syntax-function">main</span>() {
       });
     }
 
+    // Interactive Developer Sandbox logic
+    const phoneInput = document.getElementById('sandbox-phone');
+    const msgInput = document.getElementById('sandbox-msg');
+    const sendBtn = document.getElementById('sandbox-send-btn');
+    const pushAlert = document.getElementById('sandbox-sms-push');
+    const pushText = document.getElementById('sandbox-push-text');
+
+    function updateSandboxCode() {
+      const phone = phoneInput.value || '+233545678901';
+      const msg = msgInput.value || 'Hello from BzTel 🚀';
+
+      heroCode.curl = `<span class="hl-keyword">curl</span> -X POST https://api.bztel.com/v1/sms/send \\\\
+  -H <span class="hl-string">"Authorization: Bearer YOUR_API_KEY"</span> \\\\
+  -H <span class="hl-string">"Content-Type: application/json"</span> \\\\
+  -d <span class="hl-string">'{
+    "to": "${phone}",
+    "message": "${msg}",
+    "sender_id": "BZTel",
+    "type": "text"
+  }'</span>`;
+
+      heroCode.python = `<span class="hl-keyword">import</span> requests
+<span class="hl-keyword">import</span> json
+
+url = <span class="hl-string">"https://api.bztel.com/v1/sms/send"</span>
+headers = {
+    <span class="hl-string">"Authorization"</span>: <span class="hl-string">"Bearer YOUR_API_KEY"</span>,
+    <span class="hl-string">"Content-Type"</span>: <span class="hl-string">"application/json"</span>
+}
+payload = {
+    <span class="hl-string">"to"</span>: <span class="hl-string">"${phone}"</span>,
+    <span class="hl-string">"message"</span>: <span class="hl-string">"${msg}"</span>,
+    <span class="hl-string">"sender_id"</span>: <span class="hl-string">"BZTel"</span>,
+    <span class="hl-string">"type"</span>: <span class="hl-string">"text"</span>
+}
+
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+print(response.json())`;
+
+      heroCode.php = `<span class="hl-keyword">&lt;?php</span>
+$curl = curl_init();
+curl_setopt_array($curl, [
+  CURLOPT_URL => <span class="hl-string">"https://api.bztel.com/v1/sms/send"</span>,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_CUSTOMREQUEST => <span class="hl-string">"POST"</span>,
+  CURLOPT_POSTFIELDS => json_encode([
+    <span class="hl-string">"to"</span> => <span class="hl-string">"${phone}"</span>,
+    <span class="hl-string">"message"</span> => <span class="hl-string">"${msg}"</span>,
+    <span class="hl-string">"sender_id"</span> => <span class="hl-string">"BZTel"</span>
+  ]),
+  CURLOPT_HTTPHEADER => [
+    <span class="hl-string">"Authorization: Bearer YOUR_API_KEY"</span>,
+    <span class="hl-string">"Content-Type: application/json"</span>
+  ],
+]);
+$response = curl_exec($curl);
+curl_close($curl);
+echo $response;`;
+
+      heroCode.node = `<span class="hl-keyword">import</span> fetch <span class="hl-keyword">from</span> <span class="hl-string">'node-fetch'</span>;
+
+const response = await fetch(<span class="hl-string">'https://api.bztel.com/v1/sms/send'</span>, {
+  method: <span class="hl-string">'POST'</span>,
+  headers: {
+    <span class="hl-string">'Authorization'</span>: <span class="hl-string">'Bearer YOUR_API_KEY'</span>,
+    <span class="hl-string">'Content-Type'</span>: <span class="hl-string">'application/json'</span>
+  },
+  body: JSON.stringify({
+    to: <span class="hl-string">'${phone}'</span>,
+    message: <span class="hl-string">'${msg}'</span>,
+    sender_id: <span class="hl-string">'BZTel'</span>
+  })
+});
+
+const data = await response.json();
+console.log(data);`;
+
+      heroCode.go = `<span class="hl-keyword">package</span> main
+
+<span class="hl-keyword">import</span> (
+	<span class="hl-string">"bytes"</span>
+	<span class="hl-string">"net/http"</span>
+)
+
+func main() {
+	jsonData := []byte(\`{"to": "${phone}", "message": "${msg}"}\`)
+	req, _ := http.NewRequest(<span class="hl-string">"POST"</span>, <span class="hl-string">"https://api.bztel.com/v1/sms/send"</span>, bytes.NewBuffer(jsonData))
+	req.Header.Set(<span class="hl-string">"Authorization"</span>, <span class="hl-string">"Bearer YOUR_API_KEY"</span>)
+	req.Header.Set(<span class="hl-string">"Content-Type"</span>, <span class="hl-string">"application/json"</span>)
+	
+	client := &http.Client{}
+	client.Do(req)
+}\``;
+
+      // Update current displayed tab code
+      const activeTab = document.querySelector('#hero-tabs .active');
+      if (activeTab) {
+        const lang = activeTab.getAttribute('data-lang');
+        document.getElementById('hero-code-block').innerHTML = heroCode[lang];
+      }
+    }
+
+    if (phoneInput && msgInput) {
+      phoneInput.addEventListener('input', updateSandboxCode);
+      msgInput.addEventListener('input', updateSandboxCode);
+    }
+
+    if (sendBtn) {
+      sendBtn.addEventListener('click', () => {
+        sendBtn.disabled = true;
+        sendBtn.innerText = 'Sending...';
+
+        setTimeout(() => {
+          if (pushText && pushAlert) {
+            pushText.innerText = msgInput.value || 'Hello from BzTel 🚀';
+            pushAlert.classList.remove('hidden');
+            pushAlert.style.animation = 'slideDownPush 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+          }
+
+          sendBtn.innerText = 'Sent!';
+
+          setTimeout(() => {
+            if (pushAlert) {
+              pushAlert.style.animation = 'fadeOutPush 0.8s forwards';
+              setTimeout(() => {
+                pushAlert.classList.add('hidden');
+                sendBtn.disabled = false;
+                sendBtn.innerText = 'Send Test';
+              }, 800);
+            } else {
+              sendBtn.disabled = false;
+              sendBtn.innerText = 'Send Test';
+            }
+          }, 4000);
+        }, 1000);
+      });
+    }
+
+    // Theme Toggle Logic
+    const themeToggle = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('theme-toggle-moon');
+    const sunIcon = document.getElementById('theme-toggle-sun');
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('bztel-theme') || 'light';
+      setTheme(savedTheme);
+    }
+
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        if (moonIcon) moonIcon.classList.add('hidden');
+        if (sunIcon) sunIcon.classList.remove('hidden');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        if (sunIcon) sunIcon.classList.add('hidden');
+        if (moonIcon) moonIcon.classList.remove('hidden');
+      }
+      localStorage.setItem('bztel-theme', theme);
+    }
+
+    if (themeToggle) {
+      themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        setTheme(current);
+      });
+    }
+
+    initTheme();
+
     // Run auto detect sequence
     autoDetectCurrency();
   </script>
+
+  <!-- iOS Sandbox Push SMS Container -->
+  <div id="sandbox-sms-push" class="hidden" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 340px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 9999; display: flex; gap: 12px; align-items: center;">
+    <div style="width: 36px; height: 36px; border-radius: 8px; background: var(--accent-purple); display: flex; align-items: center; justify-content: center; color: white;">
+      <svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    </div>
+    <div style="flex: 1; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <strong style="font-size: 0.85rem; color: #fff; font-family: var(--font-heading);">MESSAGES (BZTel)</strong>
+        <span style="font-size: 0.7rem; color: #94a3b8;">now</span>
+      </div>
+      <div id="sandbox-push-text" style="font-size: 0.8rem; color: #e2e8f0; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; font-family: var(--font-body);">Hello from BzTel 🚀</div>
+    </div>
+  </div>
 </body>
 </html>
