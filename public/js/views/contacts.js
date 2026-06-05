@@ -60,6 +60,10 @@ export function renderContactsView(root, state) {
               <label for="contact-group">Group Tag</label>
               <input type="text" id="contact-group" class="form-control" placeholder="e.g. Marketing" value="Default">
             </div>
+            <div class="form-group">
+              <label for="contact-birthdate">Birthdate (Optional)</label>
+              <input type="date" id="contact-birthdate" class="form-control">
+            </div>
             <button type="submit" class="btn btn-primary btn-block" id="contact-submit-btn">
               Save Contact
             </button>
@@ -78,7 +82,7 @@ export function renderContactsView(root, state) {
             </svg>
             <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Upload CSV File</div>
             <div style="color: var(--text-muted); font-size: 0.75rem;">Click to browse or drop CSV here</div>
-            <div style="color: var(--accent-color); font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Format: name, phone, group</div>
+            <div style="color: var(--accent-color); font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Format: name, phone, group, birthdate(YYYY-MM-DD, optional)</div>
             <input type="file" id="csv-file-input" accept=".csv" class="hidden">
           </div>
         </div>
@@ -237,6 +241,7 @@ function setupAddForm() {
     const name = document.getElementById('contact-name').value;
     const phone = document.getElementById('contact-phone').value;
     const group_name = document.getElementById('contact-group').value;
+    const birthdate = document.getElementById('contact-birthdate').value;
 
     submitBtn.disabled = true;
     submitBtn.innerText = 'Saving...';
@@ -244,7 +249,7 @@ function setupAddForm() {
     try {
       const response = await apiFetch('/api/contacts', {
         method: 'POST',
-        body: JSON.stringify({ name, phone, group_name })
+        body: JSON.stringify({ name, phone, group_name, birthdate })
       });
 
       if (response.ok) {
@@ -252,6 +257,7 @@ function setupAddForm() {
         document.getElementById('contact-name').value = '';
         document.getElementById('contact-phone').value = '';
         document.getElementById('contact-group').value = 'Default';
+        document.getElementById('contact-birthdate').value = '';
         await loadContactsData();
       } else {
         const err = await response.json();
@@ -316,7 +322,7 @@ function handleCSVFile(file) {
     const lines = text.split(/\r?\n/);
     const parsedContacts = [];
 
-    // Parse each line (expect format: name, phone, group)
+    // Parse each line (expect format: name, phone, group, birthdate)
     lines.forEach((line, index) => {
       // Skip empty lines or header rows
       if (!line.trim()) return;
@@ -324,7 +330,7 @@ function handleCSVFile(file) {
       const columns = line.split(',').map(col => col.replace(/^["']|["']$/g, '').trim());
       if (columns.length < 2) return;
 
-      const [name, phone, group_name] = columns;
+      const [name, phone, group_name, birthdate] = columns;
 
       // Skip common CSV headers
       if (index === 0 && (name.toLowerCase() === 'name' || name.toLowerCase() === 'fullname')) {
@@ -334,7 +340,8 @@ function handleCSVFile(file) {
       parsedContacts.push({
         name: name,
         phone: phone,
-        group_name: group_name || 'Imported'
+        group_name: group_name || 'Imported',
+        birthdate: birthdate || null
       });
     });
 

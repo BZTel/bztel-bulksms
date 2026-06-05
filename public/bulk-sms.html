@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
   <link rel="stylesheet" href="/css/landing.css">
+  <!-- Scroll animations -->
+  <script src="/js/landing-animations.js" defer></script>
 </head>
 <body>
 
@@ -38,7 +40,7 @@
 
   <!-- Hero Section -->
   <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%), var(--bg-light);">
-    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;" class="reveal reveal-scale">
       <span class="sect-tag-l">PRODUCT OVERVIEW</span>
       <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Bulk SMS Campaign Broadcasting</h1>
       <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">Send high-volume SMS dispatches worldwide in seconds. BZTel integrates campaign builders, personalization tokens, and automated contact lists into one premium dashboard console.</p>
@@ -46,10 +48,9 @@
     </div>
   </section>
 
-  <!-- SMS Detail Layout -->
   <section class="sect-l sect-l-offset">
     <div class="software-l" style="max-width: 1100px;">
-      <div class="software-content-l">
+      <div class="software-content-l reveal reveal-left">
         <span class="sect-tag-l">SMS BROADCASTING FEATURES</span>
         <h2 style="font-family:var(--font-heading); font-size:2rem; font-weight:800; margin-bottom:20px;">Built for Higher Delivery success and Customer Engagement</h2>
         <p style="font-size:0.95rem; color:var(--text-slate); line-height:1.65; margin-bottom:24px;">Our campaign console bypasses cellular blockages and route lag by utilizing dynamic simulation models. We help companies test customer alerts, verify recipient numbers, and evaluate campaign costs instantly.</p>
@@ -73,7 +74,7 @@
       </div>
 
       <!-- Interactive SMS Cost Estimator Demo -->
-      <div class="api-card-l" style="padding: 30px;">
+      <div class="api-card-l reveal reveal-right" style="padding: 30px;">
         <h3 style="font-family:var(--font-heading); font-size:1.2rem; margin-bottom:16px;">Cost & Credit Calculator</h3>
         <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:20px;">Calculate campaign costs dynamically. Each message represents 160 characters (GSM 7-bit standard).</p>
         

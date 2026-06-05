@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
   <link rel="stylesheet" href="/css/landing.css">
+  <!-- Scroll animations -->
+  <script src="/js/landing-animations.js" defer></script>
   <style>
     /* Slider Custom styling */
     .slider-container {
@@ -72,7 +74,7 @@
 
   <!-- Hero Section -->
   <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 10% 20%, rgba(79, 70, 229, 0.08) 0%, transparent 50%), var(--bg-light);">
-    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;" class="reveal reveal-scale">
       <span class="sect-tag-l">BILLING SCHEMES</span>
       <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Simple, Transparent Pricing</h1>
       <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">No setup fees, lock-in contracts, or hidden billing. Pay only for the messages you broadcast and the custom engineering resources you consume.</p>
@@ -81,13 +83,13 @@
 
   <!-- SMS API Pricing grid -->
   <section class="sect-l sect-l-offset">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <h2 class="sect-title-l">Communications API Rates</h2>
     </div>
 
     <div class="pricing-grid-l">
       <!-- SMS card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="0">
         <span class="pricing-card-lbl-l">SMS</span>
         <div class="pricing-card-val-l">$0.005</div>
         <div class="pricing-card-sub-l">Per SMS</div>
@@ -96,7 +98,7 @@
       </div>
 
       <!-- WhatsApp Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="100">
         <span class="pricing-card-lbl-l">WhatsApp API</span>
         <div class="pricing-card-val-l">$0.03</div>
         <div class="pricing-card-sub-l">Per Conversation</div>
@@ -105,7 +107,7 @@
       </div>
 
       <!-- OTP Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="200">
         <span class="pricing-card-lbl-l">OTP SMS</span>
         <div class="pricing-card-val-l">$0.01</div>
         <div class="pricing-card-sub-l">Per OTP</div>
@@ -114,7 +116,7 @@
       </div>
 
       <!-- Voice Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="300">
         <span class="pricing-card-lbl-l">Voice Call</span>
         <div class="pricing-card-val-l">$0.02</div>
         <div class="pricing-card-sub-l">Per Minute</div>
@@ -123,7 +125,7 @@
       </div>
 
       <!-- Email Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="400">
         <span class="pricing-card-lbl-l">Email API</span>
         <div class="pricing-card-val-l">$0.001</div>
         <div class="pricing-card-sub-l">Per Email</div>
@@ -133,7 +135,7 @@
     </div>
 
     <!-- Volume Calculator Slider -->
-    <div class="slider-container">
+    <div class="slider-container reveal reveal-scale">
       <h3 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px; text-align:center;">Bulk Volume Discount Estimator</h3>
       <p style="font-size:0.75rem; color:var(--text-muted); text-align:center;">Slide to adjust your estimated monthly SMS campaign volume.</p>
       
@@ -159,7 +161,7 @@
 
   <!-- Software Development consulting packages rates -->
   <section class="sect-l">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <span class="sect-tag-l">CONSULTING FEES</span>
       <h2 class="sect-title-l">Custom Software Development Rates</h2>
       <p class="sect-subtitle-l">Professional custom software engineering billed under transparent package agreements.</p>
@@ -167,7 +169,7 @@
 
     <div class="api-grid-l" style="max-width:1100px;">
       <!-- MVP Package -->
-      <div class="api-card-l" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+      <div class="api-card-l reveal reveal-scale" data-delay="0" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
         <div>
           <h3 class="api-card-title-l" style="font-size:1.25rem;">MVP Startup Pack</h3>
           <div style="font-size:2rem; font-weight:800; color:var(--text-dark); font-family:var(--font-heading); margin: 16px 0 8px;">$5,000+</div>
@@ -177,7 +179,7 @@
       </div>
 
       <!-- Growth Package -->
-      <div class="api-card-l" style="position:relative; border-color:var(--accent-purple); display:flex; flex-direction:column; justify-content:space-between; box-shadow:var(--shadow-md);">
+      <div class="api-card-l reveal reveal-scale" data-delay="100" style="position:relative; border-color:var(--accent-purple); display:flex; flex-direction:column; justify-content:space-between; box-shadow:var(--shadow-md);">
         <div>
           <h3 class="api-card-title-l" style="font-size:1.25rem; color:var(--accent-purple);">Growth & SaaS</h3>
           <div style="font-size:2rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin: 16px 0 8px;">$15,000+</div>
@@ -187,7 +189,7 @@
       </div>
 
       <!-- Custom Enterprise -->
-      <div class="api-card-l" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
+      <div class="api-card-l reveal reveal-scale" data-delay="200" style="position:relative; display:flex; flex-direction:column; justify-content:space-between;">
         <div>
           <h3 class="api-card-title-l" style="font-size:1.25rem;">Custom Enterprise</h3>
           <div style="font-size:2rem; font-weight:800; color:var(--text-dark); font-family:var(--font-heading); margin: 16px 0 8px;">$50,000+</div>

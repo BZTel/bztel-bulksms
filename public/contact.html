@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
   <link rel="stylesheet" href="/css/landing.css">
+  <!-- Scroll animations -->
+  <script src="/js/landing-animations.js" defer></script>
 </head>
 <body>
 
@@ -38,7 +40,7 @@
 
   <!-- Hero Section -->
   <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%), var(--bg-light);">
-    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;" class="reveal reveal-scale">
       <span class="sect-tag-l">GET IN TOUCH</span>
       <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Let's Start a Conversation</h1>
       <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">Have questions about our simulated gateway, credit pricing, or need an enterprise custom software proposal? Our teams are here to help.</p>
@@ -49,7 +51,7 @@
   <section class="sect-l sect-l-offset">
     <div class="software-l" style="max-width: 1100px;">
       <!-- Left: Contact Form -->
-      <div class="contact-container" style="background:#ffffff; border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); width:100%; box-shadow: var(--shadow-lg);">
+      <div class="contact-container reveal reveal-left" style="background:#ffffff; border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); width:100%; box-shadow: var(--shadow-lg);">
         <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:24px;">Send us a message</h3>
         
         <form id="general-contact-form">
@@ -77,7 +79,7 @@
       </div>
 
       <!-- Right: Office Info & Hours -->
-      <div class="software-content-l" style="padding-left:20px; gap:24px;">
+      <div class="software-content-l reveal reveal-right" style="padding-left:20px; gap:24px;">
         <div>
           <h3 style="font-family:var(--font-heading); font-size:1.25rem; margin-bottom:12px;">Office Locations</h3>
           <div style="display:flex; flex-direction:column; gap:16px;">

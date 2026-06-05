@@ -3,28 +3,40 @@ import { renderAuthView } from './views/auth.js';
 import { renderDashboardView } from './views/dashboard.js';
 import { renderSMSView } from './views/sms.js';
 import { renderContactsView } from './views/contacts.js';
-import { renderDeveloperView } from './views/developer.js';
 import { renderWalletView } from './views/wallet.js';
+import { renderBirthdayView } from './views/birthday.js';
+import { renderTeamsView } from './views/teams.js';
+import { renderCampaignHistoryView } from './views/campaign-history.js';
+import { renderRequestServiceView } from './views/request-service.js';
+import { renderHelpView } from './views/help.js';
+import { renderMoreView } from './views/more.js';
+import { renderVoiceView } from './views/voice.js';
 
 // Global Application State
 const state = {
   user: null,
   token: localStorage.getItem('token') || null,
   currentView: 'dashboard',
-  statsInterval: null
+  statsInterval: null,
+  currentChannel: 'sms'
 };
 
 // Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
   initApp();
-});
+}
 
 async function initApp() {
+  console.log('[initApp] Starting initialization. state.token:', state.token);
   setupGlobalEvents();
   setupModalEvents();
 
   if (state.token) {
+    console.log('[initApp] Token present, fetching user profile...');
     const success = await fetchUserProfile();
+    console.log('[initApp] fetchUserProfile success:', success);
     if (success) {
       showAppContainer();
       navigateTo(state.currentView);
@@ -32,6 +44,7 @@ async function initApp() {
       logout();
     }
   } else {
+    console.log('[initApp] No token present, showing auth container...');
     showAuthContainer();
   }
 }
@@ -44,6 +57,51 @@ function setupGlobalEvents() {
     item.addEventListener('click', (e) => {
       const view = e.currentTarget.getAttribute('data-view');
       navigateTo(view);
+    });
+  });
+
+  // Switch channel item handlers
+  const channelItems = document.querySelectorAll('.switch-channel-item');
+  channelItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      channelItems.forEach(c => c.classList.remove('active'));
+      const activeItem = e.currentTarget;
+      activeItem.classList.add('active');
+      
+      // Update dot styles
+      document.querySelectorAll('.channel-dot').forEach(d => {
+        d.className = 'channel-dot grey';
+      });
+      const dot = activeItem.querySelector('.channel-dot');
+      if (dot) {
+        dot.className = 'channel-dot orange';
+      }
+      
+      const channel = activeItem.getAttribute('data-channel');
+      state.currentChannel = channel;
+      
+      const sendNavBtn = document.querySelector('.nav-item[data-view="sms"], .nav-item[data-view="voice"]');
+      if (sendNavBtn) {
+        if (channel === 'voice') {
+          sendNavBtn.setAttribute('data-view', 'voice');
+          sendNavBtn.innerHTML = `
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            Send Voice
+          `;
+        } else {
+          sendNavBtn.setAttribute('data-view', 'sms');
+          sendNavBtn.innerHTML = `
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Send SMS
+          `;
+        }
+      }
+      
+      navigateTo('dashboard');
     });
   });
 
@@ -138,6 +196,7 @@ function setupModalEvents() {
 
 // Fetch Profile
 export async function fetchUserProfile() {
+  console.log('[fetchUserProfile] Called. token:', state.token);
   if (!state.token) return false;
 
   try {
@@ -147,14 +206,17 @@ export async function fetchUserProfile() {
       }
     });
 
+    console.log('[fetchUserProfile] API response status:', response.status);
+
     if (response.ok) {
       const data = await response.json();
       state.user = data.user;
+      console.log('[fetchUserProfile] User loaded:', state.user);
       updateUIHeader();
       return true;
     }
   } catch (error) {
-    console.error('Fetch profile error:', error);
+    console.error('[fetchUserProfile] Error:', error);
   }
   return false;
 }
@@ -166,6 +228,12 @@ export function updateUIHeader() {
   document.getElementById('balance-count').innerText = state.user.balance.toLocaleString();
   document.getElementById('sidebar-user-email').innerText = state.user.email;
   
+  // Update sidebar wallet badge GHS
+  const walletBadge = document.getElementById('sidebar-wallet-balance');
+  if (walletBadge) {
+    walletBadge.innerText = `GHS ${state.user.balance.toFixed(2)}`;
+  }
+
   // Set initials icon
   const initials = state.user.email.substring(0, 2).toUpperCase();
   document.getElementById('user-initials').innerText = initials;
@@ -192,9 +260,15 @@ export function navigateTo(viewName) {
   const titleMap = {
     dashboard: 'Dashboard Overview',
     sms: 'Bulk SMS Composer',
+    voice: 'Voice Broadcasting Composer',
     contacts: 'Contacts Directory',
-    wallet: 'Wallet & Billing',
-    developer: 'Developer Resources'
+    birthday: 'Birthday Campaign Scheduler',
+    teams: 'Team Collaboration Hub',
+    wallet: 'Wallet & Billing Details',
+    'campaign-history': 'Campaign History Logs',
+    'request-service': 'Request Custom Service',
+    help: 'Support Desk & FAQs',
+    more: 'More Settings & Resources'
   };
   document.getElementById('view-title').innerText = titleMap[viewName] || 'Bztel App';
 
@@ -214,14 +288,32 @@ export function navigateTo(viewName) {
     case 'sms':
       renderSMSView(root, state);
       break;
+    case 'voice':
+      renderVoiceView(root, state);
+      break;
     case 'contacts':
       renderContactsView(root, state);
+      break;
+    case 'birthday':
+      renderBirthdayView(root, state);
+      break;
+    case 'teams':
+      renderTeamsView(root, state);
       break;
     case 'wallet':
       renderWalletView(root, state);
       break;
-    case 'developer':
-      renderDeveloperView(root, state);
+    case 'campaign-history':
+      renderCampaignHistoryView(root, state);
+      break;
+    case 'request-service':
+      renderRequestServiceView(root, state);
+      break;
+    case 'help':
+      renderHelpView(root, state);
+      break;
+    case 'more':
+      renderMoreView(root, state);
       break;
     default:
       renderDashboardView(root, state);
@@ -230,12 +322,14 @@ export function navigateTo(viewName) {
 
 // Navigation flow toggles
 export function showAppContainer() {
+  console.log('[showAppContainer] Hiding loader and showing app...');
   document.getElementById('auth-container').classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
   document.getElementById('app-loader').classList.add('hidden');
 }
 
 export function showAuthContainer() {
+  console.log('[showAuthContainer] Hiding loader and showing auth...');
   document.getElementById('app-container').classList.add('hidden');
   document.getElementById('app-loader').classList.add('hidden');
   document.getElementById('auth-container').classList.remove('hidden');
@@ -255,6 +349,7 @@ export function loginSuccess(token, user) {
 
 // Logout handler
 export function logout() {
+  console.log('[logout] Logging out user...');
   state.token = null;
   state.user = null;
   localStorage.removeItem('token');
@@ -303,6 +398,7 @@ export function showToast(message, type = 'info') {
 
 // Helper: Make API calls with auth token automatically attached
 export async function apiFetch(url, options = {}) {
+  console.log('[apiFetch] Fetching:', url, 'token:', state.token);
   const headers = options.headers || {};
   if (state.token) {
     headers['Authorization'] = `Bearer ${state.token}`;
@@ -316,8 +412,11 @@ export async function apiFetch(url, options = {}) {
     }
   });
 
+  console.log('[apiFetch] Response from:', url, 'status:', res.status);
+
   // If token expired, log out automatically
   if (res.status === 403) {
+    console.log('[apiFetch] 403 Forbidden received, triggering logout...');
     logout();
     showToast('Session expired. Please log in again.', 'warning');
     throw new Error('Unauthorized');

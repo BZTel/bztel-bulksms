@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/css/landing.css">
+  <!-- Scroll animations -->
+  <script src="/js/landing-animations.js" defer></script>
 </head>
 <body>
 
@@ -39,7 +41,7 @@
 
   <!-- Hero Section -->
   <section class="hero-l">
-    <div class="hero-content-l">
+    <div class="hero-content-l reveal reveal-left">
       <span class="hero-tag-l">ALL-IN-ONE COMMUNICATION & SOFTWARE PARTNER</span>
       <h1 class="hero-title-l">Communication APIs & <span>Custom Software</span> Built for Your Growth</h1>
       <p class="hero-subtitle-l">BZTel provides powerful communication APIs and custom software development services to help businesses connect, automate and scale globally.</p>
@@ -90,7 +92,7 @@
     </div>
 
     <!-- Code Block -->
-    <div class="code-editor-l">
+    <div class="code-editor-l reveal reveal-right">
       <div class="editor-header-l">
         <ul class="editor-tabs-l" id="hero-tabs">
           <li class="editor-tab-l active" data-lang="curl">cURL</li>
@@ -116,7 +118,7 @@
   </section>
 
   <!-- Stats Row -->
-  <section class="stats-row-l">
+  <section class="stats-row-l reveal reveal-scale">
     <div class="stat-item-l">
       <div class="stat-item-icon">
         <svg style="width:20px; height:20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2a2.5 2.5 0 002.5-2.5V10a2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -157,14 +159,14 @@
 
   <!-- Products / Powerful APIs Section -->
   <section class="sect-l" id="products">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <h2 class="sect-title-l" style="font-size: 2.5rem; text-align: center;">Powerful Communication APIs</h2>
       <p class="sect-subtitle-l">Everything you need to engage your customers across every channel.</p>
     </div>
 
     <div class="api-grid-l">
       <!-- Card 1 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="0">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         </div>
@@ -174,7 +176,7 @@
       </div>
 
       <!-- Card 2 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="100">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.9 1.9 0 01-2-2v-6a2 2 0 012-2h8a2 2 0 012 2z"/></svg>
         </div>
@@ -184,7 +186,7 @@
       </div>
 
       <!-- Card 3 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="200">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
         </div>
@@ -194,7 +196,7 @@
       </div>
 
       <!-- Card 4 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="300">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
         </div>
@@ -204,7 +206,7 @@
       </div>
 
       <!-- Card 5 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="400">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         </div>
@@ -214,7 +216,7 @@
       </div>
 
       <!-- Card 6 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="500">
         <div class="benefit-icon-box" style="margin-bottom: 20px;">
           <svg style="width:18px; height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </div>
@@ -228,7 +230,7 @@
   <!-- Software Solutions Section -->
   <section class="sect-l sect-l-offset" id="software">
     <div class="software-l">
-      <div class="software-content-l">
+      <div class="software-content-l reveal reveal-left">
         <span class="sect-tag-l">SOFTWARE DEVELOPMENT</span>
         <h2 class="sect-title-l" style="margin-bottom: 20px;">Custom Software Solutions That Drive <span>Your Business Forward</span></h2>
         <p style="font-size: 1rem; color: var(--text-slate); line-height: 1.6;">Beyond communication APIs, BZTel is your technology partner for building custom software, web & mobile applications, and scalable systems tailored to your business needs.</p>
@@ -263,7 +265,7 @@
         <a href="#contact" class="btn-l btn-l-primary" style="align-self: flex-start; padding: 12px 28px;">Discuss Your Project &rarr;</a>
       </div>
 
-      <div class="software-preview-l">
+      <div class="software-preview-l reveal reveal-right">
         <!-- Dashboard Card Mockup -->
         <div class="software-preview-dashboard">
           <!-- Mock Sidebar -->
@@ -388,7 +390,7 @@
   <section class="sect-l" id="developers">
     <div class="dev-l">
       <!-- Left content -->
-      <div class="software-content-l">
+      <div class="software-content-l reveal reveal-left">
         <span class="sect-tag-l">DEVELOPER EXPERIENCE</span>
         <h2 class="sect-title-l" style="margin-bottom: 20px;">Developer Friendly. Built for Speed.</h2>
         <p style="font-size: 1rem; color: var(--text-slate); line-height: 1.6;">Well documented APIs, SDKs, webhooks and tools to help developers build faster and smarter.</p>
@@ -430,7 +432,7 @@
       </div>
 
       <!-- Right SDK Code Block -->
-      <div class="code-editor-l" style="display:grid; grid-template-columns: 1fr 140px;">
+      <div class="code-editor-l reveal reveal-right" style="display:grid; grid-template-columns: 1fr 140px;">
         <div style="border-right: 1px solid var(--code-border);">
           <div class="editor-header-l" style="padding: 0 12px;">
             <ul class="editor-tabs-l" id="dev-tabs">
@@ -479,14 +481,14 @@ print(response.id)</pre>
 
   <!-- Pricing / Simple Transparent Pricing Section -->
   <section class="sect-l sect-l-offset" id="pricing">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <h2 class="sect-title-l" style="font-size: 2.5rem; text-align: center;">Simple, Transparent Pricing</h2>
       <p class="sect-subtitle-l">Start free. Pay as you grow.</p>
     </div>
 
     <div class="pricing-grid-l">
       <!-- SMS card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="0">
         <span class="pricing-card-lbl-l">SMS</span>
         <div class="pricing-card-val-l">$0.005</div>
         <div class="pricing-card-sub-l">Per SMS</div>
@@ -495,7 +497,7 @@ print(response.id)</pre>
       </div>
 
       <!-- WhatsApp Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="100">
         <span class="pricing-card-lbl-l">WhatsApp API</span>
         <div class="pricing-card-val-l">$0.03</div>
         <div class="pricing-card-sub-l">Per Conversation</div>
@@ -504,7 +506,7 @@ print(response.id)</pre>
       </div>
 
       <!-- OTP Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="200">
         <span class="pricing-card-lbl-l">OTP SMS</span>
         <div class="pricing-card-val-l">$0.01</div>
         <div class="pricing-card-sub-l">Per OTP</div>
@@ -513,7 +515,7 @@ print(response.id)</pre>
       </div>
 
       <!-- Voice Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="300">
         <span class="pricing-card-lbl-l">Voice Call</span>
         <div class="pricing-card-val-l">$0.02</div>
         <div class="pricing-card-sub-l">Per Minute</div>
@@ -522,7 +524,7 @@ print(response.id)</pre>
       </div>
 
       <!-- Email Card -->
-      <div class="pricing-card-l">
+      <div class="pricing-card-l reveal reveal-scale" data-delay="400">
         <span class="pricing-card-lbl-l">Email API</span>
         <div class="pricing-card-val-l">$0.001</div>
         <div class="pricing-card-sub-l">Per Email</div>
@@ -538,7 +540,7 @@ print(response.id)</pre>
 
   <!-- Banner CTA Section -->
   <section class="sect-l" style="padding: 40px 0;">
-    <div class="banner-cta-l">
+    <div class="banner-cta-l reveal reveal-scale">
       <h2 class="banner-title-l">Let's Build Something Amazing Together</h2>
       <p class="banner-desc-l">Use our powerful APIs or let our expert team build custom software that takes your business to the next level.</p>
       
@@ -551,11 +553,11 @@ print(response.id)</pre>
 
   <!-- Contact Us / Intake Section (for Talk to an Expert / Discuss Project CTAs) -->
   <section class="sect-l" id="contact">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <span class="sect-tag-l">Get in Touch</span>
       <h2 class="sect-title-l" style="text-align: center;">Talk to our team</h2>
     </div>
-    <div class="contact-container" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); max-width: 600px; margin: 0 auto;">
+    <div class="contact-container reveal reveal-scale" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); max-width: 600px; margin: 0 auto;">
       <form id="contact-expert-form">
         <div class="form-group">
           <label for="c-name">Your Name</label>

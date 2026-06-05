@@ -1,494 +1,321 @@
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import 'dotenv/config';
+import sql from 'mssql';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const dbFile = join(__dirname, 'db.json');
-
-// Initialize local DB state
-let data = {
-  users: [],
-  contacts: [],
-  sms_logs: [],
-  templates: [],
-  api_keys: [],
-  transactions: []
+const config = {
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || 'Password123',
+  server: process.env.DB_SERVER || 'localhost',
+  database: process.env.DB_DATABASE || 'bztel_db',
+  port: parseInt(process.env.DB_PORT || '1433'),
+  options: {
+    encrypt: true,
+    trustServerCertificate: true
+  }
 };
 
-// Load existing data if present
-if (fs.existsSync(dbFile)) {
+console.log(`[Database] Connecting to server: ${config.server}, database: ${config.database}...`);
+const poolPromise = sql.connect(config);
+
+// Auto-initialize the database schema if needed
+async function initializeDatabase(pool) {
   try {
-    const raw = fs.readFileSync(dbFile, 'utf8');
-    data = JSON.parse(raw);
-    // Ensure all tables exist in loaded file
-    data.users = data.users || [];
-    data.contacts = data.contacts || [];
-    data.sms_logs = data.sms_logs || [];
-    data.templates = data.templates || [];
-    data.api_keys = data.api_keys || [];
-    data.transactions = data.transactions || [];
-    // Migrate: add is_admin and status fields to existing users
-    data.users = data.users.map(u => ({
-      ...u,
-      is_admin: u.is_admin || false,
-      status: u.status || 'active'
-    }));
-    saveDB();
+    const check = await pool.request().query("SELECT * FROM sys.tables WHERE name = 'users'");
+    if (check.recordset.length === 0) {
+      console.log("[Database] Initializing database tables for Azure SQL...");
+      
+      // Create users table
+      await pool.request().query(`
+        CREATE TABLE users (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          is_admin BIT NOT NULL DEFAULT 0,
+          status VARCHAR(50) NOT NULL DEFAULT 'active',
+          balance INT NOT NULL DEFAULT 100,
+          role VARCHAR(50) NOT NULL DEFAULT 'Owner',
+          parent_user_id INT NULL FOREIGN KEY REFERENCES users(id),
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+      
+      // Create contacts table
+      await pool.request().query(`
+        CREATE TABLE contacts (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          name VARCHAR(255) NOT NULL,
+          phone VARCHAR(50) NOT NULL,
+          group_name VARCHAR(255) NOT NULL DEFAULT 'Default',
+          birthdate VARCHAR(10) NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create sms_logs table
+      await pool.request().query(`
+        CREATE TABLE sms_logs (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          sender_id VARCHAR(11) NOT NULL,
+          recipient VARCHAR(50) NOT NULL,
+          message NVARCHAR(MAX) NOT NULL,
+          credits INT NOT NULL DEFAULT 1,
+          status VARCHAR(50) NOT NULL DEFAULT 'pending',
+          sent_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create templates table
+      await pool.request().query(`
+        CREATE TABLE templates (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          name VARCHAR(255) NOT NULL,
+          content NVARCHAR(MAX) NOT NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create api_keys table
+      await pool.request().query(`
+        CREATE TABLE api_keys (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          key VARCHAR(255) UNIQUE NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create transactions table
+      await pool.request().query(`
+        CREATE TABLE transactions (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          type VARCHAR(50) NOT NULL,
+          amount INT NOT NULL,
+          balance_before INT NOT NULL,
+          balance_after INT NOT NULL,
+          description VARCHAR(255) NOT NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create birthday_campaigns table
+      await pool.request().query(`
+        CREATE TABLE birthday_campaigns (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          sender_id VARCHAR(11) NOT NULL,
+          target_group VARCHAR(255) NOT NULL,
+          dispatch_time VARCHAR(5) NOT NULL,
+          message_template NVARCHAR(MAX) NOT NULL,
+          is_active BIT NOT NULL DEFAULT 1,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create support_tickets table
+      await pool.request().query(`
+        CREATE TABLE support_tickets (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          subject VARCHAR(255) NOT NULL,
+          priority VARCHAR(50) NOT NULL,
+          description NVARCHAR(MAX) NOT NULL,
+          status VARCHAR(50) NOT NULL DEFAULT 'Open',
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create service_requests table
+      await pool.request().query(`
+        CREATE TABLE service_requests (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          service_type VARCHAR(255) NOT NULL,
+          rep_name VARCHAR(255) NOT NULL,
+          phone VARCHAR(50) NOT NULL,
+          description NVARCHAR(MAX) NOT NULL,
+          status VARCHAR(50) NOT NULL DEFAULT 'Reviewing',
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create voice_logs table
+      await pool.request().query(`
+        CREATE TABLE voice_logs (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT FOREIGN KEY REFERENCES users(id) ON DELETE CASCADE,
+          sender_id VARCHAR(15) NOT NULL,
+          recipient VARCHAR(50) NOT NULL,
+          audio_url VARCHAR(255) NULL,
+          tts_text NVARCHAR(MAX) NULL,
+          duration INT NOT NULL DEFAULT 0,
+          credits INT NOT NULL DEFAULT 1,
+          status VARCHAR(50) NOT NULL DEFAULT 'pending',
+          sent_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+
+      // Create audit_logs table
+      await pool.request().query(`
+        CREATE TABLE audit_logs (
+          id INT IDENTITY(1,1) PRIMARY KEY,
+          user_id INT NULL FOREIGN KEY REFERENCES users(id) ON DELETE SET NULL,
+          action VARCHAR(255) NOT NULL,
+          details NVARCHAR(MAX) NOT NULL,
+          ip_address VARCHAR(50) NULL,
+          created_at DATETIME2 NOT NULL DEFAULT GETDATE()
+        )
+      `);
+      
+      console.log("[Database] Database tables created. Creating production indexes...");
+      
+      // Indexes to optimize joins, filterings, and stats lookups
+      await pool.request().query("CREATE INDEX idx_users_parent ON users(parent_user_id)");
+      await pool.request().query("CREATE INDEX idx_contacts_user ON contacts(user_id)");
+      await pool.request().query("CREATE INDEX idx_contacts_group ON contacts(group_name)");
+      await pool.request().query("CREATE INDEX idx_sms_logs_user_sent ON sms_logs(user_id, sent_at DESC)");
+      await pool.request().query("CREATE INDEX idx_templates_user ON templates(user_id)");
+      await pool.request().query("CREATE INDEX idx_api_keys_user ON api_keys(user_id)");
+      await pool.request().query("CREATE INDEX idx_transactions_user ON transactions(user_id)");
+      await pool.request().query("CREATE INDEX idx_birthday_campaigns_user ON birthday_campaigns(user_id)");
+      await pool.request().query("CREATE INDEX idx_support_tickets_user ON support_tickets(user_id)");
+      await pool.request().query("CREATE INDEX idx_service_requests_user ON service_requests(user_id)");
+      await pool.request().query("CREATE INDEX idx_voice_logs_user ON voice_logs(user_id)");
+      await pool.request().query("CREATE INDEX idx_audit_logs_user ON audit_logs(user_id)");
+      await pool.request().query("CREATE INDEX idx_audit_logs_created ON audit_logs(created_at DESC)");
+      
+      console.log("[Database] Database tables and indexes initialized successfully.");
+    } else {
+      console.log("[Database] Database tables verified. Ready.");
+    }
   } catch (err) {
-    console.error('Failed to parse database file, starting clean.', err);
+    console.error("[Database] Failed to initialize database tables:", err);
   }
-} else {
-  saveDB();
 }
 
-function saveDB() {
+// Kick off connection and schema verification
+(async () => {
   try {
-    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
+    const pool = await poolPromise;
+    console.log("[Database] Connected successfully.");
+    await initializeDatabase(pool);
   } catch (err) {
-    console.error('Failed to save database state to file:', err);
+    console.error("[Database] Connection failed:", err);
   }
-}
+})();
 
-// Generate new ID for a table
-function getNextId(table) {
-  const list = data[table] || [];
-  if (list.length === 0) return 1;
-  return Math.max(...list.map(item => item.id)) + 1;
-}
-
-// Custom SQL statement router/executor
-export const queryRun = async (sql, params = []) => {
-  const sqlClean = sql.trim().replace(/\s+/g, ' ');
+/**
+ * Execute a query and return the first row (or null if empty)
+ */
+export async function queryGet(sqlStr, params = []) {
+  const pool = await poolPromise;
+  const request = pool.request();
+  let index = 0;
+  const convertedQuery = sqlStr.replace(/\?/g, () => {
+    const paramName = `p${index}`;
+    request.input(paramName, params[index]);
+    index++;
+    return `@${paramName}`;
+  });
   
-  // Transaction queries - ignore or mock
+  const result = await request.query(convertedQuery);
+  return result.recordset[0] || null;
+}
+
+/**
+ * Execute a query and return all matching rows
+ */
+export async function queryAll(sqlStr, params = []) {
+  const pool = await poolPromise;
+  const request = pool.request();
+  let index = 0;
+  const convertedQuery = sqlStr.replace(/\?/g, () => {
+    const paramName = `p${index}`;
+    request.input(paramName, params[index]);
+    index++;
+    return `@${paramName}`;
+  });
+  
+  const result = await request.query(convertedQuery);
+  return result.recordset;
+}
+
+/**
+ * Run an INSERT, UPDATE, or DELETE query.
+ * For INSERT, it returns { id: insertedId, changes: rowsAffected }
+ */
+export async function queryRun(sqlStr, params = []) {
+  const sqlClean = sqlStr.trim().replace(/\s+/g, ' ');
+  
+  // Transaction queries - ignore/mock to prevent connection pooling and transaction scoping issues
   if (/^(BEGIN|COMMIT|ROLLBACK)/i.test(sqlClean)) {
     return { id: 0, changes: 0 };
   }
 
-  // INSERT INTO users (email, password_hash[, is_admin]) VALUES (?, ?[, ?])
-  if (/^INSERT INTO users/i.test(sqlClean)) {
-    const [email, password_hash, is_admin] = params;
-    const newUser = {
-      id: getNextId('users'),
-      email,
-      password_hash,
-      is_admin: is_admin || false,
-      status: 'active',
-      balance: is_admin ? 0 : 100,
-      created_at: new Date().toISOString()
-    };
-    data.users.push(newUser);
-    saveDB();
-    return { id: newUser.id, changes: 1 };
+  const pool = await poolPromise;
+  const request = pool.request();
+  let index = 0;
+  let convertedQuery = sqlStr.replace(/\?/g, () => {
+    const paramName = `p${index}`;
+    request.input(paramName, params[index]);
+    index++;
+    return `@${paramName}`;
+  });
+
+  // For inserts, append SELECT SCOPE_IDENTITY() to fetch the generated identity key
+  const isInsert = /^\s*INSERT\s+INTO/i.test(convertedQuery);
+  if (isInsert) {
+    convertedQuery += '; SELECT SCOPE_IDENTITY() AS id;';
   }
+  
+  const result = await request.query(convertedQuery);
+  const insertId = result.recordset?.[0]?.id || null;
+  const rowsAffected = result.rowsAffected[0] || 0;
+  
+  return { 
+    id: insertId, 
+    changes: rowsAffected 
+  };
+}
 
-  // UPDATE users SET balance = balance - ? WHERE id = ?
-  // OR UPDATE users SET balance = balance + ? WHERE id = ?
-  if (/^UPDATE users SET balance = balance ([-+]) \? WHERE id = \?/i.test(sqlClean)) {
-    const match = sqlClean.match(/^UPDATE users SET balance = balance ([-+]) \? WHERE id = \?/i);
-    const operator = match[1];
-    const amount = Number(params[0]);
-    const userId = Number(params[1]);
-
-    const user = data.users.find(u => u.id === userId);
-    if (user) {
-      if (operator === '-') {
-        user.balance -= amount;
-      } else {
-        user.balance += amount;
-      }
-      saveDB();
-      return { id: userId, changes: 1 };
-    }
-    return { id: 0, changes: 0 };
-  }
-
-  // UPDATE users SET status = ? WHERE id = ?
-  if (/^UPDATE users SET status = \? WHERE id = \?/i.test(sqlClean)) {
-    const [status, id] = params;
-    const user = data.users.find(u => u.id === Number(id));
-    if (user) {
-      user.status = status;
-      saveDB();
-      return { id: Number(id), changes: 1 };
-    }
-    return { id: 0, changes: 0 };
-  }
-
-  // UPDATE users SET balance = ? WHERE id = ? (admin direct set)
-  if (/^UPDATE users SET balance = \? WHERE id = \?/i.test(sqlClean)) {
-    const [balance, id] = params;
-    const user = data.users.find(u => u.id === Number(id));
-    if (user) {
-      user.balance = Number(balance);
-      saveDB();
-      return { id: Number(id), changes: 1 };
-    }
-    return { id: 0, changes: 0 };
-  }
-
-  // DELETE FROM users WHERE id = ?
-  if (/^DELETE FROM users WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const initialLength = data.users.length;
-    data.users = data.users.filter(u => u.id !== id);
-    if (data.users.length !== initialLength) {
-      saveDB();
-      return { id, changes: 1 };
-    }
-    return { id, changes: 0 };
-  }
-
-  // INSERT INTO contacts (user_id, name, phone, group_name) VALUES (?, ?, ?, ?)
-  if (/^INSERT INTO contacts/i.test(sqlClean)) {
-    const [user_id, name, phone, group_name] = params;
-    const newContact = {
-      id: getNextId('contacts'),
-      user_id: Number(user_id),
-      name,
-      phone,
-      group_name: group_name || 'Default',
-      created_at: new Date().toISOString()
-    };
-    data.contacts.push(newContact);
-    saveDB();
-    return { id: newContact.id, changes: 1 };
-  }
-
-  // DELETE FROM contacts WHERE id = ?
-  if (/^DELETE FROM contacts WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const initialLength = data.contacts.length;
-    data.contacts = data.contacts.filter(c => c.id !== id);
-    if (data.contacts.length !== initialLength) {
-      saveDB();
-      return { id, changes: 1 };
-    }
-    return { id, changes: 0 };
-  }
-
-  // INSERT INTO sms_logs (user_id, sender_id, recipient, message, credits, status) VALUES (?, ?, ?, ?, ?, 'pending')
-  if (/^INSERT INTO sms_logs/i.test(sqlClean)) {
-    const [user_id, sender_id, recipient, message, credits, status] = params;
-    const newLog = {
-      id: getNextId('sms_logs'),
-      user_id: Number(user_id),
-      sender_id,
-      recipient,
-      message,
-      credits: Number(credits || 1),
-      status: status || 'pending',
-      sent_at: new Date().toISOString()
-    };
-    data.sms_logs.push(newLog);
-    saveDB();
-    return { id: newLog.id, changes: 1 };
-  }
-
-  // UPDATE sms_logs SET status = ? WHERE id = ?
-  if (/^UPDATE sms_logs SET status = \? WHERE id = \?/i.test(sqlClean)) {
-    const [status, id] = params;
-    const log = data.sms_logs.find(l => l.id === Number(id));
-    if (log) {
-      log.status = status;
-      saveDB();
-      return { id: Number(id), changes: 1 };
-    }
-    return { id: 0, changes: 0 };
-  }
-
-  // INSERT INTO templates (user_id, name, content) VALUES (?, ?, ?)
-  if (/^INSERT INTO templates/i.test(sqlClean)) {
-    const [user_id, name, content] = params;
-    const newTemplate = {
-      id: getNextId('templates'),
-      user_id: Number(user_id),
-      name,
-      content,
-      created_at: new Date().toISOString()
-    };
-    data.templates.push(newTemplate);
-    saveDB();
-    return { id: newTemplate.id, changes: 1 };
-  }
-
-  // DELETE FROM templates WHERE id = ?
-  if (/^DELETE FROM templates WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const initialLength = data.templates.length;
-    data.templates = data.templates.filter(t => t.id !== id);
-    if (data.templates.length !== initialLength) {
-      saveDB();
-      return { id, changes: 1 };
-    }
-    return { id, changes: 0 };
-  }
-
-  // INSERT INTO api_keys (user_id, key, name) VALUES (?, ?, ?)
-  if (/^INSERT INTO api_keys/i.test(sqlClean)) {
-    const [user_id, key, name] = params;
-    const newKey = {
-      id: getNextId('api_keys'),
-      user_id: Number(user_id),
-      key,
-      name,
-      created_at: new Date().toISOString()
-    };
-    data.api_keys.push(newKey);
-    saveDB();
-    return { id: newKey.id, changes: 1 };
-  }
-
-  // DELETE FROM api_keys WHERE id = ?
-  if (/^DELETE FROM api_keys WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const initialLength = data.api_keys.length;
-    data.api_keys = data.api_keys.filter(k => k.id !== id);
-    if (data.api_keys.length !== initialLength) {
-      saveDB();
-      return { id, changes: 1 };
-    }
-    return { id, changes: 0 };
-  }
-
-  // INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)
-  if (/^INSERT INTO transactions/i.test(sqlClean)) {
-    const [user_id, type, amount, balance_before, balance_after, description] = params;
-    const newTx = {
-      id: getNextId('transactions'),
-      user_id: Number(user_id),
-      type,
-      amount: Number(amount),
-      balance_before: Number(balance_before),
-      balance_after: Number(balance_after),
-      description,
-      created_at: new Date().toISOString()
-    };
-    data.transactions.push(newTx);
-    saveDB();
-    return { id: newTx.id, changes: 1 };
-  }
-
-  console.warn('Unhandled queryRun statement:', sqlClean);
-  return { id: 0, changes: 0 };
-};
-
-export const queryGet = async (sql, params = []) => {
-  const sqlClean = sql.trim().replace(/\s+/g, ' ');
-
-  // SELECT id FROM users WHERE email = ?
-  if (/^SELECT id FROM users WHERE email = \?/i.test(sqlClean)) {
-    const email = params[0]?.toLowerCase();
-    const user = data.users.find(u => u.email.toLowerCase() === email);
-    return user ? { id: user.id } : null;
-  }
-
-  // SELECT * FROM users WHERE email = ?
-  if (/^SELECT \* FROM users WHERE email = \?/i.test(sqlClean)) {
-    const email = params[0]?.toLowerCase();
-    const user = data.users.find(u => u.email.toLowerCase() === email);
-    return user || null;
-  }
-
-  // SELECT id, email, balance FROM users WHERE id = ?
-  if (/^SELECT id, email, balance FROM users WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const user = data.users.find(u => u.id === id);
-    return user ? { id: user.id, email: user.email, balance: user.balance } : null;
-  }
-
-  // SELECT id FROM contacts WHERE id = ? AND user_id = ?
-  if (/^SELECT id FROM contacts WHERE id = \? AND user_id = \?/i.test(sqlClean)) {
-    const [id, user_id] = params.map(Number);
-    const contact = data.contacts.find(c => c.id === id && c.user_id === user_id);
-    return contact ? { id: contact.id } : null;
-  }
-
-  // SELECT id FROM templates WHERE id = ? AND user_id = ?
-  if (/^SELECT id FROM templates WHERE id = \? AND user_id = \?/i.test(sqlClean)) {
-    const [id, user_id] = params.map(Number);
-    const template = data.templates.find(t => t.id === id && t.user_id === user_id);
-    return template ? { id: template.id } : null;
-  }
-
-  // SELECT id FROM api_keys WHERE id = ? AND user_id = ?
-  if (/^SELECT id FROM api_keys WHERE id = \? AND user_id = \?/i.test(sqlClean)) {
-    const [id, user_id] = params.map(Number);
-    const key = data.api_keys.find(k => k.id === id && k.user_id === user_id);
-    return key ? { id: key.id } : null;
-  }
-
-  // SELECT user_id FROM api_keys WHERE key = ?
-  if (/^SELECT user_id FROM api_keys WHERE key = \?/i.test(sqlClean)) {
-    const key = params[0];
-    const keyData = data.api_keys.find(k => k.key === key);
-    return keyData ? { user_id: keyData.user_id } : null;
-  }
-
-  // SELECT balance FROM users WHERE id = ?
-  if (/^SELECT balance FROM users WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const user = data.users.find(u => u.id === id);
-    return user ? { balance: user.balance } : null;
-  }
-
-  // SELECT id, status FROM users WHERE id = ? (auth middleware check)
-  if (/^SELECT id, status FROM users WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const user = data.users.find(u => u.id === id);
-    return user ? { id: user.id, status: user.status } : null;
-  }
-
-  // SELECT * FROM users WHERE id = ? (admin full user detail)
-  if (/^SELECT \* FROM users WHERE id = \?/i.test(sqlClean)) {
-    const id = Number(params[0]);
-    const user = data.users.find(u => u.id === id);
-    return user || null;
-  }
-
-  console.warn('Unhandled queryGet statement:', sqlClean);
-  return null;
-};
-
-export const queryAll = async (sql, params = []) => {
-  const sqlClean = sql.trim().replace(/\s+/g, ' ');
-
-  // SELECT * FROM contacts WHERE user_id = ? ORDER BY group_name, name
-  if (/^SELECT \* FROM contacts WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const list = data.contacts.filter(c => c.user_id === userId);
-    list.sort((a, b) => {
-      const gComp = a.group_name.localeCompare(b.group_name);
-      if (gComp !== 0) return gComp;
-      return a.name.localeCompare(b.name);
-    });
-    return list;
-  }
-
-  // SELECT name, phone FROM contacts WHERE user_id = ?
-  if (/^SELECT name, phone FROM contacts WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    return data.contacts
-      .filter(c => c.user_id === userId)
-      .map(c => ({ name: c.name, phone: c.phone }));
-  }
-
-  // SELECT status, COUNT(*) as count, SUM(credits) as total_credits FROM sms_logs WHERE user_id = ? GROUP BY status
-  if (/^SELECT status, COUNT\(\*\) as count, SUM\(credits\) as total_credits FROM sms_logs WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const userLogs = data.sms_logs.filter(l => l.user_id === userId);
-    
-    const groups = {};
-    userLogs.forEach(l => {
-      if (!groups[l.status]) {
-        groups[l.status] = { status: l.status, count: 0, total_credits: 0 };
-      }
-      groups[l.status].count++;
-      groups[l.status].total_credits += l.credits;
-    });
-    
-    return Object.values(groups);
-  }
-
-  // SELECT DATE(sent_at) as date, COUNT(*) as count, SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END) as delivered FROM sms_logs WHERE user_id = ? AND sent_at >= datetime('now', '-7 days') GROUP BY DATE(sent_at) ORDER BY date ASC
-  // Custom simple parser for last 7 days chart data
-  if (/^SELECT DATE\(sent_at\) as date, COUNT\(\*\) as count/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const userLogs = data.sms_logs.filter(l => {
-      if (l.user_id !== userId) return false;
-      const sentTime = new Date(l.sent_at);
-      return sentTime >= sevenDaysAgo;
-    });
-
-    const datesMap = {};
-    // Pre-populate last 7 days to make chart look complete
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      datesMap[dateStr] = { date: dateStr, count: 0, delivered: 0 };
-    }
-
-    userLogs.forEach(l => {
-      const dateStr = l.sent_at.split('T')[0];
-      if (datesMap[dateStr]) {
-        datesMap[dateStr].count++;
-        if (l.status === 'sent') {
-          datesMap[dateStr].delivered++;
-        }
-      }
-    });
-
-    return Object.values(datesMap).sort((a, b) => a.date.localeCompare(b.date));
-  }
-
-  // SELECT * FROM sms_logs WHERE user_id = ? ORDER BY sent_at DESC LIMIT 100
-  if (/^SELECT \* FROM sms_logs WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const list = data.sms_logs.filter(l => l.user_id === userId);
-    list.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
-    return list.slice(0, 100);
-  }
-
-  // SELECT * FROM templates WHERE user_id = ? ORDER BY name ASC
-  if (/^SELECT \* FROM templates WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const list = data.templates.filter(t => t.user_id === userId);
-    list.sort((a, b) => a.name.localeCompare(b.name));
-    return list;
-  }
-
-  // SELECT id, name, key, created_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC
-  if (/^SELECT id, name, key, created_at FROM api_keys WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const list = data.api_keys.filter(k => k.user_id === userId);
-    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    return list.map(k => ({
-      id: k.id,
-      name: k.name,
-      key: k.key,
-      created_at: k.created_at
-    }));
-  }
-
-  // SELECT * FROM users ORDER BY created_at DESC (admin list all users)
-  if (/^SELECT \* FROM users ORDER BY created_at DESC/i.test(sqlClean)) {
-    const list = [...data.users];
-    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    return list;
-  }
-
-  // SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC
-  if (/^SELECT \* FROM transactions WHERE user_id = \?/i.test(sqlClean)) {
-    const userId = Number(params[0]);
-    const list = data.transactions.filter(t => t.user_id === userId);
-    list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    return list;
-  }
-
-  console.warn('Unhandled queryAll statement:', sqlClean);
-  return [];
-};
-
-// Admin cascade delete: removes user and all related data
-export const deleteUserCascade = (userId) => {
+/**
+ * Cascade deletes a user (manually cascading to self-referencing child accounts to prevent SQL Server cycle restrictions, and letting ON DELETE CASCADE handle other tables)
+ */
+export async function deleteUserCascade(userId) {
   const id = Number(userId);
-  data.contacts = data.contacts.filter(c => c.user_id !== id);
-  data.sms_logs = data.sms_logs.filter(l => l.user_id !== id);
-  data.templates = data.templates.filter(t => t.user_id !== id);
-  data.api_keys = data.api_keys.filter(k => k.user_id !== id);
-  const initialLength = data.users.length;
-  data.users = data.users.filter(u => u.id !== id);
-  if (data.users.length !== initialLength) {
-    saveDB();
-    return { changes: 1 };
+  // Manually delete child coworkers first
+  await queryRun('DELETE FROM users WHERE parent_user_id = ?', [id]);
+  const result = await queryRun('DELETE FROM users WHERE id = ?', [id]);
+  return { changes: result.changes };
+}
+
+/**
+ * Log an event to the audit_logs table for administrative auditing
+ */
+export async function logAuditEvent(userId, action, details, ipAddress = null) {
+  try {
+    await queryRun(
+      `INSERT INTO audit_logs (user_id, action, details, ip_address) 
+       VALUES (?, ?, ?, ?)`,
+      [userId || null, action, typeof details === 'object' ? JSON.stringify(details) : details, ipAddress]
+    );
+  } catch (err) {
+    console.error('[Database] Failed to write audit log event:', err);
   }
-  return { changes: 0 };
+}
+
+const db = {
+  data: {
+    users: [],
+    contacts: [],
+    sms_logs: [],
+    templates: [],
+    api_keys: [],
+    transactions: []
+  }
 };
 
-const db = { data };
 export default db;

@@ -10,6 +10,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheet -->
   <link rel="stylesheet" href="/css/landing.css">
+  <!-- Scroll animations -->
+  <script src="/js/landing-animations.js" defer></script>
 </head>
 <body>
 
@@ -38,7 +40,7 @@
 
   <!-- Hero Section -->
   <section class="sect-l" style="padding-top: 150px; background: radial-gradient(circle at 10% 20%, rgba(168, 85, 247, 0.08) 0%, transparent 50%), var(--bg-light);">
-    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;" class="reveal reveal-scale">
       <span class="sect-tag-l">ENGINEERING SERVICES</span>
       <h1 style="font-family:var(--font-heading); font-size:3.5rem; font-weight:800; color:var(--text-dark); margin-bottom:20px; line-height:1.1;">Custom Software Engineering</h1>
       <p style="font-size:1.15rem; color:var(--text-slate); max-width:700px; margin: 0 auto 36px; line-height:1.6;">Build scalable applications, modern SaaS consoles, and responsive mobile systems tailored exactly to your business logic. We convert complex requirements into robust code bases.</p>
@@ -49,26 +51,26 @@
 
   <!-- Services Detail -->
   <section class="sect-l sect-l-offset">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <h2 class="sect-title-l">Our Development Expertise</h2>
       <p class="sect-subtitle-l">We design, build, and deploy production-grade software using modern architectures.</p>
     </div>
 
     <div class="api-grid-l" style="max-width: 1100px;">
       <!-- Service Card 1 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="0">
         <h3 class="api-card-title-l">Web App Development</h3>
         <p class="api-card-desc-l" style="font-size:0.85rem;">Single Page Apps (SPAs) and Progressive Web Apps built with premium frontend architectures, responsive grid layouts, and high-performance caching layers.</p>
       </div>
 
       <!-- Service Card 2 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="100">
         <h3 class="api-card-title-l">Mobile Applications</h3>
         <p class="api-card-desc-l" style="font-size:0.85rem;">Native and cross-platform mobile apps for iOS and Android, focusing on fluid user interfaces, native utility features, and smooth offline performance.</p>
       </div>
 
       <!-- Service Card 3 -->
-      <div class="api-card-l">
+      <div class="api-card-l reveal reveal-scale" data-delay="200">
         <h3 class="api-card-title-l">SaaS Product Engineering</h3>
         <p class="api-card-desc-l" style="font-size:0.85rem;">Multi-tenant cloud architectures featuring role access gates, secure subscription billing, real-time activity metrics, and transactional database backups.</p>
       </div>
@@ -77,28 +79,28 @@
 
   <!-- Workflow Section -->
   <section class="sect-l" id="workflow">
-    <div class="sect-header-l">
+    <div class="sect-header-l reveal">
       <span class="sect-tag-l">DEVELOPMENT WORKFLOW</span>
       <h2 class="sect-title-l">How We Turn Ideas into Code</h2>
     </div>
 
     <div class="api-grid-l" style="max-width:1100px; grid-template-columns: repeat(4, 1fr);">
-      <div style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
+      <div class="reveal reveal-scale" data-delay="0" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
         <div style="font-size:1.5rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin-bottom:8px;">01</div>
         <strong style="color:var(--text-dark); display:block; font-size:0.95rem; margin-bottom:8px;">Discover & Plan</strong>
         <span style="color:var(--text-muted); font-size:0.8rem; line-height:1.5; display:block;">Map functional requirements, database dependencies, and UI flowcharts before writing code.</span>
       </div>
-      <div style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
+      <div class="reveal reveal-scale" data-delay="100" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
         <div style="font-size:1.5rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin-bottom:8px;">02</div>
         <strong style="color:var(--text-dark); display:block; font-size:0.95rem; margin-bottom:8px;">Design & Prototype</strong>
         <span style="color:var(--text-muted); font-size:0.8rem; line-height:1.5; display:block;">Create high-fidelity visual mockups and interactive wireframes to verify design layouts.</span>
       </div>
-      <div style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
+      <div class="reveal reveal-scale" data-delay="200" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
         <div style="font-size:1.5rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin-bottom:8px;">03</div>
         <strong style="color:var(--text-dark); display:block; font-size:0.95rem; margin-bottom:8px;">Build & Refine</strong>
         <span style="color:var(--text-muted); font-size:0.8rem; line-height:1.5; display:block;">Write clean, commented, and modular codebase modules backed by comprehensive unit tests.</span>
       </div>
-      <div style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
+      <div class="reveal reveal-scale" data-delay="300" style="background:var(--bg-offset); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--border-radius-md);">
         <div style="font-size:1.5rem; font-weight:800; color:var(--accent-purple); font-family:var(--font-heading); margin-bottom:8px;">04</div>
         <strong style="color:var(--text-dark); display:block; font-size:0.95rem; margin-bottom:8px;">Deploy & Scale</strong>
         <span style="color:var(--text-muted); font-size:0.8rem; line-height:1.5; display:block;">Ship to cloud hosting networks, configure auto-scaling, and monitor metrics in watch mode.</span>
@@ -108,12 +110,12 @@
 
   <!-- Intake Project brief Form -->
   <section class="sect-l sect-l-offset" id="consult-form">
-    <div class="sect-header-l" style="margin-bottom:30px;">
+    <div class="sect-header-l reveal" style="margin-bottom:30px;">
       <h2 class="sect-title-l" style="text-align:center;">Discuss Your Project</h2>
       <p class="sect-subtitle-l">Tell us about your technical requirements and our engineering team will outline a solution timeline.</p>
     </div>
 
-    <div class="contact-container" style="background:#ffffff; border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); max-width: 600px; margin: 0 auto; box-shadow: var(--shadow-lg);">
+    <div class="contact-container reveal reveal-scale" style="background:#ffffff; border: 1px solid var(--border-color); padding: 40px; border-radius: var(--border-radius-lg); max-width: 600px; margin: 0 auto; box-shadow: var(--shadow-lg);">
       <form id="project-brief-form">
         <div class="form-group">
           <label>Company Name</label>

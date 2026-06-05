@@ -1,16 +1,24 @@
 import express from 'express';
 import crypto from 'crypto';
 import { queryGet, queryAll, queryRun } from '../db.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { createRateLimiter } from '../middleware/rateLimiter.js';
+
+const apiRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP or API key to 100 requests per windowMs
+  message: 'Too many requests to Bztel API, please wait 15 minutes.'
+});
 
 const router = express.Router();
 
 // Get active API keys
 router.get('/keys', authenticateToken, async (req, res) => {
+  const ownerId = req.user.owner_id;
   try {
     const keys = await queryAll(
       'SELECT id, name, key, created_at FROM api_keys WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]
+      [ownerId]
     );
     // Mask API keys for safety before returning
     const maskedKeys = keys.map(k => ({
@@ -24,20 +32,21 @@ router.get('/keys', authenticateToken, async (req, res) => {
   }
 });
 
-// Generate new API key
-router.post('/keys', authenticateToken, async (req, res) => {
+// Generate new API key (Owners & Administrators only)
+router.post('/keys', authenticateToken, requireRole(['Owner', 'Administrator']), async (req, res) => {
   const { name } = req.body;
+  const ownerId = req.user.owner_id;
+
   if (!name) {
     return res.status(400).json({ error: 'API key name is required' });
   }
 
-  // Generate secure token: bztel_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   const secureKey = 'bztel_live_' + crypto.randomBytes(20).toString('hex');
 
   try {
     const result = await queryRun(
       'INSERT INTO api_keys (user_id, key, name) VALUES (?, ?, ?)',
-      [req.user.id, secureKey, name.trim()]
+      [ownerId, secureKey, name.trim()]
     );
 
     res.status(201).json({
@@ -55,12 +64,13 @@ router.post('/keys', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete/Revoke API key
-router.delete('/keys/:id', authenticateToken, async (req, res) => {
+// Delete/Revoke API key (Owners & Administrators only)
+router.delete('/keys/:id', authenticateToken, requireRole(['Owner', 'Administrator']), async (req, res) => {
   const { id } = req.params;
+  const ownerId = req.user.owner_id;
 
   try {
-    const keyExists = await queryGet('SELECT id FROM api_keys WHERE id = ? AND user_id = ?', [id, req.user.id]);
+    const keyExists = await queryGet('SELECT id FROM api_keys WHERE id = ? AND user_id = ?', [id, ownerId]);
     if (!keyExists) {
       return res.status(404).json({ error: 'API key not found' });
     }
@@ -74,8 +84,7 @@ router.delete('/keys/:id', authenticateToken, async (req, res) => {
 });
 
 /* PUBLIC API ENDPOINT FOR SMS SENDING */
-// This allows developers to integrate bulk SMS using their generated keys
-router.post('/v1/sms/send', async (req, res) => {
+router.post('/v1/sms/send', apiRateLimiter, async (req, res) => {
   const authHeader = req.headers['authorization'];
   const apiKey = authHeader && authHeader.split(' ')[1]; // Bearer bztel_live_xxx
 
@@ -84,13 +93,12 @@ router.post('/v1/sms/send', async (req, res) => {
   }
 
   try {
-    // Find key in database
     const keyData = await queryGet('SELECT user_id FROM api_keys WHERE key = ?', [apiKey]);
     if (!keyData) {
       return res.status(403).json({ error: 'Invalid API key' });
     }
 
-    const userId = keyData.user_id;
+    const userId = keyData.user_id; // This is the owner's ID
     const { senderId, recipients, message } = req.body;
 
     if (!senderId || !recipients || !message) {
@@ -100,7 +108,6 @@ router.post('/v1/sms/send', async (req, res) => {
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
     const rawMessage = message.trim();
 
-    // Parse recipients
     let recipientList = [];
     if (Array.isArray(recipients)) {
       recipientList = recipients;
@@ -112,11 +119,9 @@ router.post('/v1/sms/send', async (req, res) => {
       return res.status(400).json({ error: 'Recipients list is empty' });
     }
 
-    // Credits count
     const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
     const totalCreditsNeeded = creditsPerMessage * recipientList.length;
 
-    // Check balance
     const user = await queryGet('SELECT balance FROM users WHERE id = ?', [userId]);
     if (!user) {
       return res.status(404).json({ error: 'User associated with key not found' });
@@ -128,10 +133,18 @@ router.post('/v1/sms/send', async (req, res) => {
       });
     }
 
-    // Deduct credits
     await queryRun('UPDATE users SET balance = balance - ? WHERE id = ?', [totalCreditsNeeded, userId]);
 
-    // Insert pending logs
+    // Log transaction
+    await queryRun(
+      'INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        userId, 'sms_debit', -totalCreditsNeeded,
+        user.balance, user.balance - totalCreditsNeeded,
+        `Public API SMS Broadcast \u2014 ${recipientList.length} recipients via ${cleanSenderId}`
+      ]
+    );
+
     const logIds = [];
     await queryRun('BEGIN TRANSACTION');
     for (const phone of recipientList) {
@@ -144,7 +157,6 @@ router.post('/v1/sms/send', async (req, res) => {
     }
     await queryRun('COMMIT');
 
-    // Simulate async delivery
     setTimeout(async () => {
       try {
         await queryRun('BEGIN TRANSACTION');

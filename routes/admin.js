@@ -1,6 +1,5 @@
 import express from 'express';
-import { queryGet, queryAll, queryRun, deleteUserCascade } from '../db.js';
-import db from '../db.js';
+import { queryGet, queryAll, queryRun, deleteUserCascade, logAuditEvent } from '../db.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -8,35 +7,34 @@ const router = express.Router();
 // All admin routes require a valid JWT AND admin flag
 router.use(authenticateToken, requireAdmin);
 
-// ─── Helper: compute SMS stats for a user ───────────────────────────────────
-function getUserSMSStats(userId) {
-  const id = Number(userId);
-  const logs = db.data.sms_logs.filter(l => l.user_id === id);
-  let sent = 0, failed = 0, pending = 0, credits_used = 0;
-  logs.forEach(l => {
-    if (l.status === 'sent') { sent++; credits_used += l.credits || 0; }
-    else if (l.status === 'failed') { failed++; }
-    else if (l.status === 'pending') { pending++; credits_used += l.credits || 0; }
-  });
-  return { total_sent: sent, total_failed: failed, total_pending: pending, credits_used };
-}
-
 // ─── GET /api/admin/users ─────────────────────────────────────────────────────
 // Returns all non-admin customers with their SMS stats
 router.get('/users', async (req, res) => {
   try {
-    const allUsers = await queryAll('SELECT * FROM users ORDER BY created_at DESC', []);
-    const customers = allUsers
-      .filter(u => !u.is_admin)
-      .map(u => {
-        const { password_hash, ...safe } = u;
-        return { ...safe, ...getUserSMSStats(u.id) };
-      });
+    // Get non-admin customers with their aggregated SMS stats in a single JOIN query.
+    // This is clean, fast, and fully SQL Server/Azure SQL compliant.
+    const customers = await queryAll(`
+      SELECT 
+        u.id, u.email, u.status, u.balance, u.created_at, u.is_admin,
+        COALESCE(SUM(CASE WHEN l.status = 'sent' THEN 1 ELSE 0 END), 0) as total_sent,
+        COALESCE(SUM(CASE WHEN l.status = 'failed' THEN 1 ELSE 0 END), 0) as total_failed,
+        COALESCE(SUM(CASE WHEN l.status = 'pending' THEN 1 ELSE 0 END), 0) as total_pending,
+        COALESCE(SUM(CASE WHEN l.status IN ('sent', 'pending') THEN l.credits ELSE 0 END), 0) as credits_used
+      FROM users u
+      LEFT JOIN sms_logs l ON u.id = l.user_id
+      WHERE u.is_admin = 0
+      GROUP BY u.id, u.email, u.status, u.balance, u.created_at, u.is_admin
+      ORDER BY u.created_at DESC
+    `, []);
 
     // Platform-wide totals (also useful for admin dashboard stats)
-    const totalSent = db.data.sms_logs.filter(l => l.status === 'sent').length;
-    const totalPending = db.data.sms_logs.filter(l => l.status === 'pending').length;
-    const totalFailed = db.data.sms_logs.filter(l => l.status === 'failed').length;
+    const totals = await queryGet(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END), 0) as total_sent,
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as total_pending,
+        COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as total_failed
+      FROM sms_logs
+    `, []);
 
     res.json({
       customers,
@@ -44,9 +42,9 @@ router.get('/users', async (req, res) => {
         total_customers: customers.length,
         active: customers.filter(u => u.status === 'active').length,
         suspended: customers.filter(u => u.status === 'suspended').length,
-        total_sms_sent: totalSent,
-        total_sms_pending: totalPending,
-        total_sms_failed: totalFailed
+        total_sms_sent: totals.total_sent,
+        total_sms_pending: totals.total_pending,
+        total_sms_failed: totals.total_failed
       }
     });
   } catch (error) {
@@ -64,13 +62,30 @@ router.get('/users/:id', async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
     const { password_hash, ...safe } = user;
-    const stats = getUserSMSStats(user.id);
-    const recentLogs = db.data.sms_logs
-      .filter(l => l.user_id === user.id)
-      .sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at))
-      .slice(0, 20);
 
-    res.json({ customer: { ...safe, ...stats }, recent_logs: recentLogs });
+    // Get SMS stats for this user
+    const stats = await queryGet(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END), 0) as total_sent,
+        COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as total_failed,
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) as total_pending,
+        COALESCE(SUM(CASE WHEN status IN ('sent', 'pending') THEN credits ELSE 0 END), 0) as credits_used
+      FROM sms_logs
+      WHERE user_id = ?
+    `, [user.id]);
+
+    // Get top 20 recent logs for this user using SQL Server OFFSET-FETCH syntax
+    const recentLogs = await queryAll(`
+      SELECT * FROM sms_logs 
+      WHERE user_id = ? 
+      ORDER BY sent_at DESC 
+      OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY
+    `, [user.id]);
+
+    res.json({ 
+      customer: { ...safe, ...stats }, 
+      recent_logs: recentLogs 
+    });
   } catch (error) {
     console.error('Admin get user error:', error);
     res.status(500).json({ error: 'Failed to fetch customer' });
@@ -109,6 +124,16 @@ router.post('/users/:id/credits', async (req, res) => {
     );
 
     const action = adj >= 0 ? 'added' : 'deducted';
+    
+    // Audit Log
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    await logAuditEvent(
+      req.user.id, 
+      'ADMIN_CREDIT_ADJUSTMENT', 
+      `Admin adjusted user ID ${userId} balance by ${adj}. New balance: ${newBalance}`, 
+      clientIp
+    );
+
     res.json({
       message: `Successfully ${action} ${Math.abs(adj)} credits.`,
       new_balance: newBalance
@@ -137,6 +162,15 @@ router.patch('/users/:id/status', async (req, res) => {
 
     await queryRun('UPDATE users SET status = ? WHERE id = ?', [status, userId]);
 
+    // Audit Log
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    await logAuditEvent(
+      req.user.id,
+      status === 'suspended' ? 'ADMIN_USER_SUSPEND' : 'ADMIN_USER_REACTIVATE',
+      `Admin updated user ID ${userId} status to ${status}`,
+      clientIp
+    );
+
     res.json({
       message: `Account ${status === 'suspended' ? 'suspended' : 'reactivated'} successfully.`,
       status
@@ -158,10 +192,20 @@ router.delete('/users/:id', async (req, res) => {
       return res.status(404).json({ error: 'Customer not found' });
     }
 
-    const result = deleteUserCascade(userId);
+    // Await the cascade delete operation in database
+    const result = await deleteUserCascade(userId);
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Customer not found' });
     }
+
+    // Audit Log
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    await logAuditEvent(
+      req.user.id,
+      'ADMIN_USER_DELETE',
+      `Admin permanently deleted user ID ${userId} (${user.email}) and all their data`,
+      clientIp
+    );
 
     res.json({ message: `Customer ${user.email} and all their data deleted successfully.` });
   } catch (error) {

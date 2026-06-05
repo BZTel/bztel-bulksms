@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
@@ -15,6 +16,10 @@ import contactsRoutes from './routes/contacts.js';
 import apiRoutes from './routes/api.js';
 import adminRoutes from './routes/admin.js';
 import billingRoutes from './routes/billing.js';
+import teamsRoutes from './routes/teams.js';
+import birthdayRoutes from './routes/birthday.js';
+import supportRoutes from './routes/support.js';
+import voiceRoutes from './routes/voice.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,6 +28,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+// Enforce HTTPS redirection in production environment (e.g., Azure App Services)
+app.use((req, res, next) => {
+  if (req.headers['x-forwarded-proto'] !== 'https' && process.env.NODE_ENV === 'production') {
+    return res.redirect(`https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,6 +50,10 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api', apiRoutes);         // API keys & public endpoints
 app.use('/api/admin', adminRoutes); // Admin management endpoints
 app.use('/api/billing', billingRoutes); // Wallet & transaction history
+app.use('/api/teams', teamsRoutes);
+app.use('/api/birthday', birthdayRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/voice', voiceRoutes);
 
 // Marketing subpages routing
 app.get('/bulk-sms', (req, res) => {

@@ -6,10 +6,11 @@ const router = express.Router();
 
 // GET /api/billing/transactions — returns full transaction history + summary
 router.get('/transactions', authenticateToken, async (req, res) => {
+  const ownerId = req.user.owner_id;
   try {
     const transactions = await queryAll(
       'SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC',
-      [req.user.id]
+      [ownerId]
     );
 
     let total_credited = 0;

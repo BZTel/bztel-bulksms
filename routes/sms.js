@@ -1,13 +1,14 @@
 import express from 'express';
 import { queryGet, queryAll, queryRun } from '../db.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get SMS stats for dashboard
+// Get SMS stats for dashboard (uses owner_id for team shared wallet stats)
 router.get('/stats', authenticateToken, async (req, res) => {
+  const ownerId = req.user.owner_id;
   try {
-    const user = await queryGet('SELECT balance FROM users WHERE id = ?', [req.user.id]);
+    const user = await queryGet('SELECT balance FROM users WHERE id = ?', [ownerId]);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -17,7 +18,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
        FROM sms_logs 
        WHERE user_id = ? 
        GROUP BY status`,
-      [req.user.id]
+      [ownerId]
     );
 
     let sent = 0, failed = 0, pending = 0, totalCreditsUsed = 0;
@@ -29,18 +30,18 @@ router.get('/stats', authenticateToken, async (req, res) => {
         failed = c.count;
       } else if (c.status === 'pending') {
         pending = c.count;
-        totalCreditsUsed += c.total_credits || 0; // Count pending as used credits
+        totalCreditsUsed += c.total_credits || 0;
       }
     });
 
     // Get daily stats for chart (last 7 days)
     const chartData = await queryAll(
-      `SELECT DATE(sent_at) as date, COUNT(*) as count, SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END) as delivered
+      `SELECT CONVERT(varchar(10), sent_at, 120) as date, COUNT(*) as count, SUM(CASE WHEN status='sent' THEN 1 ELSE 0 END) as delivered
        FROM sms_logs 
-       WHERE user_id = ? AND sent_at >= datetime('now', '-7 days')
-       GROUP BY DATE(sent_at)
+       WHERE user_id = ? AND sent_at >= DATEADD(day, -7, GETDATE())
+       GROUP BY CONVERT(varchar(10), sent_at, 120)
        ORDER BY date ASC`,
-      [req.user.id]
+      [ownerId]
     );
 
     res.json({
@@ -59,10 +60,11 @@ router.get('/stats', authenticateToken, async (req, res) => {
 
 // Get SMS sending logs/history
 router.get('/history', authenticateToken, async (req, res) => {
+  const ownerId = req.user.owner_id;
   try {
     const history = await queryAll(
-      'SELECT * FROM sms_logs WHERE user_id = ? ORDER BY sent_at DESC LIMIT 100',
-      [req.user.id]
+      'SELECT TOP 100 * FROM sms_logs WHERE user_id = ? ORDER BY sent_at DESC',
+      [ownerId]
     );
     res.json({ history });
   } catch (error) {
@@ -71,19 +73,18 @@ router.get('/history', authenticateToken, async (req, res) => {
   }
 });
 
-// Send SMS API (Simulated Gateway)
-router.post('/send', authenticateToken, async (req, res) => {
+// Send SMS API (Simulated Gateway) - Dispatchers/Marketers/Owners/Admins only
+router.post('/send', authenticateToken, requireRole(['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent']), async (req, res) => {
   const { senderId, recipients, message } = req.body;
-  // recipients: array of phone numbers or string with comma-separated values
+  const ownerId = req.user.owner_id;
 
   if (!senderId || !recipients || !message) {
     return res.status(400).json({ error: 'Sender ID, Recipients, and Message are required' });
   }
 
-  const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase(); // GSM limit 11 characters
+  const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
   const rawMessage = message.trim();
 
-  // Normalize recipients to array
   let recipientList = [];
   if (Array.isArray(recipients)) {
     recipientList = recipients;
@@ -95,35 +96,34 @@ router.post('/send', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'Recipients list is empty' });
   }
 
-  // Calculate credits per SMS page (160 characters per GSM page)
   const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
   const totalCreditsNeeded = creditsPerMessage * recipientList.length;
 
   try {
-    // Check balance
-    const user = await queryGet('SELECT balance FROM users WHERE id = ?', [req.user.id]);
+    // Check balance of the owner (shared wallet)
+    const user = await queryGet('SELECT balance FROM users WHERE id = ?', [ownerId]);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     if (user.balance < totalCreditsNeeded) {
       return res.status(400).json({
-        error: `Insufficient credits. You need ${totalCreditsNeeded} credits, but only have ${user.balance} remaining.`
+        error: `Insufficient credits. Required: ${totalCreditsNeeded} credits, Balance: ${user.balance}`
       });
     }
 
-    // Fetch user contacts for personalization ([Name] placeholder replacement)
-    const contacts = await queryAll('SELECT name, phone FROM contacts WHERE user_id = ?', [req.user.id]);
+    // Fetch user contacts for personalization
+    const contacts = await queryAll('SELECT name, phone FROM contacts WHERE user_id = ?', [ownerId]);
     const contactsMap = new Map(contacts.map(c => [c.phone.replace(/[\s+()-]/g, ''), c.name]));
 
-    // Deduct credits from user
-    await queryRun('UPDATE users SET balance = balance - ? WHERE id = ?', [totalCreditsNeeded, req.user.id]);
+    // Deduct credits from owner account
+    await queryRun('UPDATE users SET balance = balance - ? WHERE id = ?', [totalCreditsNeeded, ownerId]);
 
-    // Write sms_debit transaction
+    // Write transaction log under owner
     await queryRun(
       'INSERT INTO transactions (user_id, type, amount, balance_before, balance_after, description) VALUES (?, ?, ?, ?, ?, ?)',
       [
-        req.user.id, 'sms_debit', -totalCreditsNeeded,
+        ownerId, 'sms_debit', -totalCreditsNeeded,
         user.balance, user.balance - totalCreditsNeeded,
         `SMS Batch \u2014 ${recipientList.length} recipient${recipientList.length !== 1 ? 's' : ''} via ${cleanSenderId}`
       ]
@@ -137,19 +137,18 @@ router.post('/send', authenticateToken, async (req, res) => {
       const cleanPhone = rawPhone.replace(/[\s+()-]/g, '');
       const contactName = contactsMap.get(cleanPhone) || 'Customer';
 
-      // Personalize message: replace [Name] with contact name
       const personalizedMsg = rawMessage.replace(/\[Name\]/gi, contactName);
 
       const result = await queryRun(
         `INSERT INTO sms_logs (user_id, sender_id, recipient, message, credits, status)
          VALUES (?, ?, ?, ?, ?, 'pending')`,
-        [req.user.id, cleanSenderId, rawPhone.trim(), personalizedMsg, creditsPerMessage]
+        [ownerId, cleanSenderId, rawPhone.trim(), personalizedMsg, creditsPerMessage]
       );
       logIds.push(result.id);
     }
     await queryRun('COMMIT');
 
-    // Simulate SMS Gateway: Async status update (95% delivered, 5% failed)
+    // Simulate async delivery
     simulateDelivery(logIds);
 
     res.status(202).json({
@@ -166,34 +165,30 @@ router.post('/send', authenticateToken, async (req, res) => {
   }
 });
 
-// Helper: Simulate Delivery
 function simulateDelivery(logIds) {
   setTimeout(async () => {
     try {
       await queryRun('BEGIN TRANSACTION');
       for (const id of logIds) {
-        // Randomly fail 5% of SMS
         const isDelivered = Math.random() > 0.05;
-        const status = isDelivered ? 'sent' : 'failed';
-        await queryRun('UPDATE sms_logs SET status = ? WHERE id = ?', [status, id]);
+        await queryRun('UPDATE sms_logs SET status = ? WHERE id = ?', [isDelivered ? 'sent' : 'failed', id]);
       }
       await queryRun('COMMIT');
-      console.log(`Simulated gateway updated ${logIds.length} messages.`);
     } catch (error) {
-      console.error('Error updating simulated delivery status:', error);
       try {
         await queryRun('ROLLBACK');
       } catch (e) {}
     }
-  }, 3500); // 3.5 seconds delay
+  }, 3500);
 }
 
 /* Templates Routes */
 
 // Get templates
 router.get('/templates', authenticateToken, async (req, res) => {
+  const ownerId = req.user.owner_id;
   try {
-    const templates = await queryAll('SELECT * FROM templates WHERE user_id = ? ORDER BY name ASC', [req.user.id]);
+    const templates = await queryAll('SELECT * FROM templates WHERE user_id = ? ORDER BY name ASC', [ownerId]);
     res.json({ templates });
   } catch (error) {
     console.error('Fetch templates error:', error);
@@ -202,8 +197,9 @@ router.get('/templates', authenticateToken, async (req, res) => {
 });
 
 // Create template
-router.post('/templates', authenticateToken, async (req, res) => {
+router.post('/templates', authenticateToken, requireRole(['Owner', 'Administrator', 'Marketing Agent']), async (req, res) => {
   const { name, content } = req.body;
+  const ownerId = req.user.owner_id;
 
   if (!name || !content) {
     return res.status(400).json({ error: 'Template name and content are required' });
@@ -212,7 +208,7 @@ router.post('/templates', authenticateToken, async (req, res) => {
   try {
     const result = await queryRun(
       'INSERT INTO templates (user_id, name, content) VALUES (?, ?, ?)',
-      [req.user.id, name.trim(), content.trim()]
+      [ownerId, name.trim(), content.trim()]
     );
     res.status(201).json({
       message: 'Template created successfully',
@@ -229,11 +225,12 @@ router.post('/templates', authenticateToken, async (req, res) => {
 });
 
 // Delete template
-router.delete('/templates/:id', authenticateToken, async (req, res) => {
+router.delete('/templates/:id', authenticateToken, requireRole(['Owner', 'Administrator', 'Marketing Agent']), async (req, res) => {
   const { id } = req.params;
+  const ownerId = req.user.owner_id;
 
   try {
-    const template = await queryGet('SELECT id FROM templates WHERE id = ? AND user_id = ?', [id, req.user.id]);
+    const template = await queryGet('SELECT id FROM templates WHERE id = ? AND user_id = ?', [id, ownerId]);
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });
     }

@@ -222,6 +222,7 @@ function getTypeBadge(type) {
     purchase:     { label: 'Top-Up',        color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   border: 'rgba(99,102,241,0.3)' },
     signup_bonus: { label: 'Signup Bonus',  color: '#10b981', bg: 'rgba(16,185,129,0.12)',   border: 'rgba(16,185,129,0.3)' },
     sms_debit:    { label: 'SMS Send',      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   border: 'rgba(245,158,11,0.3)' },
+    voice_debit:  { label: 'Voice Send',    color: '#a855f7', bg: 'rgba(168,85,247,0.12)',   border: 'rgba(168,85,247,0.3)' },
     admin_credit: { label: 'Admin Credit',  color: '#38bdf8', bg: 'rgba(56,189,248,0.12)',   border: 'rgba(56,189,248,0.3)' },
     admin_debit:  { label: 'Admin Debit',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)',    border: 'rgba(239,68,68,0.3)'  },
   };
