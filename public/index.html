@@ -34,6 +34,11 @@
     </ul>
 
     <div class="nav-actions-l">
+      <select id="currency-selector" style="background: transparent; border: 1px solid var(--border-color); color: var(--text-dark); border-radius: var(--border-radius-sm); padding: 6px 12px; margin-right: 12px; font-weight: 600; font-family: inherit; cursor: pointer; outline: none;">
+        <option value="USD">USD ($)</option>
+        <option value="GHS">GHS (GH₵)</option>
+        <option value="NGN">NGN (₦)</option>
+      </select>
       <a href="/app" class="nav-login-btn">Log in</a>
       <a href="/app" class="btn-l btn-l-primary" style="border-radius: var(--border-radius-sm); padding: 8px 18px;">Sign Up</a>
     </div>
@@ -490,7 +495,7 @@ print(response.id)</pre>
       <!-- SMS card -->
       <div class="pricing-card-l reveal reveal-scale" data-delay="0">
         <span class="pricing-card-lbl-l">SMS</span>
-        <div class="pricing-card-val-l">$0.005</div>
+        <div class="pricing-card-val-l" data-usd-val="0.005">$0.005</div>
         <div class="pricing-card-sub-l">Per SMS</div>
         <p class="pricing-card-desc-l" style="margin-top:6px;">Worldwide SMS Delivery</p>
         <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
@@ -499,7 +504,7 @@ print(response.id)</pre>
       <!-- WhatsApp Card -->
       <div class="pricing-card-l reveal reveal-scale" data-delay="100">
         <span class="pricing-card-lbl-l">WhatsApp API</span>
-        <div class="pricing-card-val-l">$0.03</div>
+        <div class="pricing-card-val-l" data-usd-val="0.03">$0.03</div>
         <div class="pricing-card-sub-l">Per Conversation</div>
         <p class="pricing-card-desc-l" style="margin-top:6px;">24-hour session window</p>
         <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
@@ -508,7 +513,7 @@ print(response.id)</pre>
       <!-- OTP Card -->
       <div class="pricing-card-l reveal reveal-scale" data-delay="200">
         <span class="pricing-card-lbl-l">OTP SMS</span>
-        <div class="pricing-card-val-l">$0.01</div>
+        <div class="pricing-card-val-l" data-usd-val="0.01">$0.01</div>
         <div class="pricing-card-sub-l">Per OTP</div>
         <p class="pricing-card-desc-l" style="margin-top:6px;">Fast & Secure Delivery</p>
         <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
@@ -517,7 +522,7 @@ print(response.id)</pre>
       <!-- Voice Card -->
       <div class="pricing-card-l reveal reveal-scale" data-delay="300">
         <span class="pricing-card-lbl-l">Voice Call</span>
-        <div class="pricing-card-val-l">$0.02</div>
+        <div class="pricing-card-val-l" data-usd-val="0.02">$0.02</div>
         <div class="pricing-card-sub-l">Per Minute</div>
         <p class="pricing-card-desc-l" style="margin-top:6px;">High Quality Voice</p>
         <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
@@ -526,7 +531,7 @@ print(response.id)</pre>
       <!-- Email Card -->
       <div class="pricing-card-l reveal reveal-scale" data-delay="400">
         <span class="pricing-card-lbl-l">Email API</span>
-        <div class="pricing-card-val-l">$0.001</div>
+        <div class="pricing-card-val-l" data-usd-val="0.001">$0.001</div>
         <div class="pricing-card-sub-l">Per Email</div>
         <p class="pricing-card-desc-l" style="margin-top:6px;">Inbox Delivery</p>
         <a href="/app" class="btn-l btn-l-outline btn-block" style="padding: 6px 12px; font-size: 0.75rem;">Get Started</a>
@@ -832,6 +837,81 @@ func <span class="syntax-function">main</span>() {
       input.disabled = true;
       document.querySelector('.newsletter-submit-l').disabled = true;
     });
+
+    // Currency config configurations (rates can be customized later)
+    const currencyConfig = {
+      USD: { symbol: '$', rate: 1.0, decimals: 3, decimalsLarge: 0 },
+      GHS: { symbol: 'GH₵', rate: 15.0, decimals: 2, decimalsLarge: 0 },
+      NGN: { symbol: '₦', rate: 1500.0, decimals: 1, decimalsLarge: 0 }
+    };
+
+    let currentCurrency = 'USD';
+
+    // Auto detect currency via IP geolocation API, with timezone lookup backup
+    async function autoDetectCurrency() {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.country_code === 'GH') {
+            setCurrency('GHS');
+          } else if (data.country_code === 'NG') {
+            setCurrency('NGN');
+          } else {
+            setCurrency('USD');
+          }
+          return;
+        }
+      } catch (err) {
+        console.warn('IP Geolocation failed. Falling back to local timezone lookup.');
+      }
+
+      // Timezone fallback
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz.includes('Accra')) {
+        setCurrency('GHS');
+      } else if (tz.includes('Lagos')) {
+        setCurrency('NGN');
+      } else {
+        setCurrency('USD');
+      }
+    }
+
+    // Refresh all price labels based on selected currency
+    function updatePricingDisplay() {
+      const config = currencyConfig[currentCurrency];
+
+      document.querySelectorAll('[data-usd-val]').forEach(el => {
+        const baseUsd = parseFloat(el.getAttribute('data-usd-val'));
+        const converted = baseUsd * config.rate;
+        const decimals = baseUsd >= 1000 ? config.decimalsLarge : config.decimals;
+        
+        const formatted = converted.toLocaleString(undefined, {
+          minimumFractionDigits: decimals,
+          maximumFractionDigits: decimals
+        });
+
+        el.innerText = `${config.symbol}${formatted}${baseUsd >= 1000 ? '+' : ''}`;
+      });
+    }
+
+    function setCurrency(currencyCode) {
+      currentCurrency = currencyCode;
+      const selector = document.getElementById('currency-selector');
+      if (selector) selector.value = currencyCode;
+      updatePricingDisplay();
+    }
+
+    // Bind event listeners
+    const currencySelector = document.getElementById('currency-selector');
+    if (currencySelector) {
+      currencySelector.addEventListener('change', (e) => {
+        setCurrency(e.target.value);
+      });
+    }
+
+    // Run auto detect sequence
+    autoDetectCurrency();
   </script>
 </body>
 </html>
