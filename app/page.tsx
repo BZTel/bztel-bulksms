@@ -503,20 +503,22 @@ func main() {
       <Script src="/js/landing-animations.js" strategy="afterInteractive" />
 
       {/* iOS Sandbox Push SMS Alert Toast (Interactive visual feed) */}
-      <div id="sandbox-sms-push" className={showPushAlert ? '' : 'hidden'} style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '340px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', color: 'white', justifyContent: 'center' }}>
-          <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </div>
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <strong style={{ fontSize: '0.85rem', color: '#fff' }}>MESSAGES (BZTel)</strong>
-            <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>now</span>
+      {showPushAlert && (
+        <div id="sandbox-sms-push" style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', width: '340px', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--accent-purple)', display: 'flex', alignItems: 'center', color: 'white', justifyContent: 'center' }}>
+            <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
           </div>
-          <div id="sandbox-push-text" style={{ fontSize: '0.8rem', color: '#e2e8f0', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{pushText}</div>
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <strong style={{ fontSize: '0.85rem', color: '#fff' }}>MESSAGES (BZTel)</strong>
+              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>now</span>
+            </div>
+            <div id="sandbox-push-text" style={{ fontSize: '0.8rem', color: '#e2e8f0', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{pushText}</div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
