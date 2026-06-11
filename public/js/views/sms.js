@@ -4,7 +4,8 @@ import { apiFetch, showToast, navigateTo, fetchUserProfile } from '../app.js';
 let viewState = {
   activeTab: 'templates',
   searchQuery: '',
-  appState: null
+  appState: null,
+  currentDraftId: null
 };
 
 export function renderSMSView(root, state) {
@@ -17,6 +18,7 @@ export function renderSMSView(root, state) {
         <div class="sub-tabs-bar">
           <button class="sub-tab-btn active" data-tab="templates">SMS Template</button>
           <button class="sub-tab-btn" data-tab="scheduled">Scheduled Messages</button>
+          <button class="sub-tab-btn" data-tab="drafts">Drafts</button>
           <button class="sub-tab-btn" data-tab="international">International Messaging</button>
         </div>
         
@@ -119,6 +121,12 @@ export function renderSMSView(root, state) {
                 </div>
                 <div style="display: flex; gap: 12px;">
                   <button type="button" class="btn btn-secondary" id="btn-cancel-compose" style="padding: 12px 20px;">Cancel</button>
+                  <button type="button" class="btn btn-secondary" id="btn-save-draft" style="padding: 12px 20px; display: flex; align-items: center; gap: 8px;">
+                    <svg class="btn-icon" style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    <span id="draft-btn-text">Save Draft</span>
+                  </button>
                   <button type="submit" class="btn btn-primary" id="broadcast-submit-btn" style="padding: 12px 24px; background: var(--accent-color); border-color: var(--accent-color);">
                     <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     <span id="submit-btn-text">Dispatch Broadcast</span>
@@ -202,6 +210,8 @@ function loadTabContent() {
     loadTemplates(viewState.searchQuery);
   } else if (viewState.activeTab === 'scheduled') {
     loadScheduled(viewState.searchQuery);
+  } else if (viewState.activeTab === 'drafts') {
+    loadDrafts(viewState.searchQuery);
   } else if (viewState.activeTab === 'international') {
     loadInternational(viewState.searchQuery);
   }
@@ -267,6 +277,9 @@ function setupGlobalViewListeners() {
 
   // Setup broadcast composer submission
   document.getElementById('broadcast-form').addEventListener('submit', handleBroadcastComposerSubmit);
+
+  // Setup save draft click
+  document.getElementById('btn-save-draft').addEventListener('click', handleSaveDraftClick);
 }
 
 // ── SMS Templates Tab Loader ──────────────────────────────────────────
@@ -541,14 +554,21 @@ function loadInternational(query = '') {
 }
 
 // ── Compose Modal Actions ───────────────────────────────────────────
-async function openComposeModal(initialText = '') {
+async function openComposeModal(initialText = '', draftId = null, senderId = 'BZTEL', recipients = '') {
   const modal = document.getElementById('compose-modal');
   modal.classList.remove('hidden');
   
-  // Reset fields
-  document.getElementById('sms-recipients').value = '';
+  viewState.currentDraftId = draftId;
+
+  // Set fields
+  document.getElementById('sms-recipients').value = recipients;
   document.getElementById('sms-message').value = initialText;
-  document.getElementById('sms-sender').value = 'BZTEL';
+  document.getElementById('sms-sender').value = senderId || 'BZTEL';
+  
+  const draftBtnText = document.getElementById('draft-btn-text');
+  if (draftBtnText) {
+    draftBtnText.innerText = draftId ? 'Update Draft' : 'Save Draft';
+  }
   
   const scheduleToggle = document.getElementById('sms-schedule-toggle');
   scheduleToggle.checked = false;
@@ -565,6 +585,7 @@ async function openComposeModal(initialText = '') {
 
 function closeComposeModal() {
   document.getElementById('compose-modal').classList.add('hidden');
+  viewState.currentDraftId = null;
 }
 
 // Recalculates recipient counts, character pages, and credit costs dynamically
@@ -745,6 +766,16 @@ async function handleBroadcastComposerSubmit(e) {
       const data = await response.json();
       if (response.ok) {
         showToast(data.message || 'SMS broadcast dispatched successfully!', 'success');
+        
+        // If it was sent from a draft, delete the draft
+        if (viewState.currentDraftId) {
+          try {
+            await apiFetch(`/api/sms/drafts/${viewState.currentDraftId}`, { method: 'DELETE' });
+          } catch (err) {
+            console.error('Failed to clear draft after send:', err);
+          }
+        }
+        
         closeComposeModal();
 
         // Refresh global state user balance count
@@ -819,4 +850,187 @@ async function handleTemplateCreationSubmit(e) {
     btn.disabled = false;
     btn.innerText = 'Create Template';
   }
+}
+
+// ── SMS Drafts Event Handlers & Loader ──────────────────────────────────
+async function handleSaveDraftClick() {
+  const senderId = document.getElementById('sms-sender').value;
+  const recipientsRaw = document.getElementById('sms-recipients').value;
+  const message = document.getElementById('sms-message').value;
+  const draftBtn = document.getElementById('btn-save-draft');
+  const draftBtnText = document.getElementById('draft-btn-text');
+
+  draftBtn.disabled = true;
+  const originalText = draftBtnText ? draftBtnText.innerText : 'Save Draft';
+  if (draftBtnText) draftBtnText.innerText = 'Saving...';
+
+  const recipients = recipientsRaw.split(',').map(r => r.trim()).filter(Boolean);
+
+  try {
+    const url = viewState.currentDraftId 
+      ? `/api/sms/drafts/${viewState.currentDraftId}`
+      : '/api/sms/drafts';
+    
+    const method = viewState.currentDraftId ? 'PUT' : 'POST';
+
+    const response = await apiFetch(url, {
+      method,
+      body: JSON.stringify({ senderId, recipients, message })
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+      showToast(data.message || 'Draft saved successfully!', 'success');
+      closeComposeModal();
+      loadTabContent();
+    } else {
+      showToast(data.error || 'Failed to save draft', 'error');
+    }
+  } catch (error) {
+    showToast('Connection error saving draft', 'error');
+  } finally {
+    draftBtn.disabled = false;
+    if (draftBtnText) draftBtnText.innerText = originalText;
+  }
+}
+
+async function loadDrafts(query = '') {
+  const container = document.getElementById('sms-tab-content');
+  container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--text-muted);">Fetching saved drafts...</div>`;
+
+  try {
+    const response = await apiFetch('/api/sms/drafts');
+    if (!response.ok) {
+      container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Error loading drafts. Please try again.</div>`;
+      return;
+    }
+
+    const data = await response.json();
+    let drafts = data.drafts || [];
+
+    // Filter by query
+    if (query) {
+      drafts = drafts.filter(d => 
+        d.recipients.toLowerCase().includes(query) || 
+        d.message.toLowerCase().includes(query) ||
+        d.sender_id.toLowerCase().includes(query)
+      );
+    }
+
+    if (drafts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out;">
+          <div class="empty-state-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+          </div>
+          <div class="empty-state-title">No Drafts Found</div>
+          <div class="empty-state-desc">You don't have any saved drafts yet. Compose a message and click "Save Draft" to keep it here.</div>
+          <button id="empty-state-compose-draft-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Compose Broadcast</button>
+        </div>
+      `;
+      document.getElementById('empty-state-compose-draft-btn').addEventListener('click', () => openComposeModal());
+      return;
+    }
+
+    // Render Drafts table
+    container.innerHTML = `
+      <div class="table-responsive" style="animation: fadeIn 0.2s ease-out;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Sender ID</th>
+              <th>Recipient(s)</th>
+              <th>Message Content</th>
+              <th>Saved At</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${drafts.map(d => {
+              const dateDisplay = new Date(d.created_at || Date.now()).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              const textSnippet = d.message.length > 50 ? d.message.substring(0, 47) + '...' : d.message;
+              
+              // Show recipients preview
+              const repsList = d.recipients ? d.recipients.split(',').map(r => r.trim()).filter(Boolean) : [];
+              const repsPreview = repsList.length > 0
+                ? `<span style="font-weight: 600; color: var(--text-primary);">${repsList.length} Contact${repsList.length !== 1 ? 's' : ''}</span><div style="color: var(--text-muted); font-size: 0.78rem;">${repsList.slice(0, 2).join(', ')}${repsList.length > 2 ? '...' : ''}</div>`
+                : `<span style="color: var(--text-muted); font-style: italic;">No recipients</span>`;
+
+              return `
+                <tr>
+                  <td style="font-weight: 600; color: var(--text-primary);">${d.sender_id}</td>
+                  <td>${repsPreview}</td>
+                  <td style="color: var(--text-secondary); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(d.message)}">${escapeHtml(textSnippet)}</td>
+                  <td style="color: var(--text-muted); font-size: 0.82rem;">${dateDisplay}</td>
+                  <td style="text-align: right;">
+                    <button class="btn btn-secondary btn-sm resume-draft-btn mr-2" data-id="${d.id}" data-sender="${encodeURIComponent(d.sender_id)}" data-recipients="${encodeURIComponent(d.recipients)}" data-message="${encodeURIComponent(d.message)}" style="padding: 6px 12px;">Resume</button>
+                    <button class="btn btn-danger btn-sm delete-draft-btn" data-id="${d.id}" style="background: var(--error-color); padding: 6px 12px;">Delete</button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Bind action buttons
+    document.querySelectorAll('.resume-draft-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-id');
+        const sender = decodeURIComponent(e.currentTarget.getAttribute('data-sender'));
+        const recipients = decodeURIComponent(e.currentTarget.getAttribute('data-recipients'));
+        const message = decodeURIComponent(e.currentTarget.getAttribute('data-message'));
+        openComposeModal(message, id, sender, recipients);
+      });
+    });
+
+    document.querySelectorAll('.delete-draft-btn').forEach(btn => {
+      btn.addEventListener('click', handleDeleteDraftClick);
+    });
+
+  } catch (error) {
+    console.error('Load drafts error:', error);
+    container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Connection error loading drafts.</div>`;
+  }
+}
+
+async function handleDeleteDraftClick(e) {
+  const id = e.currentTarget.getAttribute('data-id');
+  e.currentTarget.disabled = true;
+  e.currentTarget.innerText = '...';
+
+  try {
+    const res = await apiFetch(`/api/sms/drafts/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      showToast('Draft deleted successfully', 'success');
+      loadDrafts(viewState.searchQuery);
+    } else {
+      showToast('Failed to delete draft', 'error');
+      e.currentTarget.disabled = false;
+      e.currentTarget.innerText = 'Delete';
+    }
+  } catch (err) {
+    showToast('Connection error deleting draft', 'error');
+    e.currentTarget.disabled = false;
+    e.currentTarget.innerText = 'Delete';
+  }
+}
+
+// Simple helper to escape HTML characters
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }

@@ -11,6 +11,7 @@ import { renderRequestServiceView } from './views/request-service.js';
 import { renderHelpView } from './views/help.js';
 import { renderMoreView } from './views/more.js';
 import { renderVoiceView } from './views/voice.js';
+import { renderInboxView } from './views/inbox.js';
 
 // Global Application State
 const state = {
@@ -287,6 +288,9 @@ export function navigateTo(viewName) {
       break;
     case 'sms':
       renderSMSView(root, state);
+      break;
+    case 'inbox':
+      renderInboxView(root, state);
       break;
     case 'voice':
       renderVoiceView(root, state);

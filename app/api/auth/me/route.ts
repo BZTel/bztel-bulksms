@@ -17,6 +17,7 @@ export async function GET(req: Request) {
         balance: true,
         role: true,
         parentUserId: true,
+        virtualNumbers: true,
       },
     });
 
@@ -45,6 +46,12 @@ export async function GET(req: Request) {
       balance,
       role: user.role,
       parent_user_id: user.parentUserId,
+      virtualNumbers: user.virtualNumbers.map((vn) => ({
+        id: vn.id,
+        number: vn.number,
+        status: vn.status,
+        created_at: vn.createdAt,
+      })),
     };
 
     return NextResponse.json({ user: legacyUserObject });

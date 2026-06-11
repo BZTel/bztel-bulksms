@@ -6,86 +6,8 @@ export function renderAuthView(container, state) {
   const render = () => {
     container.innerHTML = `
       <div class="auth-split-wrapper">
-        <!-- Left: Brand Banner Pane (Mockup UI Representation) -->
-        <div class="auth-banner-pane">
-          <div class="auth-banner-header">
-            <div class="logo-l" style="color: #ffffff; display: flex; align-items: center; gap: 8px;">
-              <svg class="logo-l-icon" fill="currentColor" viewBox="0 0 24 24" style="width:28px; height:28px; color: #ffffff;">
-                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
-              </svg>
-              <span style="font-size: 1.45rem; font-weight:800; font-family:'Outfit',sans-serif; color: #ffffff; letter-spacing: 0.5px;">BZTel</span>
-            </div>
-            <span class="auth-banner-tagline">Connect. Communicate. Grow.</span>
-          </div>
-
-          <div class="auth-banner-content">
-            <h1 class="auth-banner-title">Smarter Messaging. <br>Stronger Connections. <br><span class="highlight-pink">Better Business.</span></h1>
-            <p class="auth-banner-desc">BZTel empowers businesses with powerful messaging solutions across SMS, WhatsApp, Voice and Email — all in one platform.</p>
-          </div>
-
-          <!-- Mock Dashboard Visual -->
-          <div class="auth-mock-dashboard">
-            <div class="mock-sidebar">
-              <div class="mock-nav-item active">Dashboard</div>
-              <div class="mock-nav-item">Campaigns</div>
-              <div class="mock-nav-item">Contacts</div>
-              <div class="mock-nav-item">Templates</div>
-              <div class="mock-nav-item">Reports</div>
-              <div class="mock-nav-item">Settings</div>
-            </div>
-            <div class="mock-content">
-              <div class="mock-stats-row">
-                <div class="mock-stat-card">
-                  <span class="lbl">Total Messages</span>
-                  <span class="val">128,456</span>
-                </div>
-                <div class="mock-stat-card">
-                  <span class="lbl">Delivered</span>
-                  <span class="val" style="color: #10b981;">98.5%</span>
-                </div>
-                <div class="mock-stat-card">
-                  <span class="lbl">Campaigns</span>
-                  <span class="val">356</span>
-                </div>
-              </div>
-              <div class="mock-chart-box">
-                <span class="chart-title">Recent Campaigns</span>
-                <!-- SVG Line Chart Mock -->
-                <svg viewBox="0 0 300 80" class="mock-svg-chart" style="height: 50px;">
-                  <defs>
-                    <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="rgba(139, 92, 246, 0.4)" />
-                      <stop offset="100%" stop-color="rgba(139, 92, 246, 0)" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M 0,55 C 30,55 50,20 80,30 C 110,40 130,75 160,50 C 190,25 210,15 240,40 C 270,65 285,15 300,10" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round" />
-                  <path d="M 0,55 C 30,55 50,20 80,30 C 110,40 130,75 160,50 C 190,25 210,15 240,40 C 270,65 285,15 300,10 L 300,80 L 0,80 Z" fill="url(#chart-grad)" />
-                </svg>
-              </div>
-            </div>
-
-            <!-- Floating items -->
-            <div class="mock-floating-badge float-sms">
-              <span class="icon">💬</span>
-              <span class="txt">SMS</span>
-            </div>
-            <div class="mock-floating-badge float-wa">
-              <span class="icon">🟢</span>
-              <span class="txt">WhatsApp</span>
-            </div>
-            <div class="mock-floating-badge float-voice">
-              <span class="icon">📞</span>
-              <span class="txt">Voice</span>
-            </div>
-            <div class="mock-floating-badge float-email">
-              <span class="icon">✉️</span>
-              <span class="txt">Email</span>
-            </div>
-          </div>
-        </div>
-
         <!-- Right: Auth Form Pane -->
-        <div class="auth-form-pane">
+        <div class="auth-form-pane" style="flex: 1; min-height: 100vh;">
           <!-- Top Right Header Links -->
           <div class="auth-form-top-header">
             <span>${isLogin ? "Don't have an account?" : "Already have an account?"}</span>

@@ -13,7 +13,7 @@
 
   --accent-color: #4f46e5; /* Indigo */
   --accent-hover: #4338ca;
-  --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #d946ef 100%);
+  --accent-gradient: var(--accent-color);
   --accent-glow: rgba(79, 70, 229, 0.12);
 
   --success-color: #10b981; /* Emerald */
@@ -612,7 +612,7 @@ textarea.form-control {
 /* Left Pane: Branding Banner */
 .auth-banner-pane {
   flex: 1.1;
-  background: linear-gradient(135deg, #1e1b4b 0%, #31106c 50%, #0c0828 100%);
+  background: var(--accent-color);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -653,9 +653,9 @@ textarea.form-control {
 }
 
 .auth-banner-title .highlight-pink {
-  background: linear-gradient(to right, #ec4899, #f43f5e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: none;
+  -webkit-text-fill-color: initial;
+  color: #c7d2fe;
 }
 
 .auth-banner-desc {
@@ -800,7 +800,7 @@ textarea.form-control {
 
 /* Right Pane: Form panel */
 .auth-form-pane {
-  flex: 0.9;
+  flex: 1;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;

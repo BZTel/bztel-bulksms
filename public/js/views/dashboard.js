@@ -73,11 +73,11 @@ export function renderDashboardView(container, state) {
         </div>
         <div id="billing-summary-body">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
-            <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:16px;text-align:center;">
+            <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:16px;text-align:center;">
               <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Total Credited</div>
               <div id="billing-credited" style="font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;color:#10b981;">—</div>
             </div>
-            <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:16px;text-align:center;">
+            <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:16px;text-align:center;">
               <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Total Spent</div>
               <div id="billing-spent" style="font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;color:#ef4444;">—</div>
             </div>
@@ -119,15 +119,15 @@ export function renderDashboardView(container, state) {
         </div>
         <div id="delivery-summary-body">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-            <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:12px;text-align:center;">
+            <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
               <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Delivered</div>
               <div id="del-sent" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#10b981;">0</div>
             </div>
-            <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:12px;text-align:center;">
+            <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
               <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Failed</div>
               <div id="del-failed" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#ef4444;">0</div>
             </div>
-            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px;text-align:center;">
+            <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
               <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Pending</div>
               <div id="del-pending" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#f59e0b;">0</div>
             </div>

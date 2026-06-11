@@ -5,9 +5,8 @@ let activeFilter = 'all';
 
 export function renderWalletView(root, state) {
   root.innerHTML = `
-    <!-- Credit Card Hero -->
     <div style="
-      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+      background: var(--accent-color);
       border-radius: 20px;
       padding: 36px 40px;
       display: flex;

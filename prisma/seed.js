@@ -14,7 +14,7 @@ async function main() {
   if (!existing) {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(adminPassword, salt);
-    await prisma.user.create({
+    const adminUser = await prisma.user.create({
       data: {
         email: adminEmail,
         passwordHash: hash,
@@ -25,8 +25,30 @@ async function main() {
       },
     });
     console.log(`Admin user created: ${adminEmail}`);
+
+    await prisma.virtualNumber.create({
+      data: {
+        userId: adminUser.id,
+        number: '+1234567890',
+        status: 'active',
+      },
+    });
+    console.log(`Admin virtual number created: +1234567890`);
   } else {
     console.log(`Admin user already exists: ${adminEmail}`);
+    const adminVn = await prisma.virtualNumber.findFirst({
+      where: { userId: existing.id }
+    });
+    if (!adminVn) {
+      await prisma.virtualNumber.create({
+        data: {
+          userId: existing.id,
+          number: '+1234567890',
+          status: 'active'
+        }
+      });
+      console.log(`Default virtual number +1234567890 assigned to existing Admin.`);
+    }
   }
 }
 

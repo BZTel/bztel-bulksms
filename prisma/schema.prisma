@@ -32,6 +32,9 @@ model User {
   serviceRequests ServiceRequest[]
   voiceLogs      VoiceLog[]
   auditLogs      AuditLog[]
+  virtualNumbers    VirtualNumber[]
+  incomingMessages  IncomingMessage[]
+  drafts            Draft[]
 
   @@map("users")
 }
@@ -187,4 +190,43 @@ model ContactMessage {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("contact_messages")
+}
+
+model VirtualNumber {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  number    String   @unique
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("virtual_numbers")
+}
+
+model IncomingMessage {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  from       String
+  to         String
+  message    String
+  providerId String?  @map("provider_id")
+  receivedAt DateTime @default(now()) @map("received_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("incoming_messages")
+}
+
+model Draft {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  senderId   String   @map("sender_id")
+  recipients String   @db.Text
+  message    String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("drafts")
 }

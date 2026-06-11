@@ -64,6 +64,16 @@ export async function POST(req: Request) {
         },
       });
 
+      // Assign a default unique virtual number (for receiving replies)
+      const randomPhone = `+1${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+      await tx.virtualNumber.create({
+        data: {
+          userId: newUser.id,
+          number: randomPhone,
+          status: 'active',
+        },
+      });
+
       return newUser;
     });
 
