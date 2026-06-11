@@ -249,7 +249,6 @@ func main() {
       {/* Hero Section */}
       <section className="hero-l" style={{ display: 'flex' }}>
         <div className="hero-content-l reveal reveal-left reveal-active">
-          <span className="hero-tag-l">ALL-IN-ONE COMMUNICATION & SOFTWARE PARTNER</span>
           <h1 className="hero-title-l">Communication APIs & <span>Custom Software</span> Built for Your Growth</h1>
           <p className="hero-subtitle-l">BZTel provides powerful communication APIs and custom software development services to help businesses connect, automate and scale globally.</p>
           
