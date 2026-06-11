@@ -1,5 +1,25 @@
+# Dependency directories
 node_modules/
+
+# Next.js build outputs
+.next/
+out/
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# Local environment files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases (SQLite)
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS files
 .DS_Store
 Thumbs.db
-db.json
