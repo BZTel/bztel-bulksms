@@ -326,25 +326,21 @@ func main() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h3 className="trusted-title">TRUSTED BY LEADING TEAMS WORLDWIDE</h3>
           <div className="trusted-logos">
-            {/* AeroLogix Logo */}
+            {/* GradiaKlasso Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 140 30" width="120" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">GradiaKlasso</text>
+            </svg>
+            {/* Medfusion Logo */}
             <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="100" height="24">
-              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">AeroLogix</text>
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">Medfusion</text>
             </svg>
-            {/* Vortex Logo */}
-            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="80" height="24">
-              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">VORTEX</text>
+            {/* KaycareSystems Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 160 30" width="130" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">KaycareSystems</text>
             </svg>
-            {/* ApexCorp Logo */}
-            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="100" height="24">
-              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">APEX CORP</text>
-            </svg>
-            {/* Quantum Logo */}
-            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="90" height="24">
-              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">QUANTUM</text>
-            </svg>
-            {/* Nexus Logo */}
-            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="80" height="24">
-              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">NEXUS</text>
+            {/* CompuNerdGhana Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 160 30" width="130" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">CompuNerdGhana</text>
             </svg>
           </div>
           
@@ -353,7 +349,7 @@ func main() {
               "Integrating BZTel SMS API took us less than 15 minutes. We deliver over 50,000 notifications daily to our customers across Nigeria with sub-second delivery latency. The dynamic failover routing is a complete game-changer."
             </p>
             <div className="testimonial-author">
-              — Tunde Balogun, CTO at AeroLogix
+              — Tunde Balogun, CTO at GradiaKlasso
             </div>
           </div>
         </div>
