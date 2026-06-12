@@ -172,8 +172,8 @@ export default function ContactPage() {
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>25 Ropemaker Street, London, EC2Y 9LY, UK</span>
                 </div>
                 <div style={{ borderLeft: '2px solid var(--accent-purple)', paddingLeft: '12px' }}>
-                  <strong style={{ color: 'var(--text-dark)', fontSize: '0.9rem', display: 'block' }}>Accra Office</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>15 Liberation Road, Accra, Ghana</span>
+                  <strong style={{ color: 'var(--text-dark)', fontSize: '0.9rem', display: 'block' }}>Lagos Office</strong>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>15 Kingsway Road, Ikoyi, Lagos, Nigeria</span>
                 </div>
               </div>
             </div>

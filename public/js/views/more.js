@@ -295,7 +295,7 @@ function updateCodeSnippet(tokenOverride = null) {
   -H "Content-Type: application/json" \\
   -d '{
     "senderId": "BZTEL",
-    "recipients": ["+233241234567"],
+    "recipients": ["+2348012345678"],
     "message": "Hello from the Bztel developer API!"
   }'`;
   } else {
@@ -309,7 +309,7 @@ const response = await fetch('${endpoint}', {
   },
   body: JSON.stringify({
     senderId: 'BZTEL',
-    recipients: ['+233241234567'],
+    recipients: ['+2348012345678'],
     message: 'Hello from the Bztel developer API!'
   })
 });

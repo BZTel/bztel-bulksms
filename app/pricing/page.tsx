@@ -68,7 +68,9 @@ export default function PricingPage() {
   }
 
   const localRate = rateUsd * config.rate;
-  const rateLabel = `${(localRate * 100).toFixed(2)}¢ / SMS`;
+  const rateLabel = currency === 'NGN' 
+    ? `${config.symbol}${localRate.toFixed(2)} / SMS` 
+    : `${(localRate * 100).toFixed(2)}¢ / SMS`;
   const estimatedCost = volume * localRate;
   const costLabel = `${config.symbol}${estimatedCost.toLocaleString(undefined, {
     minimumFractionDigits: 2,

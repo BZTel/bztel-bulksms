@@ -8,7 +8,7 @@ export default function HomePage() {
   const [volume, setVolume] = useState(25000);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeLang, setActiveLang] = useState<'curl' | 'python' | 'php' | 'node' | 'go'>('curl');
-  const [phone, setPhone] = useState('+233545678901');
+  const [phone, setPhone] = useState('+2348054567890');
   const [smsMsg, setSmsMsg] = useState('Hello from BzTel 🚀');
   const [sendingTest, setSendingTest] = useState(false);
   const [sentTest, setSentTest] = useState(false);
@@ -94,7 +94,9 @@ export default function HomePage() {
     rateUsd = 0.0059;
   }
   const localRate = rateUsd * config.rate;
-  const sliderRateLabel = `${(localRate * 100).toFixed(2)}¢ / SMS`;
+  const sliderRateLabel = currency === 'NGN' 
+    ? `${config.symbol}${localRate.toFixed(2)} / SMS` 
+    : `${(localRate * 100).toFixed(2)}¢ / SMS`;
   const estimatedCost = volume * localRate;
   const costLabel = `${config.symbol}${estimatedCost.toLocaleString(undefined, {
     minimumFractionDigits: 2,
