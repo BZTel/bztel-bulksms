@@ -34,6 +34,25 @@ async function initApp() {
   setupGlobalEvents();
   setupModalEvents();
 
+  // Check URL parameters for OAuth token or error redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  const tokenFromUrl = urlParams.get('token');
+  const errorFromUrl = urlParams.get('error');
+
+  if (errorFromUrl) {
+    showToast(decodeURIComponent(errorFromUrl), 'error');
+    // Clean query parameters from URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  if (tokenFromUrl) {
+    console.log('[initApp] Found token in URL, storing and authenticating...');
+    state.token = tokenFromUrl;
+    localStorage.setItem('token', tokenFromUrl);
+    // Clean query parameters from URL for security
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   if (state.token) {
     console.log('[initApp] Token present, fetching user profile...');
     const success = await fetchUserProfile();

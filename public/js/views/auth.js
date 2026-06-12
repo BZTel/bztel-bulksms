@@ -128,17 +128,17 @@ export function renderAuthView(container, state) {
       });
     }
 
-    // Mock social login handlers
+    // Production social login handlers
     const googleBtn = document.getElementById('social-google-btn');
     const msBtn = document.getElementById('social-ms-btn');
     if (googleBtn) {
       googleBtn.addEventListener('click', () => {
-        showToast('Google integration is disabled in demo mode.', 'info');
+        window.location.href = '/api/auth/google/login';
       });
     }
     if (msBtn) {
       msBtn.addEventListener('click', () => {
-        showToast('Microsoft integration is disabled in demo mode.', 'info');
+        window.location.href = '/api/auth/microsoft/login';
       });
     }
 

@@ -12,7 +12,7 @@ generator client {
 model User {
   id             Int        @id @default(autoincrement())
   email          String     @unique
-  passwordHash   String     @map("password_hash")
+  passwordHash   String?    @map("password_hash")
   isAdmin        Boolean    @default(false) @map("is_admin")
   status         String     @default("active")
   balance        Int        @default(100)
