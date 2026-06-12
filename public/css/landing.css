@@ -1534,4 +1534,489 @@ textarea.form-control {
   min-height: 120px;
 }
 
+/* Expanded Landing Page Sections Styling */
+
+/* Social Proof / Trusted By */
+.trusted-by-sect {
+  padding: 40px 20px;
+  background-color: var(--bg-light);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.trusted-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+
+.trusted-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 48px;
+  flex-wrap: wrap;
+  opacity: 0.6;
+}
+
+.trusted-logo-svg {
+  height: 28px;
+  fill: var(--text-slate);
+  transition: var(--transition);
+}
+
+.trusted-logo-svg:hover {
+  fill: var(--accent-purple);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.dev-testimonial-card {
+  max-width: 800px;
+  margin: 32px auto 0;
+  padding: 24px;
+  background-color: var(--bg-offset);
+  border-left: 3px solid var(--accent-purple);
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  text-align: left;
+}
+
+.testimonial-quote {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-slate);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.testimonial-author {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Dashboard Mockup & Features Grid */
+.features-split-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-bullets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.feature-bullet-item {
+  display: flex;
+  gap: 16px;
+}
+
+.feature-bullet-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--accent-purple-glow);
+  color: var(--accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.feature-bullet-content h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.feature-bullet-content p {
+  font-size: 0.88rem;
+  color: var(--text-slate);
+  line-height: 1.5;
+}
+
+/* CSS Mockup Dashboard Panel */
+.mock-dashboard-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mock-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.mock-header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mock-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mock-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.mock-header-balance {
+  font-size: 0.72rem;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 4px 8px;
+  border-radius: 99px;
+  font-weight: 700;
+}
+
+.mock-dashboard-metric-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mock-metric-card {
+  background: var(--bg-offset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 12px;
+}
+
+.mock-metric-lbl {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.mock-metric-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-family: var(--font-heading);
+  margin-top: 4px;
+}
+
+.mock-logs-box {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.mock-logs-title {
+  background: var(--bg-offset);
+  padding: 8px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mock-log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+}
+
+.mock-log-item:last-child {
+  border-bottom: none;
+}
+
+.mock-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 99px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.mock-badge.success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.mock-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+/* Why BZTel Reliability Cards */
+.reliability-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.reliability-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  padding: 28px;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition);
+}
+
+.reliability-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-purple);
+  box-shadow: var(--shadow-lg);
+}
+
+.reliability-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-purple-glow);
+  color: var(--accent-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.reliability-card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+.reliability-card p {
+  font-size: 0.85rem;
+  color: var(--text-slate);
+  line-height: 1.6;
+}
+
+/* FAQ Accordion Styling */
+.faq-accordion-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.faq-item-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.faq-item-card.active {
+  border-color: var(--accent-purple);
+  box-shadow: var(--shadow-md);
+}
+
+.faq-header-btn {
+  width: 100%;
+  padding: 18px 24px;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+}
+
+.faq-question-txt {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+}
+
+.faq-chevron-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item-card.active .faq-chevron-icon {
+  transform: rotate(180deg);
+  color: var(--accent-purple);
+}
+
+.faq-panel-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 24px;
+}
+
+.faq-item-card.active .faq-panel-content {
+  max-height: 200px;
+  padding-bottom: 20px;
+}
+
+.faq-answer-txt {
+  font-size: 0.88rem;
+  color: var(--text-slate);
+  line-height: 1.6;
+}
+
+/* Bold Bottom CTA Banner Card */
+.cta-banner-container {
+  max-width: 1100px;
+  margin: 60px auto 20px;
+  padding: 0 20px;
+}
+
+.cta-gradient-card {
+  background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+  border-radius: var(--border-radius-lg);
+  padding: 56px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(79, 70, 229, 0.25);
+}
+
+/* Decorative grid or circles inside CTA */
+.cta-gradient-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.cta-gradient-card::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: -80px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.cta-card-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #ffffff !important;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card-subtitle {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 600px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.cta-card-btn {
+  background: #ffffff;
+  color: var(--accent-purple);
+  font-weight: 700;
+  border: none;
+  padding: 14px 36px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cta-card-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  background: var(--bg-offset);
+}
+
+/* Theme Adjustments for Dark Mode */
+[data-theme="dark"] .mock-dashboard-wrapper,
+[data-theme="dark"] .reliability-card,
+[data-theme="dark"] .faq-item-card {
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .mock-metric-card,
+[data-theme="dark"] .mock-logs-box,
+[data-theme="dark"] .mock-logs-title,
+[data-theme="dark"] .dev-testimonial-card {
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .mock-log-item {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .trusted-logo-svg {
+  fill: #94a3b8;
+}
+
+[data-theme="dark"] .trusted-logo-svg:hover {
+  fill: #c084fc;
+}
+
+[data-theme="dark"] .cta-gradient-card {
+  box-shadow: 0 20px 50px rgba(124, 58, 237, 0.15);
+}
+
+@media (max-width: 768px) {
+  .features-split-grid,
+  .reliability-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+
 

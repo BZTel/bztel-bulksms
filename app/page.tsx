@@ -341,6 +341,44 @@ func main() {
         </div>
       </section>
 
+      {/* Trusted By Section */}
+      <section className="trusted-by-sect">
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h3 className="trusted-title">TRUSTED BY LEADING TEAMS WORLDWIDE</h3>
+          <div className="trusted-logos">
+            {/* AeroLogix Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="100" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">AeroLogix</text>
+            </svg>
+            {/* Vortex Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="80" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">VORTEX</text>
+            </svg>
+            {/* ApexCorp Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="100" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">APEX CORP</text>
+            </svg>
+            {/* Quantum Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="90" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">QUANTUM</text>
+            </svg>
+            {/* Nexus Logo */}
+            <svg className="trusted-logo-svg" viewBox="0 0 120 30" width="80" height="24">
+              <text x="10" y="20" fontFamily="'Outfit', sans-serif" fontWeight="800" fontSize="16">NEXUS</text>
+            </svg>
+          </div>
+          
+          <div className="dev-testimonial-card reveal reveal-scale reveal-active">
+            <p className="testimonial-quote">
+              "Integrating BZTel SMS API took us less than 15 minutes. We deliver over 50,000 notifications daily to our customers across Nigeria with sub-second delivery latency. The dynamic failover routing is a complete game-changer."
+            </p>
+            <div className="testimonial-author">
+              — Tunde Balogun, CTO at AeroLogix
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Stats Row */}
       <section className="stats-row-l reveal reveal-scale reveal-active">
         <div className="stat-item-l">
@@ -412,6 +450,149 @@ func main() {
         </div>
       </section>
 
+      {/* Dashboard & Features Grid Section */}
+      <section className="sect-l sect-l-offset" style={{ borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)' }}>
+        <div className="features-split-grid">
+          {/* Left: Features Bullet List */}
+          <div className="reveal reveal-left reveal-active">
+            <span className="hero-tag-l" style={{ marginBottom: '12px', display: 'inline-block' }}>BZTEL CAPABILITIES</span>
+            <h2 className="hero-title-l" style={{ fontSize: '2.2rem', color: 'var(--text-dark)', marginBottom: '24px', lineHeight: 1.2 }}>
+              Manage campaigns from a sleek, intuitive console
+            </h2>
+            <div className="feature-bullets-list">
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Automated Birthday Campaigns</h4>
+                  <p>Upload a group of contacts and let our scheduler automatically dispatch personalized greetings on their special day.</p>
+                </div>
+              </div>
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H7m0 0v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Smart Contact Groups</h4>
+                  <p>Organize customers, VIPs, and employees. Store dynamic field data like custom names to personalize bulk SMS templates.</p>
+                </div>
+              </div>
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Detailed Delivery Metrics</h4>
+                  <p>Track delivery counts, fail logs, latency status, and outgoing credit costs directly in your console dashboard.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: CSS Mockup Dashboard Panel */}
+          <div className="reveal reveal-right reveal-active">
+            <div className="mock-dashboard-wrapper">
+              <div className="mock-dashboard-header">
+                <div className="mock-header-user">
+                  <div className="mock-user-avatar">AD</div>
+                  <div className="mock-user-name">Aliko Dangote</div>
+                </div>
+                <div className="mock-header-balance">
+                  ₦245,500.00
+                </div>
+              </div>
+
+              <div className="mock-dashboard-metric-row">
+                <div className="mock-metric-card">
+                  <span className="mock-metric-lbl">Total Dispatched</span>
+                  <div className="mock-metric-val">148,250</div>
+                </div>
+                <div className="mock-metric-card">
+                  <span className="mock-metric-lbl">Delivery Rate</span>
+                  <div className="mock-metric-val" style={{ color: '#10b981' }}>99.82%</div>
+                </div>
+              </div>
+
+              <div className="mock-logs-box">
+                <div className="mock-logs-title">Recent SMS Campaigns</div>
+                <div className="mock-log-item">
+                  <div>
+                    <strong>VIP Promo Broadcast</strong>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginTop: '2px' }}>To 12,400 recipients</div>
+                  </div>
+                  <span className="mock-badge success">Delivered</span>
+                </div>
+                <div className="mock-log-item">
+                  <div>
+                    <strong>June OTP Verification</strong>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginTop: '2px' }}>Recipient: +234805551234</div>
+                  </div>
+                  <span className="mock-badge success">Delivered</span>
+                </div>
+                <div className="mock-log-item">
+                  <div>
+                    <strong>Birthday Automation</strong>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginTop: '2px' }}>Sender ID: BZTel</div>
+                  </div>
+                  <span className="mock-badge pending">Queued</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* "Why BZTel" Reliability Section */}
+      <section className="sect-l">
+        <div className="sect-header-l reveal reveal-active">
+          <span className="hero-tag-l" style={{ display: 'block', textAlign: 'center', marginBottom: '8px' }}>CARRIER PIPELINES</span>
+          <h2 className="sect-title-l" style={{ textAlign: 'center' }}>Direct Routes. Sub-Second Latency.</h2>
+          <p className="sect-subtitle-l" style={{ textAlign: 'center' }}>We don't rely on third-party hops. We plug directly into regional carrier gateways.</p>
+        </div>
+
+        <div className="reliability-grid">
+          {/* Card 1 */}
+          <div className="reliability-card reveal reveal-scale reveal-active">
+            <div className="reliability-icon-box">
+              <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+            </div>
+            <h3>MTN & Airtel Direct Pipelines</h3>
+            <p>Direct SS7 protocol links to major regional telco centers bypass intermediate brokers, reducing routing hops and delivering verification codes within 2 seconds.</p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="reliability-card reveal reveal-scale reveal-active">
+            <div className="reliability-icon-box">
+              <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.2" />
+              </svg>
+            </div>
+            <h3>Intelligent Route Failover</h3>
+            <p>Our routing engines actively monitor carrier latency and deliverability. If a regional node suffers congestion, traffic is rerouted to hot-standby channels.</p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="reliability-card reveal reveal-scale reveal-active">
+            <div className="reliability-icon-box">
+              <svg style={{ width: '20px', height: '20px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3>Spam & Compliance Filters</h3>
+            <p>Built-in opt-out list engines, character set compliance checking, and spam key matching keep your sender IDs in good standing and prevent carrier blocking.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Volume Discount Estimator Section */}
       <section className="sect-l sect-l-offset" style={{ borderTop: '1px solid var(--border-color)' }}>
         <div className="slider-container reveal reveal-scale reveal-active" style={{ maxWidth: '600px', margin: '0 auto' }}>
@@ -443,6 +624,90 @@ func main() {
             <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Estimated Monthly Cost:</span>
             <strong style={{ fontSize: '1.2rem', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>{costLabel}</strong>
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Accordion Section */}
+      <section className="sect-l" id="faqs" style={{ borderTop: '1px solid var(--border-color)' }}>
+        <div className="sect-header-l reveal reveal-active">
+          <span className="hero-tag-l" style={{ display: 'block', textAlign: 'center', marginBottom: '8px' }}>QUESTIONS & ANSWERS</span>
+          <h2 className="sect-title-l" style={{ textAlign: 'center' }}>Frequently Asked Questions</h2>
+          <p className="sect-subtitle-l" style={{ textAlign: 'center' }}>Everything you need to know about our communication platform.</p>
+        </div>
+
+        <div className="faq-accordion-wrapper">
+          {/* FAQ Item 1 */}
+          <div className={`faq-item-card ${activeFaq === 0 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 0 ? null : 0)}>
+              <span className="faq-question-txt">How does BZTel ensure SMS delivery rates?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                We establish direct SS7 pipeline connections to primary telecommunication operators (like MTN, Airtel, Glo) and maintain fallback channels. This bypasses intermediate route brokers, reducing packet drops and ensuring a 99.9% transmission delivery rate.
+              </p>
+            </div>
+          </div>
+
+          {/* FAQ Item 2 */}
+          <div className={`faq-item-card ${activeFaq === 1 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 1 ? null : 1)}>
+              <span className="faq-question-txt">Which local currencies are supported for billing?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                BZTel fully supports local billing in US Dollar ($), Ghanaian Cedi (GH₵), and Nigerian Naira (₦). Rates are computed dynamically based on the active currency selector, and regional gateways allow instant wallet top-ups.
+              </p>
+            </div>
+          </div>
+
+          {/* FAQ Item 3 */}
+          <div className={`faq-item-card ${activeFaq === 2 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 2 ? null : 2)}>
+              <span className="faq-question-txt">How do Birthday Campaigns automatically work?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                When you create a Birthday Campaign in the dashboard, our daemon scheduler monitors your designated contact group daily. It automatically extracts birthdays, formats the template with personalized merge tags, and dispatches the SMS at the configured hour.
+              </p>
+            </div>
+          </div>
+
+          {/* FAQ Item 4 */}
+          <div className={`faq-item-card ${activeFaq === 3 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 3 ? null : 3)}>
+              <span className="faq-question-txt">Are there any limits on how many messages I can send?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                No. BZTel's queue architecture handles both low-volume individual transactional OTP messages and large bulk notification broadcasts with ease. Our infrastructure auto-scales delivery throughput based on account tier settings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bold Bottom CTA Banner */}
+      <section className="cta-banner-container reveal reveal-scale reveal-active">
+        <div className="cta-gradient-card">
+          <h2 className="cta-card-title">Connect and scale your communications today</h2>
+          <p className="cta-card-subtitle">
+            Create a free account in less than 2 minutes. Get free trial credits to test our APIs, no credit card required.
+          </p>
+          <a href="/app" className="cta-card-btn">
+            Create Free Account &rarr;
+          </a>
         </div>
       </section>
 
