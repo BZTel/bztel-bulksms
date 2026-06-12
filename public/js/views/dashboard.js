@@ -207,11 +207,11 @@ export function renderDashboardView(container, state) {
 }
 
 async function initDashboard(state) {
-  // Add Sender ID → jump to SMS sender settings (more view or toast for now)
+  // Add Sender ID → jump to SMS sender settings
   const addSenderBtn = document.getElementById('add-sender-id-btn');
   if (addSenderBtn) {
     addSenderBtn.addEventListener('click', () => {
-      showToast('Sender ID management is available via your account settings.', 'info');
+      document.querySelector('.nav-item[data-view=more]')?.click();
     });
   }
 
@@ -234,11 +234,25 @@ async function initDashboard(state) {
 async function loadDashboardData(state, silent = false) {
   try {
     // Run all fetches in parallel
-    const [statsRes, contactsRes, txRes] = await Promise.all([
+    const [statsRes, contactsRes, txRes, senderIdsRes] = await Promise.all([
       apiFetch('/api/sms/stats'),
       apiFetch('/api/contacts'),
-      apiFetch('/api/billing/transactions')
+      apiFetch('/api/billing/transactions'),
+      apiFetch('/api/sender-ids')
     ]);
+
+    let approvedSenderIds = ['BZTEL'];
+    if (senderIdsRes && senderIdsRes.ok) {
+      try {
+        const { sender_ids } = await senderIdsRes.json();
+        const approvedList = sender_ids
+          .filter(s => s.status === 'approved')
+          .map(s => s.name);
+        approvedSenderIds = ['BZTEL', ...approvedList];
+      } catch (err) {
+        console.error('Error parsing sender IDs:', err);
+      }
+    }
 
     // ── SMS Stats ──────────────────────────────────────────────────
     if (statsRes.ok) {
@@ -292,8 +306,8 @@ async function loadDashboardData(state, silent = false) {
 
       if (contacts.length > 0) markStepDone('step-contacts');
 
-      // Sender ID search filters the pre-filled BZTEL default
-      setupSenderIdSearch(state);
+      // Sender ID search filters the pre-filled BZTEL default and approved ones
+      setupSenderIdSearch(state, approvedSenderIds);
     }
 
     // ── Billing / Transactions ─────────────────────────────────────
@@ -343,12 +357,9 @@ async function loadDashboardData(state, silent = false) {
   }
 }
 
-function setupSenderIdSearch(state) {
+function setupSenderIdSearch(state, senderIds = ['BZTEL']) {
   const input = document.getElementById('sender-id-search');
   if (!input) return;
-
-  // For now show the default sender ID (BZTEL)
-  const senderIds = ['BZTEL'];
 
   function renderSenderIds(filter = '') {
     const list = document.getElementById('sender-id-list');
@@ -362,7 +373,7 @@ function setupSenderIdSearch(state) {
         </div>
       `;
       document.getElementById('add-sender-id-btn')?.addEventListener('click', () => {
-        showToast('Sender ID management is available via your account settings.', 'info');
+        document.querySelector('.nav-item[data-view=more]')?.click();
       });
       return;
     }
@@ -379,7 +390,7 @@ function setupSenderIdSearch(state) {
       <button id="add-sender-id-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;padding:7px;font-size:0.8rem;">+ Add Another Sender ID</button>
     `;
     document.getElementById('add-sender-id-btn')?.addEventListener('click', () => {
-      showToast('Sender ID management is available via your account settings.', 'info');
+      document.querySelector('.nav-item[data-view=more]')?.click();
     });
   }
 

@@ -8,6 +8,7 @@ export function renderMoreView(root, state) {
       <!-- Tab Bar within More view -->
       <div class="group-filters-bar" style="margin-bottom: 8px;">
         <span class="filter-chip active" id="tab-btn-api">Developer API Keys</span>
+        <span class="filter-chip" id="tab-btn-sender-ids">Custom Sender IDs</span>
         <span class="filter-chip" id="tab-btn-account">Account Settings</span>
       </div>
 
@@ -23,18 +24,28 @@ export function renderMoreView(root, state) {
 
 function initMoreView(state) {
   const apiTabBtn = document.getElementById('tab-btn-api');
+  const senderIdTabBtn = document.getElementById('tab-btn-sender-ids');
   const accountTabBtn = document.getElementById('tab-btn-account');
   const contentArea = document.getElementById('more-tab-content');
 
   apiTabBtn.addEventListener('click', () => {
     apiTabBtn.classList.add('active');
+    senderIdTabBtn.classList.remove('active');
     accountTabBtn.classList.remove('active');
     renderAPITab(contentArea, state);
+  });
+
+  senderIdTabBtn.addEventListener('click', () => {
+    senderIdTabBtn.classList.add('active');
+    apiTabBtn.classList.remove('active');
+    accountTabBtn.classList.remove('active');
+    renderSenderIdsTab(contentArea, state);
   });
 
   accountTabBtn.addEventListener('click', () => {
     accountTabBtn.classList.add('active');
     apiTabBtn.classList.remove('active');
+    senderIdTabBtn.classList.remove('active');
     renderAccountTab(contentArea, state);
   });
 
@@ -300,7 +311,7 @@ function updateCodeSnippet(tokenOverride = null) {
   }'`;
   } else {
     snippet = `import fetch from 'node-fetch';
-
+ 
 const response = await fetch('${endpoint}', {
   method: 'POST',
   headers: {
@@ -313,7 +324,7 @@ const response = await fetch('${endpoint}', {
     message: 'Hello from the Bztel developer API!'
   })
 });
-
+ 
 const data = await response.json();
 console.log(data);`;
   }
@@ -347,6 +358,184 @@ function setupClickToCopy() {
       showToast('API Key copied to clipboard!', 'success');
     });
   }
+}
+
+function renderSenderIdsTab(container, state) {
+  container.innerHTML = `
+    <div class="composer-layout">
+      <!-- Left side: Sender ID Directory -->
+      <div class="panel glass" style="flex: 1.2;">
+        <div class="panel-header">
+          <h3 class="panel-title">Custom Sender IDs</h3>
+        </div>
+
+        <p class="modal-desc" style="margin-bottom: 20px;">
+          Register alphanumeric Sender IDs (up to 11 characters) for custom branding on SMS campaigns. Custom Sender IDs require manual vetting and operator compliance approval.
+        </p>
+
+        <div class="table-container mb-4">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Sender ID</th>
+                <th>Use Case</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="sender-ids-tbody">
+              <tr>
+                <td colspan="4" class="text-center" style="color: var(--text-muted); padding: 30px;">Loading Sender IDs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right side: Request Form -->
+      <div class="quick-send-card" style="flex: 0.8;">
+        <div class="panel glass" style="height: 100%;">
+          <div class="panel-header" style="margin-bottom: 12px;">
+            <h3 class="panel-title">Request Sender ID</h3>
+          </div>
+          <p class="modal-desc" style="margin-bottom: 16px; font-size: 0.8rem;">
+            Submit a custom alphanumeric identity for approval. Please allow 2-5 business days for compliance verification.
+          </p>
+
+          <form id="request-sender-id-form">
+            <div class="form-group">
+              <label for="new-sender-name">Sender ID Name</label>
+              <input type="text" id="new-sender-name" class="form-control" placeholder="e.g. KAYCARE" required style="text-transform: uppercase;">
+              <span style="font-size: 0.7rem; color: var(--text-muted); display: block; margin-top: 4px;">Must be 2-11 alphanumeric characters.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="new-sender-desc">Use Case / Description</label>
+              <textarea id="new-sender-desc" class="form-control" placeholder="Describe what type of messages you will send (e.g. Transactional OTPs for customer login verification)" required style="min-height: 80px; font-size: 0.85rem;"></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="new-sender-doc">Business License URL (Optional)</label>
+              <input type="url" id="new-sender-doc" class="form-control" placeholder="https://example.com/license.pdf" style="font-size: 0.85rem;">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-4" id="submit-sender-id-btn">
+              Submit Verification Request
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  `;
+
+  initSenderIdsTab(state);
+}
+
+async function initSenderIdsTab(state) {
+  setupSenderIdForm(state);
+  await loadSenderIdsData();
+}
+
+async function loadSenderIdsData() {
+  try {
+    const response = await apiFetch('/api/sender-ids');
+    if (!response.ok) return;
+
+    const data = await response.json();
+    renderSenderIdsTable(data.sender_ids);
+  } catch (error) {
+    showToast('Failed to load Sender IDs', 'error');
+  }
+}
+
+function renderSenderIdsTable(senderIds) {
+  const tbody = document.getElementById('sender-ids-tbody');
+  if (!tbody) return;
+
+  if (!senderIds || senderIds.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center" style="color: var(--text-muted); padding: 30px;">
+          No custom Sender IDs requested. Submit a form to request your first one!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = senderIds.map(s => {
+    const date = new Date(s.created_at);
+    const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    
+    let badgeClass = '';
+    let statusText = s.status.toUpperCase();
+    if (s.status === 'approved') {
+      badgeClass = 'background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);';
+    } else if (s.status === 'rejected') {
+      badgeClass = 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); cursor: help;';
+      statusText += ` (Info)`;
+    } else {
+      badgeClass = 'background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);';
+    }
+
+    const tooltipAttr = s.status === 'rejected' ? `title="Rejection Reason: ${s.rejection_reason || 'Vetting document mismatch'}"` : '';
+
+    return `
+      <tr>
+        <td><strong>${s.name}</strong></td>
+        <td style="font-size: 0.8rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${s.description}">${s.description}</td>
+        <td>
+          <span class="mock-badge" style="display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.7rem; font-weight: 700; ${badgeClass}" ${tooltipAttr}>
+            ${statusText}
+          </span>
+        </td>
+        <td style="color: var(--text-muted); font-size: 0.8rem;">${dateStr}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function setupSenderIdForm(state) {
+  const form = document.getElementById('request-sender-id-form');
+  const btn = document.getElementById('submit-sender-id-btn');
+  const nameInput = document.getElementById('new-sender-name');
+  const descInput = document.getElementById('new-sender-desc');
+  const docInput = document.getElementById('new-sender-doc');
+
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = nameInput.value.toUpperCase();
+    const description = descInput.value;
+    const document_url = docInput.value;
+
+    btn.disabled = true;
+    btn.innerText = 'Submitting request...';
+
+    try {
+      const response = await apiFetch('/api/sender-ids', {
+        method: 'POST',
+        body: JSON.stringify({ name, description, document_url })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showToast('Sender ID request submitted successfully!', 'success');
+        nameInput.value = '';
+        descInput.value = '';
+        docInput.value = '';
+        await loadSenderIdsData();
+      } else {
+        showToast(data.error || 'Failed to submit request', 'error');
+      }
+    } catch (error) {
+      showToast('Connection error submitting request', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Submit Verification Request';
+    }
+  });
 }
 
 function renderAccountTab(container, state) {

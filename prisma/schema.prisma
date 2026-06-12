@@ -35,6 +35,7 @@ model User {
   virtualNumbers    VirtualNumber[]
   incomingMessages  IncomingMessage[]
   drafts            Draft[]
+  senderIds         SenderId[]
 
   @@map("users")
 }
@@ -229,4 +230,20 @@ model Draft {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("drafts")
+}
+
+model SenderId {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  name            String   @unique
+  description     String
+  status          String   @default("pending") // pending, approved, rejected
+  rejectionReason String?  @map("rejection_reason")
+  documentUrl     String?  @map("document_url")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sender_ids")
 }

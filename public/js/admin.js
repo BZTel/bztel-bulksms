@@ -1,4 +1,5 @@
 import { renderAdminUsersView } from './views/admin-users.js';
+import { renderAdminSenderIdsView } from './views/admin-sender-ids.js';
 
 // ─── Admin State ─────────────────────────────────────────────
 const state = {
@@ -127,11 +128,19 @@ function renderView(viewName) {
     btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
   });
 
-  const titles = { users: 'Customer Accounts' };
+  const titles = { 
+    users: 'Customer Accounts',
+    'sender-ids': 'Sender ID Verification Requests'
+  };
   document.getElementById('admin-view-title').textContent = titles[viewName] || 'Admin';
 
   switch (viewName) {
     case 'users':
+      renderAdminUsersView(root, state);
+      break;
+    case 'sender-ids':
+      renderAdminSenderIdsView(root, state);
+      break;
     default:
       renderAdminUsersView(root, state);
   }
