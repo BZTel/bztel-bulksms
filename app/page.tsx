@@ -346,10 +346,10 @@ func main() {
           
           <div className="dev-testimonial-card reveal reveal-scale reveal-active">
             <p className="testimonial-quote">
-              "Integrating BZTel SMS API took us less than 15 minutes. We deliver over 50,000 notifications daily to our customers across Nigeria with sub-second delivery latency. The dynamic failover routing is a complete game-changer."
+              "Integrating BZTel SMS API took us less than 15 minutes. We deliver over 50,000 notifications daily to our customers with sub-second delivery latency. The dynamic failover routing is a complete game-changer."
             </p>
             <div className="testimonial-author">
-              — Tunde Balogun, CTO at GradiaKlasso
+              — Ramsey Asmah, CTO at Kaycare Systems
             </div>
           </div>
         </div>
