@@ -229,7 +229,7 @@ func main() {
       </header>
 
       {/* Hero Section */}
-      <section className="hero-l" style={{ display: 'flex' }}>
+      <section className="hero-l">
         <div className="hero-content-l reveal reveal-left reveal-active">
           <h1 className="hero-title-l">Communication APIs & <span>Custom Software</span> Built for Your Growth</h1>
           <p className="hero-subtitle-l">BZTel provides powerful communication APIs and custom software development services to help businesses connect, automate and scale globally.</p>
