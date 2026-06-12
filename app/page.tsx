@@ -477,8 +477,8 @@ func main() {
             <div className="mock-dashboard-wrapper">
               <div className="mock-dashboard-header">
                 <div className="mock-header-user">
-                  <div className="mock-user-avatar">AD</div>
-                  <div className="mock-user-name">Aliko Dangote</div>
+                  <div className="mock-user-avatar">CO</div>
+                  <div className="mock-user-name">Chidi Okafor</div>
                 </div>
                 <div className="mock-header-balance">
                   ₦245,500.00
