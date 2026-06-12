@@ -17,8 +17,8 @@ export function renderVoiceView(root, state) {
         <form id="voice-broadcast-form">
           <div class="form-row-layout">
             <div class="form-group">
-              <label for="voice-sender">Caller Caller-ID</label>
-              <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +233241234567" required value="BZTEL_VOICE">
+              <label for="voice-sender">Caller ID</label>
+              <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +2348012345678" required value="BZTEL_VOICE">
             </div>
 
             <div class="form-group">
@@ -32,7 +32,7 @@ export function renderVoiceView(root, state) {
 
           <div class="form-group mt-2">
             <label for="voice-recipients">Recipients (Comma separated phone numbers)</label>
-            <textarea id="voice-recipients" class="form-control" placeholder="+233241234567, +233501234567" required style="min-height: 80px;"></textarea>
+            <textarea id="voice-recipients" class="form-control" placeholder="+2348012345678, +2348098765432" required style="min-height: 80px;"></textarea>
           </div>
 
           <!-- TTS Input Container -->

@@ -30,7 +30,7 @@ export function renderRequestServiceView(root, state) {
             </div>
             <div class="form-group flex-1">
               <label for="request-contact-phone">Contact Phone</label>
-              <input type="text" id="request-contact-phone" class="form-control" required placeholder="e.g. +233 24 123 4567">
+              <input type="text" id="request-contact-phone" class="form-control" required placeholder="e.g. +234 80 1234 5678">
             </div>
           </div>
 

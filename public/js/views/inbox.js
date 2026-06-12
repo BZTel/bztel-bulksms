@@ -264,7 +264,7 @@ export function renderInboxView(container, state) {
           body: JSON.stringify({
             recipient: phone,
             message: text,
-            sender_id: 'BZTEL'
+            sender_id: inboundNumber
           })
         });
 
@@ -293,7 +293,7 @@ export function renderInboxView(container, state) {
 
     // Prepopulate a sample phone if blank
     if (mockFrom && !mockFrom.value) {
-      mockFrom.value = '+233241112222';
+      mockFrom.value = '+2348011112222';
     }
 
     mockSend.addEventListener('click', async () => {
