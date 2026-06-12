@@ -28,7 +28,7 @@ export function renderHelpView(root, state) {
               <span style="font-weight: bold; color: var(--accent-color);">+</span>
             </summary>
             <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
-              Standard rates are 1 SMS credit per SMS page (160 GSM characters). Refills are priced transparently at tiered bulk volumes: Growth pack offers SMS credits at GHS 0.08 equivalent. Check the Pricing page for exact current rates.
+              Standard rates are 1 SMS credit per SMS page (160 GSM characters). Refills are priced transparently at tiered bulk volumes: Growth pack offers SMS credits at NGN 0.08 equivalent. Check the Pricing page for exact current rates.
             </p>
           </details>
 

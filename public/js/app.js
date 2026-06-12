@@ -229,10 +229,10 @@ export function updateUIHeader() {
   document.getElementById('balance-count').innerText = state.user.balance.toLocaleString();
   document.getElementById('sidebar-user-email').innerText = state.user.email;
   
-  // Update sidebar wallet badge GHS
+  // Update sidebar wallet badge NGN
   const walletBadge = document.getElementById('sidebar-wallet-balance');
   if (walletBadge) {
-    walletBadge.innerText = `GHS ${state.user.balance.toFixed(2)}`;
+    walletBadge.innerText = `NGN ${state.user.balance.toFixed(2)}`;
   }
 
   // Set initials icon

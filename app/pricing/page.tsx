@@ -9,7 +9,7 @@ const currencyConfig = {
 };
 
 export default function PricingPage() {
-  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('USD');
+  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('NGN');
   const [volume, setVolume] = useState(25000);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
@@ -25,7 +25,7 @@ export default function PricingPage() {
           } else if (data.country_code === 'NG') {
             setCurrency('NGN');
           } else {
-            setCurrency('USD');
+            setCurrency('NGN');
           }
           return;
         }
@@ -39,7 +39,7 @@ export default function PricingPage() {
       } else if (tz.includes('Lagos')) {
         setCurrency('NGN');
       } else {
-        setCurrency('USD');
+        setCurrency('NGN');
       }
     }
     detectCurrency();

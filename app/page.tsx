@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
 export default function HomePage() {
-  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('USD');
+  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('NGN');
   const [volume, setVolume] = useState(25000);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeLang, setActiveLang] = useState<'curl' | 'python' | 'php' | 'node' | 'go'>('curl');
@@ -27,7 +27,7 @@ export default function HomePage() {
           } else if (data.country_code === 'NG') {
             setCurrency('NGN');
           } else {
-            setCurrency('USD');
+            setCurrency('NGN');
           }
           return;
         }
@@ -41,7 +41,7 @@ export default function HomePage() {
       } else if (tz.includes('Lagos')) {
         setCurrency('NGN');
       } else {
-        setCurrency('USD');
+        setCurrency('NGN');
       }
     }
     detectCurrency();
