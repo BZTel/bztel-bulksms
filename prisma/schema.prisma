@@ -15,7 +15,7 @@ model User {
   passwordHash   String?    @map("password_hash")
   isAdmin        Boolean    @default(false) @map("is_admin")
   status         String     @default("active")
-  balance        Int        @default(100)
+  balance        Int        @default(10)
   role           String     @default("Owner")
   parentUserId   Int?       @map("parent_user_id")
   createdAt      DateTime   @default(now()) @map("created_at")

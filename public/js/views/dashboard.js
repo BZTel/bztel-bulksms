@@ -330,7 +330,7 @@ async function loadDashboardData(state, silent = false) {
       }
 
       // Onboarding: top-up done if any credits purchased
-      if (summary.total_credited > 100) { // >100 means they topped up beyond signup bonus
+      if (summary.total_credited > 10) { // >10 means they topped up beyond signup bonus
         markStepDone('step-topup');
       }
     }
