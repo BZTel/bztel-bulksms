@@ -3,11 +3,50 @@
 import { useState } from 'react';
 
 export default function SoftwareDevelopmentPage() {
+  const [companyName, setCompanyName] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [workEmail, setWorkEmail] = useState('');
+  const [scope, setScope] = useState('Web Application Development');
+  const [details, setDetails] = useState('');
+  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccess(true);
+    setLoading(true);
+    setErrorMsg('');
+
+    try {
+      const subject = `Project Brief: ${companyName} - ${scope}`;
+      const message = `Company Name: ${companyName}\nProject Scope: ${scope}\n\nProject Details & Goals:\n${details}`;
+
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: contactName,
+          email: workEmail,
+          subject,
+          message
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setSuccess(true);
+      } else {
+        setErrorMsg(data.error || 'Failed to submit project brief. Please try again.');
+      }
+    } catch (err) {
+      console.error('Error submitting project brief:', err);
+      setErrorMsg('An error occurred. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -123,33 +162,81 @@ export default function SoftwareDevelopmentPage() {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Company Name</label>
-                <input type="text" className="form-control" placeholder="Company Inc." required style={{ background: 'var(--bg-offset)' }} />
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="Company Inc." 
+                  required 
+                  style={{ background: 'var(--bg-offset)' }} 
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
               </div>
               <div className="form-row" style={{ display: 'flex', gap: '16px', marginTop: '16px' }}>
                 <div className="form-group flex-1" style={{ flex: 1 }}>
                   <label>Contact Name</label>
-                  <input type="text" className="form-control" placeholder="Jane Doe" required style={{ background: 'var(--bg-offset)' }} />
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="Jane Doe" 
+                    required 
+                    style={{ background: 'var(--bg-offset)' }} 
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                  />
                 </div>
                 <div className="form-group flex-1" style={{ flex: 1 }}>
                   <label>Work Email</label>
-                  <input type="email" className="form-control" placeholder="jane@company.com" required style={{ background: 'var(--bg-offset)' }} />
+                  <input 
+                    type="email" 
+                    className="form-control" 
+                    placeholder="jane@company.com" 
+                    required 
+                    style={{ background: 'var(--bg-offset)' }} 
+                    value={workEmail}
+                    onChange={(e) => setWorkEmail(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="form-group" style={{ marginTop: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '6px' }}>Estimated Project Scope</label>
-                <select className="form-control" style={{ background: 'var(--bg-offset)', padding: '10px 14px', fontSize: '0.9rem', width: '100%' }}>
-                  <option>Web Application Development</option>
-                  <option>Mobile Application (iOS/Android)</option>
-                  <option>SaaS Platform Engineering</option>
-                  <option>API System Integration</option>
-                  <option>UI/UX Design & Prototyping</option>
+                <select 
+                  className="form-control" 
+                  style={{ background: 'var(--bg-offset)', padding: '10px 14px', fontSize: '0.9rem', width: '100%' }}
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value)}
+                >
+                  <option value="Web Application Development">Web Application Development</option>
+                  <option value="Mobile Application (iOS/Android)">Mobile Application (iOS/Android)</option>
+                  <option value="SaaS Platform Engineering">SaaS Platform Engineering</option>
+                  <option value="API System Integration">API System Integration</option>
+                  <option value="UI/UX Design & Prototyping">UI/UX Design & Prototyping</option>
                 </select>
               </div>
               <div className="form-group" style={{ marginTop: '16px' }}>
                 <label>Project Details & Goals</label>
-                <textarea className="form-control" placeholder="Provide a brief overview of what you want to build..." required style={{ background: 'var(--bg-offset)', minHeight: '100px', width: '100%' }}></textarea>
+                <textarea 
+                  className="form-control" 
+                  placeholder="Provide a brief overview of what you want to build..." 
+                  required 
+                  style={{ background: 'var(--bg-offset)', minHeight: '100px', width: '100%' }}
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                ></textarea>
               </div>
-              <button type="submit" className="btn-l btn-l-primary btn-block" style={{ border: 'none', padding: '12px', marginTop: '20px', cursor: 'pointer' }}>Submit Project Brief</button>
+              {errorMsg && (
+                <div style={{ color: 'var(--error-color)', fontWeight: 600, fontSize: '0.85rem', marginTop: '10px' }}>
+                  ⚠ {errorMsg}
+                </div>
+              )}
+              <button 
+                type="submit" 
+                className="btn-l btn-l-primary btn-block" 
+                style={{ border: 'none', padding: '12px', marginTop: '20px', cursor: 'pointer' }}
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit Project Brief'}
+              </button>
             </form>
           )}
         </div>
