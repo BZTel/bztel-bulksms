@@ -58,14 +58,11 @@ export default function PricingPage() {
   };
 
   // Compute slider variables
-  let rateUsd = 0.0099;
-  if (volume >= 10000 && volume < 50000) {
-    rateUsd = 0.0079;
-  } else if (volume >= 50000 && volume < 200000) {
-    rateUsd = 0.0069;
-  } else if (volume >= 200000) {
-    rateUsd = 0.0059;
+  let rateUsd = 0.005;
+  if (volume >= 100000) {
+    rateUsd = 0.0042;
   }
+
 
   const localRate = rateUsd * config.rate;
   const rateLabel = currency === 'NGN' 
