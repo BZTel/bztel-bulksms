@@ -256,6 +256,9 @@ export default function SoftwareDevelopmentPage() {
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
                 ></textarea>
+                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px', lineHeight: 1.4 }}>
+                  * Please provide only high-level information necessary to assess your project. Do not share sensitive details, credentials, or private keys.
+                </span>
               </div>
               {errorMsg && (
                 <div style={{ color: 'var(--error-color)', fontWeight: 600, fontSize: '0.85rem', marginTop: '10px' }}>
