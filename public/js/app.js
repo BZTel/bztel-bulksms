@@ -427,12 +427,13 @@ export async function apiFetch(url, options = {}) {
     headers['Authorization'] = `Bearer ${state.token}`;
   }
 
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+
   const res = await fetch(url, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers
-    }
+    headers
   });
 
   console.log('[apiFetch] Response from:', url, 'status:', res.status);

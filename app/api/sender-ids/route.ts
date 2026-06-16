@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { mkdir, writeFile } from 'fs/promises';
+import { join } from 'path';
 
 const ALLOWED_WRITE_ROLES = ['Owner', 'Administrator', 'Marketing Agent'];
 const SENDER_ID_REGEX = /^[a-zA-Z0-9]{2,11}$/;
@@ -53,7 +55,10 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    const { name, description, document_url } = await req.json();
+    const formData = await req.formData();
+    const name = formData.get('name') as string | null;
+    const description = formData.get('description') as string | null;
+    const documentFile = formData.get('document') as File | null;
     const ownerId = authUser.owner_id;
 
     if (!name || !description) {
@@ -79,12 +84,27 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
+    let documentUrl: string | null = null;
+    if (documentFile && documentFile.size > 0) {
+      const bytes = await documentFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      const uploadDir = join(process.cwd(), 'public', 'uploads');
+      await mkdir(uploadDir, { recursive: true });
+
+      const safeFilename = `${Date.now()}-${documentFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = join(uploadDir, safeFilename);
+      await writeFile(filePath, buffer);
+
+      documentUrl = `/uploads/${safeFilename}`;
+    }
+
     const newSenderId = await prisma.senderId.create({
       data: {
         userId: ownerId,
         name: trimmedName,
         description: description.trim(),
-        documentUrl: document_url ? document_url.trim() : null,
+        documentUrl,
         status: 'pending'
       }
     });

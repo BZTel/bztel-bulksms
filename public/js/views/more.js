@@ -415,8 +415,8 @@ function renderSenderIdsTab(container, state) {
             </div>
 
             <div class="form-group">
-              <label for="new-sender-doc">Business License URL (Optional)</label>
-              <input type="url" id="new-sender-doc" class="form-control" placeholder="https://example.com/license.pdf" style="font-size: 0.85rem;">
+              <label for="new-sender-doc">Business License / Verification Document (Optional)</label>
+              <input type="file" id="new-sender-doc" class="form-control" accept=".pdf,.png,.jpg,.jpeg" style="font-size: 0.85rem; padding: 8px;">
             </div>
 
             <button type="submit" class="btn btn-primary btn-block mt-4" id="submit-sender-id-btn">
@@ -508,15 +508,22 @@ function setupSenderIdForm(state) {
     e.preventDefault();
     const name = nameInput.value.toUpperCase();
     const description = descInput.value;
-    const document_url = docInput.value;
+    const documentFile = docInput.files[0];
 
     btn.disabled = true;
     btn.innerText = 'Submitting request...';
 
     try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('description', description);
+      if (documentFile) {
+        formData.append('document', documentFile);
+      }
+
       const response = await apiFetch('/api/sender-ids', {
         method: 'POST',
-        body: JSON.stringify({ name, description, document_url })
+        body: formData
       });
 
       const data = await response.json();

@@ -188,6 +188,40 @@ func main() {
     <>
       <link rel="stylesheet" href="/css/landing.css" />
 
+      {/* Top Contact Header Bar */}
+      <div className="top-bar-l">
+        <div className="top-bar-container-l">
+          <div className="top-bar-info-l">
+            {/* WhatsApp Item */}
+            <div className="top-bar-item-l">
+              <svg className="top-bar-icon-l" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12.004 2C6.51 2 2.014 6.5 2.014 12c0 2.14.67 4.125 1.82 5.766L2 22l4.392-1.156c1.63.882 3.486 1.383 5.612 1.383 5.493 0 9.99-4.5 9.99-10S17.496 2 12.004 2zm6.273 14.17c-.26.736-1.503 1.345-2.07 1.41-.5.06-1.15.1-3.32-.76-2.77-1.1-4.56-3.93-4.7-4.12-.14-.19-1.11-1.48-1.11-2.82 0-1.34.7-2 .95-2.26.26-.26.56-.32.74-.32.19 0 .38 0 .54.01.17.01.4.01.62.53.22.53.76 1.85.83 1.98.07.13.11.29.02.48-.09.19-.19.31-.37.52-.18.21-.38.48-.54.65-.18.19-.37.39-.16.74.21.35.94 1.55 2.01 2.5 1.39 1.23 2.56 1.62 2.92 1.8.36.18.57.15.79-.1.21-.24.93-1.08 1.18-1.45.25-.37.5-.31.84-.19.34.12 2.16 1.02 2.53 1.2.37.19.62.28.71.43.09.16.09.91-.17 1.65z"/>
+              </svg>
+              <div className="top-bar-text-l">
+                <span className="top-bar-label-l">Mon - Sun (24/7)</span>
+                <a href="https://wa.me/2348060257405" target="_blank" rel="noopener noreferrer" className="top-bar-value-l">
+                  +234 806 025 7405 (WhatsApp Only)
+                </a>
+              </div>
+            </div>
+            
+            {/* Email Item */}
+            <div className="top-bar-item-l">
+              <svg className="top-bar-icon-l" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+              <div className="top-bar-text-l">
+                <span className="top-bar-label-l">Support Email</span>
+                <a href="mailto:info@bztel.net" className="top-bar-value-l">
+                  info@bztel.net
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       {/* Navigation Bar */}
       <header className="navbar-l">
         <div className="logo-l" onClick={() => window.location.href = '/'} style={{ cursor: 'pointer' }}>
@@ -393,7 +427,7 @@ func main() {
           <p className="sect-subtitle-l" style={{ textAlign: 'center' }}>Everything you need to engage your customers across every channel.</p>
         </div>
 
-        <div className="api-grid-l">
+        <div className="api-grid-l api-grid-4-cols">
           {/* Card 1 */}
           <div className="api-card-l reveal reveal-scale reveal-active">
             <div className="benefit-icon-box" style={{ marginBottom: '20px' }}>
@@ -401,7 +435,7 @@ func main() {
             </div>
             <h3 className="api-card-title-l">SMS API</h3>
             <p className="api-card-desc-l">Send transactional, promotional and bulk SMS worldwide.</p>
-            <a href="/app" className="api-card-link-l">Learn more &rarr;</a>
+            <a href="/bulk-sms" className="api-card-link-l">Learn more &rarr;</a>
           </div>
 
           {/* Card 2 */}
@@ -411,17 +445,31 @@ func main() {
             </div>
             <h3 className="api-card-title-l">WhatsApp API</h3>
             <p className="api-card-desc-l">Official WhatsApp Business API for notifications, alerts & chat.</p>
-            <a href="/app" className="api-card-link-l">Learn more &rarr;</a>
+            <a href="/whatsapp-api" className="api-card-link-l">Learn more &rarr;</a>
           </div>
 
           {/* Card 3 */}
           <div className="api-card-l reveal reveal-scale reveal-active">
             <div className="benefit-icon-box" style={{ marginBottom: '20px' }}>
-              <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.47-5.112-3.758-6.58-6.58l1.293-.97c.362-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+              </svg>
             </div>
-            <h3 className="api-card-title-l">OTP & Verification</h3>
-            <p className="api-card-desc-l">Fast and reliable OTP for logins, signups and secure verifications.</p>
-            <a href="/app" className="api-card-link-l">Learn more &rarr;</a>
+            <h3 className="api-card-title-l">Voice API</h3>
+            <p className="api-card-desc-l">High-quality voice calls, text-to-speech, and interactive IVR systems.</p>
+            <a href="/voice-api" className="api-card-link-l">Learn more &rarr;</a>
+          </div>
+
+          {/* Card 4 */}
+          <div className="api-card-l reveal reveal-scale reveal-active">
+            <div className="benefit-icon-box" style={{ marginBottom: '20px' }}>
+              <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              </svg>
+            </div>
+            <h3 className="api-card-title-l">Email Blast</h3>
+            <p className="api-card-desc-l">Send transactional and marketing email campaigns with high inbox delivery rates.</p>
+            <a href="/email-blast" className="api-card-link-l">Learn more &rarr;</a>
           </div>
         </div>
       </section>
@@ -525,6 +573,113 @@ func main() {
         </div>
       </section>
 
+      {/* Software Development Capabilities Section */}
+      <section className="sect-l sect-l-offset" style={{ borderBottom: '1px solid var(--border-color)' }}>
+        <div className="features-split-grid" style={{ gridTemplateColumns: '0.95fr 1.05fr' }}>
+          
+          {/* Left: CSS Mockup Sprint Board / Code Editor */}
+          <div className="reveal reveal-left reveal-active">
+            <div className="mock-dashboard-wrapper" style={{ padding: '24px' }}>
+              <div className="mock-dashboard-header" style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></span>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b' }}></span>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981' }}></span>
+                  <span style={{ marginLeft: '8px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Project: Active Sprint Board</span>
+                </div>
+                <div className="mock-badge pending" style={{ textTransform: 'uppercase', fontSize: '0.65rem' }}>Sprint 4</div>
+              </div>
+              
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>To Do</div>
+                  <div style={{ background: 'var(--bg-light)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px', marginBottom: '8px', fontSize: '0.75rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)', color: 'var(--text-dark)' }}>
+                    API Authentication
+                  </div>
+                  <div style={{ background: 'var(--bg-light)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px', fontSize: '0.75rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)', color: 'var(--text-dark)' }}>
+                    Database Migration
+                  </div>
+                </div>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>In Progress</div>
+                  <div style={{ background: 'var(--bg-light)', border: '1px dashed var(--accent-purple)', borderRadius: '6px', padding: '8px', fontSize: '0.75rem', fontWeight: 600, boxShadow: 'var(--shadow-sm)', position: 'relative', color: 'var(--text-dark)' }}>
+                    Voice Routing logic
+                    <span style={{ position: 'absolute', right: '6px', bottom: '6px', background: 'var(--accent-purple-light)', color: 'var(--accent-purple)', fontSize: '0.6rem', padding: '2px 4px', borderRadius: '4px', fontWeight: 700 }}>Active</span>
+                  </div>
+                </div>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Done</div>
+                  <div style={{ background: 'var(--bg-light)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px', marginBottom: '8px', fontSize: '0.75rem', fontWeight: 600, textDecoration: 'line-through', opacity: 0.6, color: 'var(--text-dark)' }}>
+                    SMTP Setup
+                  </div>
+                  <div style={{ background: 'var(--bg-light)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '8px', fontSize: '0.75rem', fontWeight: 600, textDecoration: 'line-through', opacity: 0.6, color: 'var(--text-dark)' }}>
+                    Landing Redesign
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: '#090d16', border: '1px solid #1e293b', borderRadius: '8px', padding: '12px 16px', fontFamily: 'monospace', fontSize: '0.75rem', color: '#fff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.65rem', marginBottom: '6px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
+                  <span>deploy-pipeline.yml</span>
+                  <span style={{ color: '#10b981' }}>✓ Success</span>
+                </div>
+                <div style={{ color: '#818cf8' }}>$ git push origin main</div>
+                <div style={{ color: '#94a3b8' }}>Enumerating objects: 12, done.</div>
+                <div style={{ color: '#34d399' }}>✓ Build completed successfully [compiled in 2.8s]</div>
+                <div style={{ color: '#10b981' }}>✓ Deployment triggered to production environment</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Software Dev Capabilities Description & Bullets */}
+          <div className="reveal reveal-right reveal-active" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <span className="hero-tag-l" style={{ marginBottom: '12px', display: 'inline-block', alignSelf: 'flex-start' }}>SOFTWARE DEVELOPMENT</span>
+            <h2 className="hero-title-l" style={{ fontSize: '2.2rem', color: 'var(--text-dark)', marginBottom: '24px', lineHeight: 1.2 }}>
+              Build and scale custom platforms with BZTel
+            </h2>
+            <div className="feature-bullets-list">
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Custom Web & Mobile Apps</h4>
+                  <p>Design, prototype, and build responsive web application interfaces and cross-platform native iOS & Android apps with modern frameworks.</p>
+                </div>
+              </div>
+              
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-.778.099-1.533.284-2.253" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Robust Enterprise APIs</h4>
+                  <p>Incorporate custom secure endpoints, real-time message callbacks, dynamic billing microservices, and webhook pipelines for third-party integrations.</p>
+                </div>
+              </div>
+              
+              <div className="feature-bullet-item">
+                <div className="feature-bullet-icon-box">
+                  <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3V7.5a3 3 0 013-3h13.5a3 3 0 013 3v3.75a3 3 0 01-3 3zm0 5.25h13.5m-13.5 0a3 3 0 01-3-3v-3.75a3 3 0 013-3h13.5a3 3 0 013 3v3.75a3 3 0 01-3 3z" />
+                  </svg>
+                </div>
+                <div className="feature-bullet-content">
+                  <h4>Cloud Infrastructure Scaling</h4>
+                  <p>Deploy applications to cloud server architectures optimized for fast request response, high scalability, database redundancies, and active telemetry logs.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+
       {/* FAQ Accordion Section */}
       <section className="sect-l" id="faqs" style={{ borderTop: '1px solid var(--border-color)' }}>
         <div className="sect-header-l reveal reveal-active">
@@ -593,19 +748,51 @@ func main() {
               </p>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Bold Bottom CTA Banner */}
-      <section className="cta-banner-container reveal reveal-scale reveal-active">
-        <div className="cta-gradient-card">
-          <h2 className="cta-card-title">Connect and scale your communications today</h2>
-          <p className="cta-card-subtitle">
-            Create a free account in less than 2 minutes. Get free trial credits to test our APIs, no credit card required.
-          </p>
-          <a href="/app" className="cta-card-btn">
-            Create Free Account &rarr;
-          </a>
+          {/* FAQ Item 5 */}
+          <div className={`faq-item-card ${activeFaq === 4 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 4 ? null : 4)}>
+              <span className="faq-question-txt">What is BZTel&apos;s custom software development process?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                We operate under an agile, sprint-based delivery model. Our workflow begins with discovery and system architecture mapping, followed by high-fidelity prototyping, active feature coding in scheduled sprints, automated unit testing, and launch monitoring.
+              </p>
+            </div>
+          </div>
+
+          {/* FAQ Item 6 */}
+          <div className={`faq-item-card ${activeFaq === 5 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 5 ? null : 5)}>
+              <span className="faq-question-txt">How long does it take to deliver a custom MVP?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                Typical minimum viable products (MVPs) are designed, developed, and deployed within 3 to 5 weeks depending on scope complexity. Every project features weekly demos on staging environments so you can track feature progress.
+              </p>
+            </div>
+          </div>
+
+          {/* FAQ Item 7 */}
+          <div className={`faq-item-card ${activeFaq === 6 ? 'active' : ''}`}>
+            <button className="faq-header-btn" onClick={() => setActiveFaq(activeFaq === 6 ? null : 6)}>
+              <span className="faq-question-txt">Who owns the intellectual property and code of custom products?</span>
+              <svg className="faq-chevron-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className="faq-panel-content">
+              <p className="faq-answer-txt">
+                You do. All custom software projects are built under work-for-hire agreements, meaning that 100% ownership of the database designs, source code repositories, visual assets, and intellectual property transfers to your business upon project completion.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -626,8 +813,9 @@ func main() {
             <h4>Products</h4>
             <ul className="footer-links-l">
               <li><a href="/bulk-sms">SMS API</a></li>
-              <li><a href="/app">WhatsApp API</a></li>
-              <li><a href="/app">OTP API</a></li>
+              <li><a href="/whatsapp-api">WhatsApp API</a></li>
+              <li><a href="/voice-api">Voice API</a></li>
+              <li><a href="/email-blast">Email Blast</a></li>
             </ul>
           </div>
 
