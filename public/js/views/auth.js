@@ -8,10 +8,17 @@ export function renderAuthView(container, state) {
       <div class="auth-split-wrapper">
         <!-- Right: Auth Form Pane -->
         <div class="auth-form-pane" style="flex: 1; min-height: 100vh;">
-          <!-- Top Right Header Links -->
-          <div class="auth-form-top-header">
-            <span>${isLogin ? "Don't have an account?" : "Already have an account?"}</span>
-            <a href="#" id="auth-toggle-link" class="auth-action-link">${isLogin ? "Sign Up" : "Sign In"}</a>
+          <div class="auth-form-top-header" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <a href="/" class="auth-back-link" style="text-decoration: none; color: #64748b; font-weight: 500; font-size: 0.85rem; display: flex; align-items: center; gap: 4px; transition: color 0.2s;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='#64748b'">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Website
+            </a>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.85rem; color: #64748b;">${isLogin ? "Don't have an account?" : "Already have an account?"}</span>
+              <a href="#" id="auth-toggle-link" class="auth-action-link">${isLogin ? "Sign Up" : "Sign In"}</a>
+            </div>
           </div>
 
           <div class="auth-form-body-wrapper">
