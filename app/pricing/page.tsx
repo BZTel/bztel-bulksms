@@ -58,10 +58,11 @@ export default function PricingPage() {
   };
 
   // Compute slider variables
-  let rateUsd = 0.005;
+  let rateUsd = 6.5 / 1500;
   if (volume >= 100000) {
-    rateUsd = 0.0042;
+    rateUsd = 6.3 / 1500;
   }
+
 
 
   const localRate = rateUsd * config.rate;
@@ -169,7 +170,7 @@ export default function PricingPage() {
           {/* SMS card */}
           <div className="pricing-card-l reveal reveal-scale reveal-active">
             <span className="pricing-card-lbl-l">SMS</span>
-            <div className="pricing-card-val-l">{formatPrice(0.005)}</div>
+            <div className="pricing-card-val-l">{formatPrice(6.5 / 1500)}</div>
             <div className="pricing-card-sub-l">Per SMS</div>
             <p className="pricing-card-desc-l" style={{ marginTop: '6px' }}>Worldwide SMS Delivery</p>
             <a href="/app" className="btn-l btn-l-outline btn-block" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Get Started</a>
@@ -181,15 +182,6 @@ export default function PricingPage() {
             <div className="pricing-card-val-l">{formatPrice(0.03)}</div>
             <div className="pricing-card-sub-l">Per Conversation</div>
             <p className="pricing-card-desc-l" style={{ marginTop: '6px' }}>24-hour session window</p>
-            <a href="/app" className="btn-l btn-l-outline btn-block" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Get Started</a>
-          </div>
-
-          {/* OTP Card */}
-          <div className="pricing-card-l reveal reveal-scale reveal-active">
-            <span className="pricing-card-lbl-l">OTP SMS</span>
-            <div className="pricing-card-val-l">{formatPrice(0.01)}</div>
-            <div className="pricing-card-sub-l">Per OTP</div>
-            <p className="pricing-card-desc-l" style={{ marginTop: '6px' }}>Fast & Secure Delivery</p>
             <a href="/app" className="btn-l btn-l-outline btn-block" style={{ padding: '6px 12px', fontSize: '0.75rem' }}>Get Started</a>
           </div>
 
