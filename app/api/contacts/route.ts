@@ -57,17 +57,19 @@ export async function POST(req: Request) {
     const { name, phone, group_name, birthdate } = await req.json();
     const ownerId = authUser.owner_id;
 
-    if (!name || !phone) {
-      return NextResponse.json({ error: 'Name and Phone are required' }, { status: 400 });
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
     }
 
+    const contactPhone = phone.trim();
+    const contactName = name && name.trim() ? name.trim() : contactPhone;
     const group = group_name ? group_name.trim() : 'Default';
 
     const contact = await prisma.contact.create({
       data: {
         userId: ownerId,
-        name: name.trim(),
-        phone: phone.trim(),
+        name: contactName,
+        phone: contactPhone,
         groupName: group,
         birthdate: birthdate ? birthdate.trim() : null,
       },

@@ -17,7 +17,7 @@ export function renderDashboardView(container, state) {
     </div>
 
     <!-- KPI Row -->
-    <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
       <div class="kpi-card glass">
         <div class="kpi-header">
           <span>Recent Campaigns</span>
@@ -38,17 +38,6 @@ export function renderDashboardView(container, state) {
         </div>
         <div class="kpi-value" id="kpi-contacts">0</div>
         <div class="kpi-desc">Saved contacts</div>
-      </div>
-
-      <div class="kpi-card glass">
-        <div class="kpi-header">
-          <span>Groups</span>
-          <svg class="kpi-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-        </div>
-        <div class="kpi-value" id="kpi-groups">0</div>
-        <div class="kpi-desc">Contact groups</div>
       </div>
 
       <div class="kpi-card glass">
@@ -296,13 +285,10 @@ async function loadDashboardData(state, silent = false) {
       document.getElementById('kpi-campaigns').innerText = dayCount.toLocaleString();
     }
 
-    // ── Contacts ───────────────────────────────────────────────────
     if (contactsRes.ok) {
       const { contacts } = await contactsRes.json();
-      const groups = [...new Set(contacts.map(c => c.group_name))].filter(Boolean);
 
       document.getElementById('kpi-contacts').innerText = contacts.length.toLocaleString();
-      document.getElementById('kpi-groups').innerText = groups.length.toLocaleString();
 
       if (contacts.length > 0) markStepDone('step-contacts');
 

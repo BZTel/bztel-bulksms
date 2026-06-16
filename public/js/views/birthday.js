@@ -22,9 +22,8 @@ export function renderBirthdayView(root, state) {
 
           <div class="form-row">
             <div class="form-group flex-1">
-              <label for="birthday-group">Target Contact Group</label>
+              <label for="birthday-group">Target Audience</label>
               <select id="birthday-group" class="form-control" required>
-                <option value="">-- Select Group --</option>
                 <option value="All">All Contacts</option>
               </select>
             </div>
@@ -74,7 +73,6 @@ export function renderBirthdayView(root, state) {
 
 async function initBirthdayView(state) {
   setupBirthdayRuleForm(state);
-  await loadBirthdayGroups();
   await loadUpcomingBirthdays();
   await loadActiveCampaigns();
 }
@@ -226,31 +224,3 @@ async function loadUpcomingBirthdays() {
   }
 }
 
-async function loadBirthdayGroups() {
-  const select = document.getElementById('birthday-group');
-  if (!select) return;
-
-  try {
-    const res = await apiFetch('/api/contacts');
-    if (!res.ok) return;
-
-    const data = await res.json();
-    const contacts = data.contacts || [];
-    
-    // Extract unique group names
-    const groups = new Set();
-    contacts.forEach(c => {
-      if (c.group_name) groups.add(c.group_name);
-    });
-
-    // Append options dynamically
-    groups.forEach(g => {
-      const opt = document.createElement('option');
-      opt.value = g;
-      opt.textContent = g;
-      select.appendChild(opt);
-    });
-  } catch (err) {
-    console.error('Failed to load birthday groups:', err);
-  }
-}

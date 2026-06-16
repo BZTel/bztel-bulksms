@@ -63,20 +63,11 @@ export function renderSMSView(root, state) {
           </div>
           <div class="modal-body" style="max-height: 75vh; overflow-y: auto; padding-right: 8px;">
             <form id="broadcast-form">
-              <div class="form-row-layout">
-                <!-- Sender ID -->
-                <div class="form-group">
-                  <label for="sms-sender">Sender ID</label>
-                  <input type="text" id="sms-sender" class="form-control" placeholder="e.g. BZTEL" required maxlength="11" value="BZTEL">
-                  <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
-                </div>
-                <!-- Recipients selection method shortcuts -->
-                <div class="form-group">
-                  <label style="margin-bottom: 8px;">Quick Group Selector</label>
-                  <div class="group-filters-bar" id="group-shortcuts" style="margin-bottom: 0; padding-bottom: 0;">
-                    <span class="text-muted" style="font-size: 0.8rem;">Loading groups...</span>
-                  </div>
-                </div>
+              <!-- Sender ID -->
+              <div class="form-group">
+                <label for="sms-sender">Sender ID</label>
+                <input type="text" id="sms-sender" class="form-control" placeholder="e.g. BZTEL" required maxlength="11" value="BZTEL">
+                <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
               </div>
 
               <!-- Recipients Input -->
@@ -579,7 +570,6 @@ async function openComposeModal(initialText = '', draftId = null, senderId = 'BZ
   recalculateSMSCost();
 
   // Load context dependent data inside modal asynchronously
-  await loadComposeContactsGroups();
   await loadComposeQuickTemplates();
 }
 
@@ -617,58 +607,7 @@ function recalculateSMSCost() {
   costDisplay.innerText = `${totalCost.toLocaleString()} Credit${totalCost !== 1 ? 's' : ''}`;
 }
 
-// Contacts groups shortcuts load
-async function loadComposeContactsGroups() {
-  const container = document.getElementById('group-shortcuts');
-  container.innerHTML = `<span class="filter-chip active" id="chip-manual">Pasted Numbers</span>`;
-  
-  try {
-    const response = await apiFetch('/api/contacts');
-    if (!response.ok) return;
 
-    const data = await response.json();
-    
-    // Group phones by group name
-    const groups = {};
-    data.contacts.forEach(c => {
-      const cleanPhone = c.phone.trim();
-      if (!groups[c.group_name]) {
-        groups[c.group_name] = [];
-      }
-      groups[c.group_name].push(cleanPhone);
-    });
-
-    const groupNames = Object.keys(groups);
-    if (groupNames.length === 0) return;
-
-    // Add filter chips for groups
-    groupNames.forEach(gName => {
-      const phones = groups[gName];
-      const chip = document.createElement('span');
-      chip.className = 'filter-chip';
-      chip.innerText = `${gName} (${phones.length})`;
-      chip.title = `Add ${phones.length} contacts from group ${gName}`;
-      
-      chip.addEventListener('click', () => {
-        const textarea = document.getElementById('sms-recipients');
-        const existingVal = textarea.value.trim();
-        const appendList = phones.join(', ');
-
-        if (existingVal) {
-          textarea.value = existingVal + ', ' + appendList;
-        } else {
-          textarea.value = appendList;
-        }
-
-        recalculateSMSCost();
-        showToast(`Appended contacts from group: ${gName}`, 'info');
-      });
-      container.appendChild(chip);
-    });
-  } catch (error) {
-    console.error('Error loading contacts groups shortcuts:', error);
-  }
-}
 
 // Quick templates pills load inside compose modal
 async function loadComposeQuickTemplates() {
