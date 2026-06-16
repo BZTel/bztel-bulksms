@@ -824,7 +824,7 @@ a {
 /* Pricing Grid */
 .pricing-grid-l {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   max-width: 1200px;
   margin: 0 auto 30px;
@@ -1069,7 +1069,7 @@ a {
   }
   
   .pricing-grid-l {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .footer-grid-l {

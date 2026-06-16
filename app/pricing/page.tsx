@@ -237,46 +237,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Software Development consulting packages rates */}
-      <section className="sect-l">
-        <div className="sect-header-l reveal reveal-active">
-          <span className="hero-tag-l">CONSULTING FEES</span>
-          <h2 className="hero-title-l" style={{ color: 'var(--text-dark)', textAlign: 'center' }}>Custom Software Development Rates</h2>
-          <p className="hero-subtitle-l" style={{ color: 'var(--text-slate)', textAlign: 'center' }}>Professional custom software engineering billed under transparent package agreements.</p>
-        </div>
 
-        <div className="api-grid-l" style={{ maxWidth: '1100px' }}>
-          {/* MVP Package */}
-          <div className="api-card-l reveal reveal-scale reveal-active" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h3 className="api-card-title-l" style={{ fontSize: '1.25rem' }}>MVP Startup Pack</h3>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-dark)', fontFamily: 'var(--font-heading)', margin: '16px 0 8px' }}>{formatPrice(5000)}</div>
-              <p className="api-card-desc-l" style={{ fontSize: '0.85rem', lineHeight: 1.5 }}>Ideal for early stage validation. Built in 3 to 5 weeks. Includes core database design, authentication dashboard, and mobile-responsive layouts.</p>
-            </div>
-            <a href="/software-development#consult-form" className="btn-l btn-l-primary btn-block">Discuss MVP</a>
-          </div>
-
-          {/* Growth Package */}
-          <div className="api-card-l reveal reveal-scale reveal-active" style={{ position: 'relative', borderColor: 'var(--accent-purple)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: 'var(--shadow-md)' }}>
-            <div>
-              <h3 className="api-card-title-l" style={{ fontSize: '1.25rem', color: 'var(--accent-purple)' }}>Growth & SaaS</h3>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--accent-purple)', fontFamily: 'var(--font-heading)', margin: '16px 0 8px' }}>{formatPrice(15000)}</div>
-              <p className="api-card-desc-l" style={{ fontSize: '0.85rem', lineHeight: 1.5 }}>Ideal for businesses launching multitenant platforms. Billed under fixed sprints. Includes payment gateways, Stripe billing, role permissions, and metrics tracking.</p>
-            </div>
-            <a href="/software-development#consult-form" className="btn-l btn-l-primary btn-block">Discuss Growth</a>
-          </div>
-
-          {/* Custom Enterprise */}
-          <div className="api-card-l reveal reveal-scale reveal-active" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h3 className="api-card-title-l" style={{ fontSize: '1.25rem' }}>Custom Enterprise</h3>
-              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-dark)', fontFamily: 'var(--font-heading)', margin: '16px 0 8px' }}>{formatPrice(50000)}</div>
-              <p className="api-card-desc-l" style={{ fontSize: '0.85rem', lineHeight: 1.5 }}>Dedicated engineering squads. Custom SLA support timelines, legacy database system migration, custom microservices mesh integration, and load scaling audits.</p>
-            </div>
-            <a href="/software-development#consult-form" className="btn-l btn-l-outline btn-block">Contact Architecture Team</a>
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Accordion Section */}
       <section className="sect-l sect-l-offset" id="faq" style={{ borderTop: '1px solid var(--border-color)' }}>
