@@ -15,8 +15,8 @@
 
 .admin-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: #000;
+  background: linear-gradient(135deg, var(--accent-color), #7c3aed);
+  color: #ffffff;
   font-size: 0.55rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -333,10 +333,22 @@
   100% { transform: translate(60px, 40px) scale(1.15); }
 }
 
-/* Glassmorphism Authentication Card replaced by Split Pane layout overrides matching Customer Portal */
+/* Split Pane layout overrides matching Customer Portal (Light Theme) */
+#admin-auth {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: 9999;
+  background-color: var(--bg-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
 #admin-auth .auth-form-pane {
-  background-color: #0b0f19;
-  color: #f8fafc;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -350,57 +362,38 @@
   to { opacity: 1; }
 }
 
-#admin-auth .auth-form-title {
-  color: #ffffff;
-}
-
-#admin-auth .auth-form-subtitle {
-  color: #94a3b8;
-}
-
-#admin-auth .form-group-with-icon label {
-  color: #cbd5e1;
-}
-
-#admin-auth .form-control-input {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-}
-
 #admin-auth .form-control-input:focus {
-  border-color: #f59e0b !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-  background-color: rgba(10, 15, 30, 0.7) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  background-color: #ffffff !important;
 }
 
-/* Bright Amber Black-text Login Button */
+/* Indigo/Purple Accent Login Button matching Customer Portal */
 #admin-login-btn {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-  color: #000000 !important;
-  font-weight: 800 !important;
-  font-family: 'Outfit', sans-serif !important;
+  background: var(--accent-color) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-family: 'Inter', sans-serif !important;
   border: none !important;
-  border-radius: 8px !important;
+  border-radius: var(--border-radius-sm) !important;
   padding: 14px !important;
   width: 100% !important;
   font-size: 0.95rem !important;
   cursor: pointer !important;
-  transition: all 0.25s !important;
-  box-shadow: 0 4px 18px rgba(245, 158, 11, 0.2) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  transition: var(--transition-smooth) !important;
+  box-shadow: 0 8px 16px var(--accent-glow) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
 }
 
 #admin-login-btn:hover:not(:disabled) {
+  background: var(--accent-hover) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.35) !important;
-  filter: brightness(1.08) !important;
+  box-shadow: 0 8px 20px var(--accent-glow) !important;
 }
 
 #admin-login-btn:hover:not(:disabled) .arrow-icon {
@@ -412,33 +405,7 @@
 }
 
 #admin-login-btn:disabled {
-  opacity: 0.5 !important;
+  opacity: 0.7 !important;
   cursor: not-allowed !important;
-}
-
-/* Custom Portal Amber Back Link */
-.admin-back-link {
-  color: #f59e0b;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.25s;
-}
-
-.admin-back-link:hover {
-  color: #fbbf24;
-  text-decoration: underline;
-}
-
-/* Auth card error message styling */
-#admin-auth .error-message {
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1px solid rgba(239, 68, 68, 0.25) !important;
-  color: #fca5a5 !important;
-  padding: 12px !important;
-  border-radius: 8px !important;
-  font-size: 0.8rem !important;
-  margin-top: 12px !important;
-  margin-bottom: 8px !important;
-  text-align: left !important;
 }
 

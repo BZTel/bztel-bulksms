@@ -57,7 +57,7 @@ function setupLoginForm() {
     visibilityToggle.addEventListener('click', () => {
       const isProtected = passwordInput.getAttribute('type') === 'password';
       passwordInput.setAttribute('type', isProtected ? 'text' : 'password');
-      visibilityToggle.style.color = isProtected ? '#f59e0b' : 'var(--text-muted)';
+      visibilityToggle.style.color = isProtected ? 'var(--accent-color)' : 'var(--text-muted)';
     });
   }
 
