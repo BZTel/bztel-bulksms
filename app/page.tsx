@@ -167,8 +167,8 @@ func main() {
               </svg>
               <div className="top-bar-text-l">
                 <span className="top-bar-label-l">Support Email</span>
-                <a href="mailto:info@bztel.net" className="top-bar-value-l">
-                  info@bztel.net
+                <a href="mailto:clientservice@bztel.net" className="top-bar-value-l">
+                  clientservice@bztel.net
                 </a>
               </div>
             </div>

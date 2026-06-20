@@ -73,8 +73,8 @@ export default function ContactPage() {
               </svg>
               <div className="top-bar-text-l">
                 <span className="top-bar-label-l">Support Email</span>
-                <a href="mailto:info@bztel.net" className="top-bar-value-l">
-                  info@bztel.net
+                <a href="mailto:clientservice@bztel.net" className="top-bar-value-l">
+                  clientservice@bztel.net
                 </a>
               </div>
             </div>
@@ -215,7 +215,7 @@ export default function ContactPage() {
             <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginBottom: '12px' }}>Helpdesk & Support</h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-slate)', lineHeight: 1.5 }}>For general issues and developer questions, email our dispatch desk:</p>
-              <a href="mailto:support@bztel.com" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.95rem', marginTop: '4px', display: 'inline-block' }}>support@bztel.com</a>
+              <a href="mailto:clientservice@bztel.net" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.95rem', marginTop: '4px', display: 'inline-block' }}>clientservice@bztel.net</a>
             </div>
 
             <div>

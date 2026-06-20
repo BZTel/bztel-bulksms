@@ -11,7 +11,7 @@ export default function EmailBlastPage() {
   -H "Content-Type: application/json" \\
   -d '{
     "to": "client@example.com",
-    "from": "marketing@bztel.com",
+    "from": "clientservice@bztel.net",
     "subject": "🚀 Welcome to BZTel!",
     "body_html": "<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>"
   }'`,
@@ -25,7 +25,7 @@ const response = await fetch('https://api.bztel.com/v1/email/send', {
   },
   body: JSON.stringify({
     to: 'client@example.com',
-    from: 'marketing@bztel.com',
+    from: 'clientservice@bztel.net',
     subject: '🚀 Welcome to BZTel!',
     body_html: '<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>'
   })
@@ -43,7 +43,7 @@ headers = {
 }
 payload = {
     "to": "client@example.com",
-    "from": "marketing@bztel.com",
+    "from": "clientservice@bztel.net",
     "subject": "🚀 Welcome to BZTel!",
     "body_html": "<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>"
 }
@@ -83,8 +83,8 @@ print(res.json())`
               </svg>
               <div className="top-bar-text-l">
                 <span className="top-bar-label-l">Support Email</span>
-                <a href="mailto:info@bztel.net" className="top-bar-value-l">
-                  info@bztel.net
+                <a href="mailto:clientservice@bztel.net" className="top-bar-value-l">
+                  clientservice@bztel.net
                 </a>
               </div>
             </div>

@@ -179,7 +179,7 @@ function showAdminApp() {
   document.getElementById('admin-loader').classList.add('hidden');
 
   // Populate admin info in sidebar
-  const email = state.adminUser?.email || localStorage.getItem('adminEmail') || 'admin@bztel.com';
+  const email = state.adminUser?.email || localStorage.getItem('adminEmail') || 'admin@bztel.net';
   document.getElementById('admin-email-display').textContent = email;
   document.getElementById('admin-initials').textContent = email.substring(0, 2).toUpperCase();
 
