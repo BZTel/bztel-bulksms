@@ -333,67 +333,43 @@
   100% { transform: translate(60px, 40px) scale(1.15); }
 }
 
-/* Glassmorphism Authentication Card */
-#admin-auth .auth-card {
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
+/* Glassmorphism Authentication Card replaced by Split Pane layout overrides matching Customer Portal */
+#admin-auth .auth-form-pane {
+  background-color: #0b0f19;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   width: 100%;
-  max-width: 400px;
-  padding: 42px 36px;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  animation: adminAuthFadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 100%;
+  animation: adminAuthFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes adminAuthFadeUp {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes adminAuthFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Brand styling overrides inside auth card */
-#admin-auth .auth-brand {
-  justify-content: center;
-  margin-bottom: 24px;
+#admin-auth .auth-form-title {
+  color: #ffffff;
 }
 
-#admin-auth .form-group {
-  margin-bottom: 20px;
-  text-align: left;
+#admin-auth .auth-form-subtitle {
+  color: #94a3b8;
 }
 
-#admin-auth .form-group label {
+#admin-auth .form-group-with-icon label {
   color: #cbd5e1;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-  display: block;
 }
 
-#admin-auth .form-control {
-  background-color: rgba(10, 15, 30, 0.5) !important;
+#admin-auth .form-control-input {
+  background: rgba(255, 255, 255, 0.03) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   color: #ffffff !important;
-  border-radius: 8px !important;
-  padding: 12px 16px !important;
-  font-size: 0.95rem !important;
-  outline: none !important;
-  width: 100% !important;
-  transition: all 0.25s !important;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
-#admin-auth .form-control::placeholder {
-  color: #475569;
-}
-
-#admin-auth .form-control:focus {
+#admin-auth .form-control-input:focus {
   border-color: #f59e0b !important;
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18), inset 0 2px 4px rgba(0, 0, 0, 0.2) !important;
   background-color: rgba(10, 15, 30, 0.7) !important;
@@ -415,12 +391,20 @@
   box-shadow: 0 4px 18px rgba(245, 158, 11, 0.2) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
 }
 
 #admin-login-btn:hover:not(:disabled) {
   transform: translateY(-1px) !important;
   box-shadow: 0 6px 24px rgba(245, 158, 11, 0.35) !important;
   filter: brightness(1.08) !important;
+}
+
+#admin-login-btn:hover:not(:disabled) .arrow-icon {
+  transform: translateX(3px) !important;
 }
 
 #admin-login-btn:active:not(:disabled) {

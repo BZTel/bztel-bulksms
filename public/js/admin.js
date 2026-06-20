@@ -50,6 +50,17 @@ function setupLoginForm() {
   const btn = document.getElementById('admin-login-btn');
   const errBox = document.getElementById('admin-login-error');
 
+  // Password visibility toggle
+  const visibilityToggle = document.getElementById('admin-password-visibility-toggle');
+  const passwordInput = document.getElementById('admin-password');
+  if (visibilityToggle && passwordInput) {
+    visibilityToggle.addEventListener('click', () => {
+      const isProtected = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isProtected ? 'text' : 'password');
+      visibilityToggle.style.color = isProtected ? '#f59e0b' : 'var(--text-muted)';
+    });
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('admin-email').value;
