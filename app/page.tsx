@@ -467,7 +467,7 @@ func main() {
                   <div className="mock-user-name">Chidi Okafor</div>
                 </div>
                 <div className="mock-header-balance">
-                  ₦245,500.00
+                  245,500 Credits
                 </div>
               </div>
 
