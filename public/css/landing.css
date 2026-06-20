@@ -2187,6 +2187,7 @@ textarea.form-control {
   }
   
   .nav-menu-l {
+    display: flex !important;
     position: fixed;
     top: 125px; /* top-bar height 45px + navbar height 80px */
     left: 0;
