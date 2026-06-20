@@ -13,7 +13,7 @@ export default function EmailBlastPage() {
   -H "Content-Type: application/json" \\
   -d '{
     "to": "client@example.com",
-    "from": "admin@bztel.net",
+    "from": "clientservice@bztel.net",
     "subject": "🚀 Welcome to BZTel!",
     "body_html": "<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>"
   }'`,
@@ -27,7 +27,7 @@ const response = await fetch('https://api.bztel.com/v1/email/send', {
   },
   body: JSON.stringify({
     to: 'client@example.com',
-    from: 'admin@bztel.net',
+    from: 'clientservice@bztel.net',
     subject: '🚀 Welcome to BZTel!',
     body_html: '<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>'
   })
@@ -45,7 +45,7 @@ headers = {
 }
 payload = {
     "to": "client@example.com",
-    "from": "admin@bztel.net",
+    "from": "clientservice@bztel.net",
     "subject": "🚀 Welcome to BZTel!",
     "body_html": "<html><body><h2>Welcome!</h2><p>Get 5,000 free credits today.</p></body></html>"
 }

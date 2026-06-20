@@ -13,7 +13,7 @@ async function sendInviteEmail(email: string, role: string, tempPassword = 'pass
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
-  const from = process.env.SMTP_FROM || 'admin@bztel.net';
+  const from = process.env.SMTP_FROM || 'clientservice@bztel.net';
 
   if (!host || !user || !pass) {
     console.log(`[SMTP Mailer] SMTP not configured. Simulating invite dispatch to: ${email}`);

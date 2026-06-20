@@ -35,8 +35,8 @@ export default function Header({ activePage }: HeaderProps) {
               </svg>
               <div className="top-bar-text-l">
                 <span className="top-bar-label-l">Support Email</span>
-                <a href="mailto:admin@bztel.net" className="top-bar-value-l">
-                  admin@bztel.net
+                <a href="mailto:clientservice@bztel.net" className="top-bar-value-l">
+                  clientservice@bztel.net
                 </a>
               </div>
             </div>
