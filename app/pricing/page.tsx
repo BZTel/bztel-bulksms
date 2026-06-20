@@ -9,41 +9,9 @@ const currencyConfig = {
 };
 
 export default function PricingPage() {
-  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('NGN');
+  const currency = 'NGN';
   const [volume, setVolume] = useState(25000);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-
-  // Auto-detect currency via geolocation and local timezone lookup
-  useEffect(() => {
-    async function detectCurrency() {
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.country_code === 'GH') {
-            setCurrency('GHS');
-          } else if (data.country_code === 'NG') {
-            setCurrency('NGN');
-          } else {
-            setCurrency('NGN');
-          }
-          return;
-        }
-      } catch (err) {
-        console.warn('Geolocation lookup failed, trying timezone detection...');
-      }
-
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz.includes('Accra')) {
-        setCurrency('GHS');
-      } else if (tz.includes('Lagos')) {
-        setCurrency('NGN');
-      } else {
-        setCurrency('NGN');
-      }
-    }
-    detectCurrency();
-  }, []);
 
   const config = currencyConfig[currency];
 
@@ -135,17 +103,6 @@ export default function PricingPage() {
         </ul>
 
         <div className="nav-actions-l">
-          <select 
-            id="currency-selector" 
-            style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: 'var(--border-radius-sm)', padding: '6px 12px', marginRight: '12px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as any)}
-          >
-            <option value="USD">USD ($)</option>
-            <option value="GHS">GHS (GH₵)</option>
-            <option value="NGN">NGN (₦)</option>
-          </select>
-          
           <a href="/app" className="nav-login-btn">Log in</a>
           <a href="/app" className="btn-l btn-l-primary" style={{ borderRadius: 'var(--border-radius-sm)', padding: '8px 18px' }}>Sign Up</a>
         </div>

@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     // Verify password
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const isMatch = await bcrypt.compare(password, user.passwordHash || '');
     if (!isMatch) {
       await logAuditEvent(user.id, 'LOGIN_FAILURE', `Failed password attempt for email: ${email}`, clientIp);
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });

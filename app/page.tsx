@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Script from 'next/script';
 
 export default function HomePage() {
-  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('NGN');
+  const currency = 'NGN';
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeLang, setActiveLang] = useState<'curl' | 'python' | 'php' | 'node' | 'go'>('curl');
   const [phone, setPhone] = useState('+2348054567890');
@@ -15,55 +15,10 @@ export default function HomePage() {
   const [pushText, setPushText] = useState('Hello from BzTel 🚀');
 
   useEffect(() => {
-    // Detect currency automatically
-    async function detectCurrency() {
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.country_code === 'GH') {
-            setCurrency('GHS');
-          } else if (data.country_code === 'NG') {
-            setCurrency('NGN');
-          } else {
-            setCurrency('NGN');
-          }
-          return;
-        }
-      } catch (err) {
-        console.warn('Geolocation lookup failed, trying timezone detection...');
-      }
-
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz.includes('Accra')) {
-        setCurrency('GHS');
-      } else if (tz.includes('Lagos')) {
-        setCurrency('NGN');
-      } else {
-        setCurrency('NGN');
-      }
-    }
-    detectCurrency();
-
-    // Theme initialization
-    const savedTheme = localStorage.getItem('bztel-theme') || 'light';
-    if (savedTheme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    // Force light mode and clean storage
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('bztel-theme');
   }, []);
-
-  const handleThemeToggle = () => {
-    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    if (current === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      localStorage.setItem('bztel-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-      localStorage.setItem('bztel-theme', 'light');
-    }
-  };
 
   const currencyConfig = {
     USD: { symbol: '$', rate: 1.0, decimals: 3, decimalsLarge: 0 },
@@ -240,23 +195,6 @@ func main() {
         </ul>
 
         <div className="nav-actions-l">
-          <select 
-            id="currency-selector" 
-            style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: 'var(--border-radius-sm)', padding: '6px 12px', marginRight: '12px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as any)}
-          >
-            <option value="USD">USD ($)</option>
-            <option value="GHS">GHS (GH₵)</option>
-            <option value="NGN">NGN (₦)</option>
-          </select>
-          
-          <button id="theme-toggle" className="theme-toggle-l" title="Toggle Light/Dark Theme" style={{ marginRight: '12px', outline: 'none' }} onClick={handleThemeToggle}>
-            <svg id="theme-toggle-moon" className="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style={{ width: '20px', height: '20px' }}>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-            </svg>
-          </button>
-
           <a href="/app" className="nav-login-btn">Log in</a>
           <a href="/app" className="btn-l btn-l-primary" style={{ borderRadius: 'var(--border-radius-sm)', padding: '8px 18px' }}>Sign Up</a>
         </div>

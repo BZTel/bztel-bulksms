@@ -349,6 +349,7 @@ export function showAppContainer() {
   document.getElementById('auth-container').classList.add('hidden');
   document.getElementById('app-container').classList.remove('hidden');
   document.getElementById('app-loader').classList.add('hidden');
+  connectTelemetry();
 }
 
 export function showAuthContainer() {
@@ -381,6 +382,7 @@ export function logout() {
     clearInterval(state.statsInterval);
     state.statsInterval = null;
   }
+  disconnectTelemetry();
 
   showAuthContainer();
   showToast('Logged out successfully', 'info');
@@ -448,3 +450,45 @@ export async function apiFetch(url, options = {}) {
 
   return res;
 }
+
+// Telemetry Server-Sent Events (SSE) connection management
+function connectTelemetry() {
+  if (state.telemetrySource) {
+    return;
+  }
+  console.log('[Telemetry] Connecting to EventSource telemetry channel...');
+  state.telemetrySource = new EventSource('/api/telemetry');
+
+  state.telemetrySource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('[Telemetry] Received event:', data);
+      
+      if (data.type === 'SMS_UPDATED') {
+        showToast('SMS statuses updated in real-time!', 'success');
+        
+        // Auto-refresh active campaign views
+        if (state.currentView === 'campaign-history') {
+          navigateTo('campaign-history');
+        } else if (state.currentView === 'dashboard') {
+          navigateTo('dashboard');
+        }
+      }
+    } catch (e) {
+      console.error('[Telemetry] Event parsing error:', e);
+    }
+  };
+
+  state.telemetrySource.onerror = () => {
+    console.warn('[Telemetry] Connection lost. EventSource reconnecting...');
+  };
+}
+
+function disconnectTelemetry() {
+  if (state.telemetrySource) {
+    console.log('[Telemetry] Closing EventSource telemetry channel...');
+    state.telemetrySource.close();
+    state.telemetrySource = null;
+  }
+}
+

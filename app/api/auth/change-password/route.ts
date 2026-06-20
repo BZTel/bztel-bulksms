@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash || '');
     if (!isMatch) {
       return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
     }

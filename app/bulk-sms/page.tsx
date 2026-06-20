@@ -14,39 +14,7 @@ export default function BulkSmsPage() {
   const [charCount, setCharCount] = useState(61);
   const [pages, setPages] = useState(1);
   const [credits, setCredits] = useState(1000);
-  const [currency, setCurrency] = useState<'USD' | 'GHS' | 'NGN'>('NGN');
-
-  // Auto-detect currency via geolocation and local timezone lookup
-  useEffect(() => {
-    async function detectCurrency() {
-      try {
-        const res = await fetch('https://ipapi.co/json/');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.country_code === 'GH') {
-            setCurrency('GHS');
-          } else if (data.country_code === 'NG') {
-            setCurrency('NGN');
-          } else {
-            setCurrency('NGN');
-          }
-          return;
-        }
-      } catch (err) {
-        console.warn('Geolocation lookup failed, trying timezone detection...');
-      }
-
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz.includes('Accra')) {
-        setCurrency('GHS');
-      } else if (tz.includes('Lagos')) {
-        setCurrency('NGN');
-      } else {
-        setCurrency('NGN');
-      }
-    }
-    detectCurrency();
-  }, []);
+  const currency = 'NGN';
 
   useEffect(() => {
     const chars = message.length;
@@ -132,17 +100,6 @@ export default function BulkSmsPage() {
         </ul>
 
         <div className="nav-actions-l">
-          <select 
-            id="currency-selector" 
-            style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: 'var(--border-radius-sm)', padding: '6px 12px', marginRight: '12px', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value as any)}
-          >
-            <option value="USD">USD ($)</option>
-            <option value="GHS">GHS (GH₵)</option>
-            <option value="NGN">NGN (₦)</option>
-          </select>
-          
           <a href="/app" className="nav-login-btn">Log in</a>
           <a href="/app" className="btn-l btn-l-primary" style={{ borderRadius: 'var(--border-radius-sm)', padding: '8px 18px' }}>Sign Up</a>
         </div>
@@ -187,15 +144,6 @@ export default function BulkSmsPage() {
           <div className="api-card-l reveal reveal-right reveal-active" style={{ padding: '30px', flex: 0.8, background: '#ffffff', borderRadius: 'var(--border-radius-lg)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-lg)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', color: 'var(--text-dark)', margin: 0 }}>Cost & Credit Calculator</h3>
-              <select 
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as any)}
-                style={{ background: 'var(--bg-offset)', border: '1px solid var(--border-color)', color: 'var(--text-dark)', borderRadius: 'var(--border-radius-sm)', padding: '4px 8px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', outline: 'none' }}
-              >
-                <option value="USD">USD ($)</option>
-                <option value="GHS">GHS (GH₵)</option>
-                <option value="NGN">NGN (₦)</option>
-              </select>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '20px' }}>Calculate campaign costs dynamically. Each message represents 160 characters (GSM 7-bit standard).</p>
             

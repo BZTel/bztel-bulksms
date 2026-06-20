@@ -15,7 +15,7 @@ async function sendContactNotificationEmail(
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
   const from = process.env.SMTP_FROM || 'no-reply@bztel.com';
-  const recipient = 'info@bztel.net';
+  const recipient = 'clientservice@bztel.com';
 
   if (!host || !user || !pass) {
     console.log(`[SMTP Mailer] SMTP not configured. Simulating Contact Form Notification:`);

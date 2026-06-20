@@ -1,26 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { triggerWorker } from '@/lib/queue';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent'];
-
-// Helper function to simulate delivery in a background execution (non-blocking)
-function simulateDelivery(logIds: number[]) {
-  setTimeout(async () => {
-    try {
-      await prisma.$transaction(
-        logIds.map((id) =>
-          prisma.smsLog.update({
-            where: { id },
-            data: { status: Math.random() > 0.05 ? 'sent' : 'failed' },
-          })
-        )
-      );
-    } catch (error) {
-      console.error('Failed to simulate SMS delivery:', error);
-    }
-  }, 3500);
-}
 
 export async function POST(req: Request) {
   try {
@@ -78,7 +61,7 @@ export async function POST(req: Request) {
     const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
     const totalCreditsNeeded = creditsPerMessage * recipientList.length;
 
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // Check owner balance
       const owner = await tx.user.findUnique({
         where: { id: ownerId },
@@ -102,7 +85,7 @@ export async function POST(req: Request) {
       const contactsMap = new Map(contacts.map(c => [c.phone.replace(/[\s+()-]/g, ''), c.name]));
 
       // Deduct owner balance
-      const updatedOwner = await tx.user.update({
+      await tx.user.update({
         where: { id: ownerId },
         data: { balance: owner.balance - totalCreditsNeeded },
       });
@@ -119,36 +102,29 @@ export async function POST(req: Request) {
         },
       });
 
-      const logPromises = [];
-      for (const rawPhone of recipientList) {
+      // Bulk insert outbox messages
+      const bulkData = recipientList.map((rawPhone) => {
         const cleanPhone = rawPhone.replace(/[\s+()-]/g, '');
         const contactName = contactsMap.get(cleanPhone) || 'Customer';
         const personalizedMsg = rawMessage.replace(/\[Name\]/gi, contactName);
 
-        logPromises.push(
-          tx.smsLog.create({
-            data: {
-              userId: ownerId,
-              senderId: cleanSenderId,
-              recipient: rawPhone.trim(),
-              message: personalizedMsg,
-              credits: creditsPerMessage,
-              status: 'pending',
-            },
-            select: { id: true }
-          })
-        );
-      }
+        return {
+          userId: ownerId,
+          senderId: cleanSenderId,
+          recipient: rawPhone.trim(),
+          message: personalizedMsg,
+          credits: creditsPerMessage,
+          status: 'pending',
+        };
+      });
 
-      const createdLogs = await Promise.all(logPromises);
-      return {
-        updatedOwner,
-        logIds: createdLogs.map((l) => l.id),
-      };
+      await tx.smsLog.createMany({
+        data: bulkData
+      });
     });
 
-    // Run async delivery simulation
-    simulateDelivery(result.logIds);
+    // Trigger async worker queue processing (decoupled background worker)
+    triggerWorker();
 
     return NextResponse.json({
       message: `Enqueued ${recipientList.length} messages. Credits deducted: ${totalCreditsNeeded}.`,
