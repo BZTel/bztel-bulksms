@@ -14,8 +14,8 @@ async function sendContactNotificationEmail(
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASSWORD;
-  const from = process.env.SMTP_FROM || 'clientservice@bztel.net';
-  const recipient = 'clientservice@bztel.net';
+  const from = process.env.SMTP_FROM || 'admin@bztel.net';
+  const recipient = 'admin@bztel.net';
 
   if (!host || !user || !pass) {
     console.log(`[SMTP Mailer] SMTP not configured. Simulating Contact Form Notification:`);

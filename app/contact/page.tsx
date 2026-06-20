@@ -161,7 +161,7 @@ export default function ContactPage() {
             <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginBottom: '12px' }}>Helpdesk & Support</h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-slate)', lineHeight: 1.5 }}>For general issues and developer questions, email our dispatch desk:</p>
-              <a href="mailto:clientservice@bztel.net" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.95rem', marginTop: '4px', display: 'inline-block' }}>clientservice@bztel.net</a>
+              <a href="mailto:admin@bztel.net" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.95rem', marginTop: '4px', display: 'inline-block' }}>admin@bztel.net</a>
             </div>
 
             <div>
