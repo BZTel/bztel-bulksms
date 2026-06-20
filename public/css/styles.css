@@ -1887,3 +1887,104 @@ textarea.form-control {
   color: white;
   border-color: var(--accent-color);
 }
+
+/* Sidebar Toggle & Mobile Responsiveness */
+.sidebar-toggle-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px;
+  margin-right: 12px;
+}
+
+.sidebar-toggle-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--sidebar-width);
+    transform: translateX(-100%);
+    transition: var(--transition-smooth);
+    z-index: 100;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sidebar.active {
+    transform: translateX(0) !important;
+  }
+  
+  .sidebar-toggle-btn {
+    display: block !important;
+  }
+  
+  .top-bar {
+    padding: 0 16px !important;
+  }
+  
+  .content-viewport {
+    padding: 16px !important;
+  }
+  
+  .form-row {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+  
+  .form-row-layout {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
+  }
+  
+  .top-bar-actions {
+    gap: 12px !important;
+  }
+  
+  .topup-btn span {
+    display: none !important;
+  }
+  
+  .topup-btn {
+    padding: 8px 12px !important;
+  }
+  
+  /* Compact headers and title styles */
+  .view-title {
+    font-size: 1.15rem !important;
+  }
+  
+  .balance-amount {
+    font-size: 1.1rem !important;
+  }
+}

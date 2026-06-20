@@ -187,6 +187,34 @@ function showAdminApp() {
   document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
     btn.addEventListener('click', () => renderView(btn.getAttribute('data-view')));
   });
+
+  // Sidebar responsive mobile toggling
+  const sidebar = document.querySelector('.sidebar');
+  const toggleBtn = document.getElementById('admin-sidebar-toggle');
+  const backdrop = document.getElementById('admin-sidebar-backdrop');
+
+  if (toggleBtn && sidebar && backdrop) {
+    if (!toggleBtn.dataset.wired) {
+      toggleBtn.dataset.wired = 'true';
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        backdrop.classList.add('active');
+      });
+
+      backdrop.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        backdrop.classList.remove('active');
+      });
+
+      // Auto-close sidebar on view navigation on mobile
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          sidebar.classList.remove('active');
+          backdrop.classList.remove('active');
+        });
+      });
+    }
+  }
 }
 
 function showAdminLogin() {

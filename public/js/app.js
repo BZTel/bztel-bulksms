@@ -127,6 +127,32 @@ function setupGlobalEvents() {
 
   // Logout button handler
   document.getElementById('logout-btn').addEventListener('click', logout);
+
+  // Sidebar responsive mobile toggling
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  
+  if (sidebarToggle && sidebar && sidebarBackdrop) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      sidebarBackdrop.classList.add('active');
+    });
+    
+    sidebarBackdrop.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      sidebarBackdrop.classList.remove('active');
+    });
+    
+    // Auto-close sidebar on view navigation on mobile
+    const allNavButtons = document.querySelectorAll('.nav-item, .switch-channel-item');
+    allNavButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarBackdrop.classList.remove('active');
+      });
+    });
+  }
 }
 
 // Setup simulated checkout modal
