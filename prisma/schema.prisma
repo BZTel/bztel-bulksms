@@ -36,6 +36,7 @@ model User {
   incomingMessages  IncomingMessage[]
   drafts            Draft[]
   senderIds         SenderId[]
+  emailLogs         EmailLog[]
 
   @@map("users")
 }
@@ -247,3 +248,22 @@ model SenderId {
 
   @@map("sender_ids")
 }
+
+model EmailLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  senderName  String   @map("sender_name")
+  senderEmail String   @map("sender_email")
+  recipient   String
+  subject     String
+  bodyHtml    String?  @map("body_html") @db.Text
+  bodyText    String?  @map("body_text") @db.Text
+  credits     Int      @default(1)
+  status      String   @default("pending")
+  sentAt      DateTime @default(now()) @map("sent_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_logs")
+}
+

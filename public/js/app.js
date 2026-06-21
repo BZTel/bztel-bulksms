@@ -12,6 +12,7 @@ import { renderHelpView } from './views/help.js';
 import { renderMoreView } from './views/more.js';
 import { renderVoiceView } from './views/voice.js';
 import { renderInboxView } from './views/inbox.js';
+import { renderEmailBlastView } from './views/email-blast.js';
 
 // Global Application State
 const state = {
@@ -308,6 +309,7 @@ export function navigateTo(viewName) {
     sms: 'Bulk SMS Composer',
     voice: 'Voice Broadcasting Composer',
     contacts: 'Contacts Directory',
+    'email-blast': 'Email Blast Campaign Console',
     birthday: 'Birthday Campaign Scheduler',
     teams: 'Team Collaboration Hub',
     wallet: 'Wallet & Billing Details',
@@ -333,6 +335,9 @@ export function navigateTo(viewName) {
       break;
     case 'sms':
       renderSMSView(root, state);
+      break;
+    case 'email-blast':
+      renderEmailBlastView(root, state);
       break;
     case 'inbox':
       renderInboxView(root, state);
