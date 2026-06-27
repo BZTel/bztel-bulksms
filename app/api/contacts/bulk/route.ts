@@ -7,6 +7,7 @@ const ALLOWED_WRITE_ROLES = ['Owner', 'Administrator', 'Marketing Agent'];
 interface BulkContactInput {
   name?: string;
   phone?: string;
+  email?: string;
   group_name?: string;
   birthdate?: string;
 }
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     const inserted = await prisma.$transaction(async (tx) => {
       const results = [];
       for (const item of contacts as BulkContactInput[]) {
-        const { name, phone, group_name, birthdate } = item;
+        const { name, phone, email, group_name, birthdate } = item;
         const contactPhone = phone ? phone.trim() : '';
         if (!contactPhone) continue; // Skip invalid rows without a phone number
 
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
             userId: ownerId,
             name: contactName,
             phone: contactPhone,
+            email: email ? email.trim().toLowerCase() : null,
             groupName: group,
             birthdate: birthdate ? birthdate.trim() : null,
           },
@@ -55,6 +57,7 @@ export async function POST(req: Request) {
           id: contact.id,
           name: contact.name,
           phone: contact.phone,
+          email: contact.email,
           group_name: contact.groupName,
           birthdate: contact.birthdate
         });

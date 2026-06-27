@@ -46,6 +46,7 @@ model Contact {
   userId     Int      @map("user_id")
   name       String
   phone      String
+  email      String?
   groupName  String   @default("Default") @map("group_name")
   birthdate  String?
   createdAt  DateTime @default(now()) @map("created_at")

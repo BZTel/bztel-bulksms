@@ -10,8 +10,11 @@ export async function GET(
 ) {
   try {
     const authUser = await getUserFromRequest(req);
-    if (!authUser || !authUser.is_admin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!authUser.is_admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const { id } = await params;
@@ -46,13 +49,13 @@ export async function GET(
       const count = group._count._all || 0;
       const credits = group._sum.credits || 0;
 
-      if (group.status === 'sent') {
-        sent = count;
+      if (group.status === 'sent' || group.status === 'submitted') {
+        sent += count;
         totalCreditsUsed += credits;
       } else if (group.status === 'failed') {
-        failed = count;
+        failed += count;
       } else if (group.status === 'pending') {
-        pending = count;
+        pending += count;
         totalCreditsUsed += credits;
       }
     }
@@ -105,8 +108,11 @@ export async function DELETE(
 ) {
   try {
     const authUser = await getUserFromRequest(req);
-    if (!authUser || !authUser.is_admin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!authUser.is_admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const { id } = await params;

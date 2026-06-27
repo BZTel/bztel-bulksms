@@ -28,6 +28,7 @@ export async function GET(req: Request) {
       user_id: c.userId,
       name: c.name,
       phone: c.phone,
+      email: c.email,
       group_name: c.groupName,
       birthdate: c.birthdate,
       created_at: c.createdAt,
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    const { name, phone, group_name, birthdate } = await req.json();
+    const { name, phone, email, group_name, birthdate } = await req.json();
     const ownerId = authUser.owner_id;
 
     if (!phone) {
@@ -70,6 +71,7 @@ export async function POST(req: Request) {
         userId: ownerId,
         name: contactName,
         phone: contactPhone,
+        email: email ? email.trim().toLowerCase() : null,
         groupName: group,
         birthdate: birthdate ? birthdate.trim() : null,
       },
@@ -82,6 +84,7 @@ export async function POST(req: Request) {
         user_id: contact.userId,
         name: contact.name,
         phone: contact.phone,
+        email: contact.email,
         group_name: contact.groupName,
         birthdate: contact.birthdate
       }

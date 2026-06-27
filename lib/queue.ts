@@ -28,20 +28,12 @@ async function processQueue() {
 
     console.log(`[Queue Worker] Processing ${pendingLogs.length} pending SMS messages...`);
 
-    // Simulate SMS dispatch latency (e.g. 2 seconds)
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Provider integration hook (e.g. Monty Mobile SMPP / HTTP gateway API)
+    for (const log of pendingLogs) {
+      await dispatchToProvider(log);
+    }
 
-    // Update logs (95% success rate)
-    await prisma.$transaction(
-      pendingLogs.map((log) =>
-        prisma.smsLog.update({
-          where: { id: log.id },
-          data: { status: Math.random() > 0.05 ? 'sent' : 'failed' }
-        })
-      )
-    );
-
-    console.log(`[Queue Worker] Batch updated successfully.`);
+    console.log(`[Queue Worker] Batch processing completed for ${pendingLogs.length} messages.`);
 
     // Broadcast update to telemetry clients
     broadcastMessage({
@@ -49,11 +41,32 @@ async function processQueue() {
       timestamp: Date.now()
     });
 
-    // Continue loop
-    setTimeout(processQueue, 500);
-
+    // Process next batch if pending messages remain
+    const remainingCount = await prisma.smsLog.count({ where: { status: 'pending' } });
+    if (remainingCount > 0) {
+      setTimeout(processQueue, 100);
+    } else {
+      globalForQueue.queueActive = false;
+    }
   } catch (error) {
     console.error('[Queue Worker] Error processing queue:', error);
     globalForQueue.queueActive = false;
+  }
+}
+
+/**
+ * Interface hook for Live Gateway Integration (e.g., Monty Mobile SMPP/HTTP)
+ * Once credentials are configured, this handler dispatches to the external carrier API.
+ */
+async function dispatchToProvider(log: { id: number; recipient: string; message: string; senderId: string }) {
+  // Provider API call will be attached here upon integration.
+  // Currently setting status to 'sent' or 'submitted' cleanly without mock random failures.
+  try {
+    await prisma.smsLog.update({
+      where: { id: log.id },
+      data: { status: 'submitted' }
+    });
+  } catch (err) {
+    console.error(`[Queue Worker] Failed to dispatch log ${log.id} to provider:`, err);
   }
 }

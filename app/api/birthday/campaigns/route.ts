@@ -61,9 +61,26 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    const cleanSenderId = senderId.trim().toUpperCase();
+    const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
     const cleanTargetGroup = targetGroup.trim();
     const cleanMessageTemplate = messageTemplate.trim();
+
+    // Enforce Sender ID Verification Checks
+    const isDefaultSender = cleanSenderId === 'BZTEL';
+    
+    const virtualNum = await prisma.virtualNumber.findFirst({
+      where: { userId: ownerId, number: senderId.trim() }
+    });
+
+    const approvedCustom = await prisma.senderId.findFirst({
+      where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
+    });
+
+    if (!isDefaultSender && !virtualNum && !approvedCustom) {
+      return NextResponse.json({ 
+        error: 'Forbidden: Sender ID is unverified, pending review, or not assigned to your account.' 
+      }, { status: 403 });
+    }
 
     const existing = await prisma.birthdayCampaign.findFirst({
       where: {

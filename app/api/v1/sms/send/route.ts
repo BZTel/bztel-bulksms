@@ -1,22 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-function simulateDelivery(logIds: number[]) {
-  setTimeout(async () => {
-    try {
-      await prisma.$transaction(
-        logIds.map((id) =>
-          prisma.smsLog.update({
-            where: { id },
-            data: { status: Math.random() > 0.05 ? 'sent' : 'failed' },
-          })
-        )
-      );
-    } catch (error) {
-      console.error('Failed to simulate API SMS delivery:', error);
-    }
-  }, 3500);
-}
+import { triggerWorker } from '@/lib/queue';
 
 export async function POST(req: Request) {
   try {
@@ -46,6 +30,25 @@ export async function POST(req: Request) {
 
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
     const rawMessage = message.trim();
+
+    // Enforce Sender ID Verification Checks
+    const isDefaultSender = cleanSenderId === 'BZTEL';
+    
+    // Check if it matches a virtual number assigned to this user
+    const virtualNum = await prisma.virtualNumber.findFirst({
+      where: { userId: ownerId, number: senderId.trim() }
+    });
+
+    // Check if it's an approved custom Sender ID
+    const approvedCustom = await prisma.senderId.findFirst({
+      where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
+    });
+
+    if (!isDefaultSender && !virtualNum && !approvedCustom) {
+      return NextResponse.json({ 
+        error: 'Forbidden: Sender ID is unverified, pending review, or not assigned to your account.' 
+      }, { status: 403 });
+    }
 
     let recipientList: string[] = [];
     if (Array.isArray(recipients)) {
@@ -115,7 +118,8 @@ export async function POST(req: Request) {
       };
     });
 
-    simulateDelivery(result.logIds);
+    // Trigger async worker queue processing
+    triggerWorker();
 
     return NextResponse.json({
       success: true,

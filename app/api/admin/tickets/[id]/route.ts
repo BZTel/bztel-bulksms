@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { logAuditEvent } from '@/lib/audit';
 
 // PATCH update support ticket status or priority (Admin only)
 export async function PATCH(
@@ -56,6 +57,14 @@ export async function PATCH(
       where: { id: ticketId },
       data: updateData
     });
+
+    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    await logAuditEvent(
+      updated.userId,
+      'ADMIN_TICKET_UPDATE',
+      `Admin updated ticket ID ${ticketId} ("${updated.subject}") to status: ${updated.status}, priority: ${updated.priority}`,
+      clientIp
+    );
 
     return NextResponse.json({
       message: 'Support ticket successfully updated',

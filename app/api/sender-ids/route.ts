@@ -65,7 +65,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Sender ID name and description/use-case are required' }, { status: 400 });
     }
 
-    const trimmedName = name.trim();
+    const trimmedName = name.trim().toUpperCase();
 
     if (!SENDER_ID_REGEX.test(trimmedName)) {
       return NextResponse.json({

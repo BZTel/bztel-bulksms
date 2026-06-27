@@ -55,13 +55,13 @@ export async function POST(req: Request) {
 
       // Fetch owner contacts for personalization mapping (replacing [Name] in bodyHtml)
       const contacts = await tx.contact.findMany({
-        where: { userId: ownerId },
-        select: { name: true, phone: true },
+        where: { userId: ownerId, email: { not: null } },
+        select: { name: true, email: true },
       });
 
-      // Map contacts by their email if they have email, or phone. Let's just use contacts map by name if they match recipient email or we can search names. 
-      // Since contacts model doesn't have an email field (only name, phone, groupName, birthdate), we can search by recipient email matching contact name or fallback to "Customer".
-      // Wait, we can match by checking if the recipient email string is inside or matches. Usually, name mapping is done by phone in SMS, but for emails, we will fallback to "Customer" or we can search matching name if the recipient exists. Let's do a simple mapping or default to "Customer".
+      const contactsMap = new Map(
+        contacts.filter(c => c.email).map(c => [c.email!.trim().toLowerCase(), c.name])
+      );
 
       // Deduct owner balance
       await tx.user.update({
@@ -86,7 +86,9 @@ export async function POST(req: Request) {
       const cleanSenderEmail = process.env.SMTP_FROM || 'noreply@bztel.net';
 
       const bulkData = recipientList.map((recipient) => {
-        const personalizedBody = bodyHtml.replace(/\[Name\]/gi, 'Customer');
+        const recipientClean = recipient.trim().toLowerCase();
+        const contactName = contactsMap.get(recipientClean) || 'Customer';
+        const personalizedBody = bodyHtml.replace(/\[Name\]/gi, contactName);
 
         return {
           userId: ownerId,
@@ -113,6 +115,15 @@ export async function POST(req: Request) {
     const pass = process.env.SMTP_PASSWORD;
     const from = process.env.SMTP_FROM || 'clientservice@bztel.net';
 
+    // Fetch contacts map for async mailer outside transaction
+    const allContacts = await prisma.contact.findMany({
+      where: { userId: ownerId, email: { not: null } },
+      select: { name: true, email: true },
+    });
+    const asyncContactsMap = new Map(
+      allContacts.filter(c => c.email).map(c => [c.email!.trim().toLowerCase(), c.name])
+    );
+
     if (!host || !user || !pass) {
       console.log(`[SMTP Mailer] SMTP not configured. Simulating Email Blast Dispatch:`);
       console.log(`----------------------------------------`);
@@ -130,7 +141,9 @@ export async function POST(req: Request) {
       });
 
       recipientList.forEach((recipient) => {
-        const personalizedBody = bodyHtml.replace(/\[Name\]/gi, 'Customer');
+        const recipientClean = recipient.trim().toLowerCase();
+        const contactName = asyncContactsMap.get(recipientClean) || 'Customer';
+        const personalizedBody = bodyHtml.replace(/\[Name\]/gi, contactName);
         transporter.sendMail({
           from: `"${senderName || 'BZTel'}" <${from}>`,
           to: recipient.trim(),

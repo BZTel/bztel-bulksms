@@ -9,8 +9,11 @@ export async function POST(
 ) {
   try {
     const authUser = await getUserFromRequest(req);
-    if (!authUser || !authUser.is_admin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!authUser.is_admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const { id } = await params;

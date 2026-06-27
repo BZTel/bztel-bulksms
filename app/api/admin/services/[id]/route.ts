@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { logAuditEvent } from '@/lib/audit';
 
 // PATCH update service request status (Admin only)
 export async function PATCH(
@@ -42,6 +43,14 @@ export async function PATCH(
       where: { id: requestId },
       data: { status }
     });
+
+    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    await logAuditEvent(
+      updated.userId,
+      'ADMIN_SERVICE_REQUEST_UPDATE',
+      `Admin updated service request ID ${requestId} (${updated.serviceType}) status to: ${updated.status}`,
+      clientIp
+    );
 
     return NextResponse.json({
       message: `Service request successfully updated to ${status}`,

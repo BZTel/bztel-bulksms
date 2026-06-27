@@ -4,22 +4,23 @@ import { getUserFromRequest } from '@/lib/auth';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher'];
 
-function simulateVoiceDelivery(logIds: number[]) {
-  setTimeout(async () => {
-    try {
-      await prisma.$transaction(
-        logIds.map((id) =>
-          prisma.voiceLog.update({
-            where: { id },
-            data: { status: Math.random() > 0.05 ? 'completed' : 'failed' },
-          })
-        )
-      );
-      console.log(`[Voice Gateway] Dispatched and updated status for ${logIds.length} voice broadcast(s).`);
-    } catch (error) {
-      console.error('Failed to simulate voice delivery status:', error);
-    }
-  }, 4000);
+/**
+ * Provider interface hook for Voice/TTS Gateway Integration
+ */
+async function dispatchVoiceToProvider(logIds: number[]) {
+  // Real Voice Provider API (e.g., Twilio/SIP/Plivo) will be attached here upon integration.
+  try {
+    await prisma.$transaction(
+      logIds.map((id) =>
+        prisma.voiceLog.update({
+          where: { id },
+          data: { status: 'submitted' },
+        })
+      )
+    );
+  } catch (error) {
+    console.error('Failed to update voice delivery status:', error);
+  }
 }
 
 export async function POST(req: Request) {
@@ -58,7 +59,24 @@ export async function POST(req: Request) {
     const creditsPerCall = 2;
     const totalCreditsNeeded = creditsPerCall * recipientList.length;
 
-    const cleanSenderId = senderId.trim().toUpperCase();
+    const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
+
+    // Enforce Sender ID Verification Checks
+    const isDefaultSender = cleanSenderId === 'BZTEL';
+    
+    const virtualNum = await prisma.virtualNumber.findFirst({
+      where: { userId: ownerId, number: senderId.trim() }
+    });
+
+    const approvedCustom = await prisma.senderId.findFirst({
+      where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
+    });
+
+    if (!isDefaultSender && !virtualNum && !approvedCustom) {
+      return NextResponse.json({ 
+        error: 'Forbidden: Sender ID is unverified, pending review, or not assigned to your account.' 
+      }, { status: 403 });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const owner = await tx.user.findUnique({
@@ -112,7 +130,7 @@ export async function POST(req: Request) {
       return createdLogs.map((l) => l.id);
     });
 
-    simulateVoiceDelivery(result);
+    await dispatchVoiceToProvider(result);
 
     return NextResponse.json({
       message: `Enqueued ${recipientList.length} voice call(s). Credits deducted: ${totalCreditsNeeded}.`,

@@ -1,7 +1,17 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from './prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'bztel-sms-app-secret-key-12345';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: JWT_SECRET environment variable is not defined in production.');
+    }
+    console.warn('[Security Warning] JWT_SECRET environment variable is missing. Using development fallback key.');
+    return 'bztel-sms-dev-secret-key-change-in-production';
+  }
+  return secret;
+}
 
 export interface AuthenticatedUser {
   id: number;
@@ -20,7 +30,7 @@ export async function getUserFromRequest(req: Request): Promise<AuthenticatedUse
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string; is_admin: boolean };
+    const decoded = jwt.verify(token, getJwtSecret()) as { id: number; email: string; is_admin: boolean };
     
     const dbUser = await prisma.user.findUnique({
       where: { id: decoded.id },
@@ -44,5 +54,5 @@ export async function getUserFromRequest(req: Request): Promise<AuthenticatedUse
 }
 
 export function generateToken(payload: { id: number; email: string; is_admin: boolean }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 }

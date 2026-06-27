@@ -2,15 +2,13 @@
   "name": "bztel-bulk-sms",
   "version": "1.0.0",
   "description": "Bulk SMS Web Application and Dashboard with Next.js",
-  "main": "server.js",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "legacy-server": "node server.js"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",

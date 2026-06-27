@@ -5,8 +5,11 @@ import { getUserFromRequest } from '@/lib/auth';
 export async function GET(req: Request) {
   try {
     const authUser = await getUserFromRequest(req);
-    if (!authUser || !authUser.is_admin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    if (!authUser) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (!authUser.is_admin) {
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     // Fetch all non-admin users with their SMS logs
@@ -38,7 +41,7 @@ export async function GET(req: Request) {
       let creditsUsed = 0;
 
       for (const log of u.smsLogs) {
-        if (log.status === 'sent') {
+        if (log.status === 'sent' || log.status === 'submitted') {
           sent++;
           creditsUsed += log.credits;
         } else if (log.status === 'failed') {
@@ -77,12 +80,12 @@ export async function GET(req: Request) {
 
     for (const t of groupTotals) {
       const count = t._count._all || 0;
-      if (t.status === 'sent') {
-        platformSent = count;
+      if (t.status === 'sent' || t.status === 'submitted') {
+        platformSent += count;
       } else if (t.status === 'pending') {
-        platformPending = count;
+        platformPending += count;
       } else if (t.status === 'failed') {
-        platformFailed = count;
+        platformFailed += count;
       }
     }
 

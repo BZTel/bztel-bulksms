@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 50" width="160" height="50">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&amp;display=swap');
+      .logo-text { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 22px; fill: #1e293b; letter-spacing: 0.5px; }
+    </style>
+  </defs>
+
+  <!-- Cube / box icon (matches the SVG path used in Header.tsx) -->
+  <svg x="4" y="9" width="32" height="32" viewBox="0 0 24 24" fill="#4f46e5">
+    <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z"/>
+  </svg>
+
+  <!-- Brand name -->
+  <text x="44" y="35" class="logo-text">BZTel</text>
+</svg>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { triggerWorker } from '@/lib/queue';
 
 export async function GET(req: Request) {
   try {
@@ -119,19 +120,11 @@ export async function GET(req: Request) {
 
         processedCount++;
 
-        // Simulate async delivery to MTA
-        setTimeout(async () => {
-          try {
-            await prisma.smsLog.update({
-              where: { id: smsLog.id },
-              data: { status: 'sent' },
-            });
-            console.log(`[Birthday Daemon] Auto-greeting sent successfully to ${contact.name} (${contact.phone}).`);
-          } catch (e) {
-            console.error('Failed to update birthday SMS log status:', e);
-          }
-        }, 3000);
       }
+    }
+
+    if (processedCount > 0) {
+      triggerWorker();
     }
 
     return NextResponse.json({
