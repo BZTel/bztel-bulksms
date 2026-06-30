@@ -144,6 +144,7 @@ h1, h2, h3, h4, .brand-text, .balance-amount, .credits-count {
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
 }
 
 .logo-icon {
@@ -170,6 +171,7 @@ h1, h2, h3, h4, .brand-text, .balance-amount, .credits-count {
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  overflow-y: auto;
 }
 
 .nav-item {
@@ -210,6 +212,7 @@ h1, h2, h3, h4, .brand-text, .balance-amount, .credits-count {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .user-pill {
@@ -1532,6 +1535,7 @@ textarea.form-control {
   flex-direction: column;
   gap: 8px;
   margin-top: auto; /* Push to bottom of nav area */
+  flex-shrink: 0;
 }
 
 .switch-channel-label {
