@@ -90,15 +90,6 @@ export function renderAuthView(container, state) {
                 </svg>
                 <span>Google</span>
               </button>
-              <button type="button" class="social-btn btn-microsoft" id="social-ms-btn">
-                <svg class="social-icon" viewBox="0 0 23 23" style="width:14px; height:14px; margin-right:4px;">
-                  <path fill="#f35325" d="M0 0h11v11H0z"/>
-                  <path fill="#81bc06" d="M12 0h11v11H12z"/>
-                  <path fill="#05a6f0" d="M0 12h11v11H0z"/>
-                  <path fill="#ffba08" d="M12 12h11v11H12z"/>
-                </svg>
-                <span>Microsoft</span>
-              </button>
             </div>
 
             <!-- Footnote secure check -->
@@ -137,15 +128,9 @@ export function renderAuthView(container, state) {
 
     // Production social login handlers
     const googleBtn = document.getElementById('social-google-btn');
-    const msBtn = document.getElementById('social-ms-btn');
     if (googleBtn) {
       googleBtn.addEventListener('click', () => {
         window.location.href = '/api/auth/google/login';
-      });
-    }
-    if (msBtn) {
-      msBtn.addEventListener('click', () => {
-        window.location.href = '/api/auth/microsoft/login';
       });
     }
 
