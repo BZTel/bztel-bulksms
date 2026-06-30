@@ -1945,6 +1945,10 @@ textarea.form-control {
     transform: translateX(0) !important;
   }
   
+  .sidebar-footer {
+    display: flex !important;
+  }
+  
   .sidebar-toggle-btn {
     display: block !important;
   }
