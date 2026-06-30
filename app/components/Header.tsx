@@ -22,8 +22,8 @@ export default function Header({ activePage }: HeaderProps) {
               </svg>
               <div className="top-bar-text-l">
                 <span className="top-bar-label-l">Mon - Sun (24/7)</span>
-                <a href="https://wa.me/2348060257405" target="_blank" rel="noopener noreferrer" className="top-bar-value-l">
-                  +234 806 025 7405<span className="hide-mobile-text-l"> (WhatsApp Only)</span>
+                <a href="https://wa.me/23058609686" target="_blank" rel="noopener noreferrer" className="top-bar-value-l">
+                  +230 5860 9686<span className="hide-mobile-text-l"> (WhatsApp Only)</span>
                 </a>
               </div>
             </div>

@@ -64,6 +64,7 @@ model SmsLog {
   message    String
   credits    Int      @default(1)
   status     String   @default("pending")
+  providerId String?  @map("provider_id")
   sentAt     DateTime @default(now()) @map("sent_at")
 
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -9,7 +9,7 @@ export default function HomePage() {
   const currency = 'NGN';
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [activeLang, setActiveLang] = useState<'curl' | 'python' | 'php' | 'node' | 'go'>('curl');
-  const [phone, setPhone] = useState('+2348054567890');
+  const [phone, setPhone] = useState('+23058609686');
   const [smsMsg, setSmsMsg] = useState('Hello from BzTel 🚀');
   const [sendingTest, setSendingTest] = useState(false);
   const [sentTest, setSentTest] = useState(false);
@@ -440,7 +440,7 @@ func main() {
                 <div className="mock-log-item">
                   <div>
                     <strong>June OTP Verification</strong>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginTop: '2px' }}>Recipient: +234805551234</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.65rem', marginTop: '2px' }}>Recipient: +230 5860 9686</div>
                   </div>
                   <span className="mock-badge success">Delivered</span>
                 </div>
