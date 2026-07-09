@@ -6,6 +6,9 @@ const globalForQueue = globalThis as unknown as {
 };
 
 export function triggerWorker() {
+  if (process.env.SMPP_ENABLED === 'true') {
+    return;
+  }
   if (globalForQueue.queueActive) {
     return;
   }

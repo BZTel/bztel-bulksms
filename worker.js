@@ -155,13 +155,40 @@ async function sendSMS(log) {
       return;
     }
 
-    console.log(`[Worker] Submitting SMS log ${log.id} to recipient ${log.recipient}...`);
+    // Clean phone number from non-digits (remove +, spaces, etc.) for destination address
+    const cleanRecipient = log.recipient.replace(/[^0-9]/g, '');
 
-    session.submit_sm({
-      destination_addr: log.recipient,
-      short_message: log.message,
-      source_addr: log.senderId
-    }, async (pdu) => {
+    // Check if Sender ID is alphanumeric
+    const isAlphanumeric = /[a-zA-Z]/.test(log.senderId);
+    
+    // Clean Sender ID if it's a numeric phone number (remove +, spaces, etc.)
+    const cleanSenderId = (log.senderId.startsWith('+') || /^\d+$/.test(log.senderId))
+      ? log.senderId.replace(/[^0-9]/g, '')
+      : log.senderId;
+
+    const source_addr_ton = isAlphanumeric ? 5 : 1; // 5 = Alphanumeric, 1 = International
+    const source_addr_npi = isAlphanumeric ? 0 : 1; // 0 = Unknown, 1 = ISDN
+
+    const pduParams = {
+      destination_addr: cleanRecipient,
+      dest_addr_ton: 1,      // 1 = International
+      dest_addr_npi: 1,      // 1 = ISDN
+      source_addr: cleanSenderId,
+      source_addr_ton: source_addr_ton,
+      source_addr_npi: source_addr_npi,
+      registered_delivery: 1 // Request delivery receipt (DLR)
+    };
+
+    if (log.message.length > 160) {
+      pduParams.short_message = ''; // empty string as we use payload
+      pduParams.message_payload = log.message;
+    } else {
+      pduParams.short_message = log.message;
+    }
+
+    console.log(`[Worker] Submitting SMS log ${log.id} to recipient ${cleanRecipient} via ${cleanSenderId}...`);
+
+    session.submit_sm(pduParams, async (pdu) => {
       try {
         if (pdu.command_status === 0) {
           console.log(`[Worker] SMS ${log.id} successfully submitted. Message ID: ${pdu.message_id}`);
@@ -193,6 +220,78 @@ async function handleIncomingDeliverSM(pdu) {
   try {
     const from = pdu.source_addr ? pdu.source_addr.toString() : '';
     const to = pdu.destination_addr ? pdu.destination_addr.toString() : '';
+    
+    // Check if it is a delivery receipt (DLR) instead of a text message
+    if (pdu.esm_class & 0x04) {
+      console.log('[Worker] Incoming message is a Delivery Receipt (DLR). Parsing status...');
+      
+      const msgText = pdu.short_message 
+        ? (pdu.short_message.message || pdu.short_message).toString() 
+        : '';
+        
+      console.log(`[Worker DLR] DLR Text: "${msgText}"`);
+      
+      const idMatch = msgText.match(/id:([^\s]+)/i);
+      const statMatch = msgText.match(/stat:([A-Z]+)/i);
+      
+      if (!idMatch || !statMatch) {
+        console.warn('[Worker DLR] Could not parse Message ID or Status from DLR text');
+        return;
+      }
+      
+      const dlrMsgId = idMatch[1];
+      const statusStr = statMatch[1];
+      
+      let status = 'failed';
+      if (statusStr === 'DELIVRD') {
+        status = 'delivered';
+      } else if (statusStr === 'ACCEPTD') {
+        status = 'submitted';
+      } else {
+        status = 'failed';
+      }
+      
+      // DLR message ID might be in decimal or hex. Look for both formats in the DB.
+      let hexMsgId = '';
+      let decMsgId = '';
+
+      if (/^\d+$/.test(dlrMsgId)) {
+        decMsgId = dlrMsgId;
+        hexMsgId = parseInt(dlrMsgId, 10).toString(16);
+      } else {
+        hexMsgId = dlrMsgId.toLowerCase();
+        try {
+          decMsgId = parseInt(dlrMsgId, 16).toString(10);
+        } catch (e) {}
+      }
+
+      console.log(`[Worker DLR] Searching for SMS log with providerId matching: '${dlrMsgId}' or hex: '${hexMsgId}' or dec: '${decMsgId}'`);
+
+      const smsLog = await prisma.smsLog.findFirst({
+        where: {
+          OR: [
+            { providerId: dlrMsgId },
+            ...(hexMsgId ? [{ providerId: hexMsgId }] : []),
+            ...(hexMsgId ? [{ providerId: hexMsgId.toUpperCase() }] : []),
+            ...(hexMsgId ? [{ providerId: hexMsgId.padStart(8, '0') }] : []),
+            ...(hexMsgId ? [{ providerId: hexMsgId.toUpperCase().padStart(8, '0') }] : []),
+            ...(decMsgId ? [{ providerId: decMsgId }] : [])
+          ]
+        }
+      });
+
+      if (smsLog) {
+        await prisma.smsLog.update({
+          where: { id: smsLog.id },
+          data: { status }
+        });
+        console.log(`[Worker DLR] Successfully updated SMS Log ${smsLog.id} status to: ${status}`);
+      } else {
+        console.warn(`[Worker DLR] No SMS log found for DLR message ID: ${dlrMsgId}`);
+      }
+      return;
+    }
+
     const message = pdu.short_message && pdu.short_message.message ? pdu.short_message.message.toString() : '';
     
     if (!from || !to || !message) {
@@ -201,13 +300,6 @@ async function handleIncomingDeliverSM(pdu) {
     }
 
     console.log(`[Worker] Inbound message received from: ${from} | to: ${to} | content: "${message}"`);
-
-    // Check if it is a delivery receipt (DLR) instead of a text message
-    if (pdu.esm_class & 0x04) {
-      console.log('[Worker] Incoming message is a Delivery Receipt (DLR). Parsing status...');
-      // Logic for parsing standard SMPP DLR reports can go here if needed.
-      return;
-    }
 
     // Find the virtual number mapping in Supabase database
     let virtualNumRecord = await prisma.virtualNumber.findFirst({

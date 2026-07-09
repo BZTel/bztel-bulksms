@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { broadcastMessage } from '@/lib/telemetry';
 
 // Helper to map Monty Mobile's StatusId to Bztel's SmsLog status
 function mapMontyStatus(statusId: string | number | null | undefined): string {
@@ -31,13 +32,34 @@ async function processDlr(messageId: string | null, statusId: string | number | 
   console.log(`[DLR Webhook] Processing DLR for MessageId: ${messageId} | StatusId: ${statusId} -> Status: ${status}`);
 
   try {
-    // Find the SMS log associated with this provider's Message ID
+    // DLR message ID might be in decimal or hex. Look for both formats in the DB.
+    let hexMsgId = '';
+    let decMsgId = '';
+
+    if (/^\d+$/.test(messageId)) {
+      decMsgId = messageId;
+      hexMsgId = parseInt(messageId, 10).toString(16);
+    } else {
+      hexMsgId = messageId.toLowerCase();
+      try {
+        decMsgId = parseInt(messageId, 16).toString(10);
+      } catch (e) {}
+    }
+
+    // Find the SMS log associated with this provider's Message ID (supporting hex/decimal formats & case-insensitivity)
     const smsLog = await prisma.smsLog.findFirst({
-      where: { providerId: messageId }
+      where: {
+        OR: [
+          { providerId: { equals: messageId, mode: 'insensitive' as const } },
+          ...(hexMsgId ? [{ providerId: { equals: hexMsgId, mode: 'insensitive' as const } }] : []),
+          ...(hexMsgId ? [{ providerId: { equals: hexMsgId.padStart(8, '0'), mode: 'insensitive' as const } }] : []),
+          ...(decMsgId ? [{ providerId: { equals: decMsgId, mode: 'insensitive' as const } }] : [])
+        ]
+      }
     });
 
     if (!smsLog) {
-      console.warn(`[DLR Webhook] No SMS log found matching providerId: ${messageId}`);
+      console.warn(`[DLR Webhook] No SMS log found matching providerId: ${messageId} (hex: ${hexMsgId}, dec: ${decMsgId})`);
       return { error: 'SMS log not found', status: 404 };
     }
 
@@ -48,6 +70,13 @@ async function processDlr(messageId: string | null, statusId: string | number | 
     });
 
     console.log(`[DLR Webhook] Successfully updated SMS Log ${smsLog.id} status to: ${status}`);
+
+    // Broadcast update to telemetry clients
+    broadcastMessage({
+      type: 'SMS_UPDATED',
+      timestamp: Date.now()
+    });
+
     return { success: true };
   } catch (error) {
     console.error(`[DLR Webhook] Error updating SMS status in database:`, error);
