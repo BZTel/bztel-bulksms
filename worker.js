@@ -7,100 +7,141 @@ const prisma = new PrismaClient();
 // Configure connection parameters from environment or fallbacks
 const SMPP_HOST = process.env.SMPP_HOST || '185.135.128.114'; // Monty Mobile SMSC IP
 const SMPP_PORT = parseInt(process.env.SMPP_PORT || '9001');   // Monty Mobile SMSC Port
-const SMPP_SYSTEM_ID = process.env.SMPP_SYSTEM_ID || 'TEMP_SYSTEM_ID';
-const SMPP_PASSWORD = process.env.SMPP_PASSWORD || 'TEMP_PASSWORD';
 const SMPP_SYSTEM_TYPE = process.env.SMPP_SYSTEM_TYPE || 'SMPP';
 
-let session = null;
-let isConnecting = false;
-let enquireLinkInterval = null;
+const connections = {
+  tx: {
+    name: 'Transactional',
+    systemId: process.env.SMPP_TX_SYSTEM_ID || process.env.SMPP_SYSTEM_ID || 'BZTItms',
+    password: process.env.SMPP_TX_PASSWORD || process.env.SMPP_PASSWORD || 'TheBztel@#1',
+    session: null,
+    isConnecting: false,
+    enquireLinkInterval: null
+  },
+  promo: {
+    name: 'Promotional',
+    systemId: process.env.SMPP_PROMO_SYSTEM_ID || 'BZTIPrmo',
+    password: process.env.SMPP_PROMO_PASSWORD || 'TheBztel@#1',
+    session: null,
+    isConnecting: false,
+    enquireLinkInterval: null
+  }
+};
+
 let isProcessing = false;
 
 // ── SMPP Connection Management ──────────────────────────────────────────────
 
-function connectSMPP() {
-  if (session || isConnecting) return;
-  isConnecting = true;
-  console.log(`[SMPP] Connecting to host ${SMPP_HOST}:${SMPP_PORT}...`);
+function connectSMPP(key) {
+  const conn = connections[key];
+  if (conn.session || conn.isConnecting) return;
+  conn.isConnecting = true;
+  console.log(`[SMPP - ${conn.name}] Connecting to host ${SMPP_HOST}:${SMPP_PORT}...`);
 
-  session = smpp.connect({
+  conn.session = smpp.connect({
     host: SMPP_HOST,
     port: SMPP_PORT
   }, () => {
-    console.log('[SMPP] Socket connection established. Binding transceiver...');
+    console.log(`[SMPP - ${conn.name}] Socket connection established. Binding transceiver...`);
     
-    session.bind_transceiver({
-      system_id: SMPP_SYSTEM_ID,
-      password: SMPP_PASSWORD,
+    conn.session.bind_transceiver({
+      system_id: conn.systemId,
+      password: conn.password,
       system_type: SMPP_SYSTEM_TYPE
     }, (pdu) => {
-      isConnecting = false;
+      conn.isConnecting = false;
       if (pdu.command_status === 0) {
-        console.log('[SMPP] Successfully bound as Transceiver!');
-        startEnquireLink();
+        console.log(`[SMPP - ${conn.name}] Successfully bound as Transceiver!`);
+        startEnquireLink(key);
         processQueue(); // Start polling the Supabase queue
       } else {
-        console.error(`[SMPP] Bind failed with command_status: ${pdu.command_status}`);
-        reconnect();
+        console.error(`[SMPP - ${conn.name}] Bind failed with command_status: ${pdu.command_status}`);
+        reconnect(key);
       }
     });
   });
 
-  session.on('close', () => {
-    console.log('[SMPP] Connection closed by remote host.');
-    reconnect();
+  conn.session.on('close', () => {
+    console.log(`[SMPP - ${conn.name}] Connection closed by remote host.`);
+    reconnect(key);
   });
 
-  session.on('error', (err) => {
-    console.error('[SMPP] Session connection error:', err);
-    reconnect();
+  conn.session.on('error', (err) => {
+    console.error(`[SMPP - ${conn.name}] Session connection error:`, err);
+    reconnect(key);
   });
   
   // Handle incoming delivery receipts or mobile-originated (MO) SMS
-  session.on('deliver_sm', (pdu) => {
-    console.log('[SMPP] Incoming deliver_sm PDU received:', pdu);
+  conn.session.on('deliver_sm', (pdu) => {
+    console.log(`[SMPP - ${conn.name}] Incoming deliver_sm PDU received:`, pdu);
     
     // Always acknowledge the incoming deliver_sm request back to the SMSC
-    session.send(pdu.createResponse());
+    conn.session.send(pdu.createResponse());
     
     handleIncomingDeliverSM(pdu);
   });
 }
 
-function startEnquireLink() {
-  stopEnquireLink();
+function startEnquireLink(key) {
+  stopEnquireLink(key);
+  const conn = connections[key];
   // Keep connection alive with heartbeats every 30 seconds
-  enquireLinkInterval = setInterval(() => {
-    if (session) {
-      console.log('[SMPP] Sending enquire_link heartbeat...');
-      session.enquire_link({}, (pdu) => {
+  conn.enquireLinkInterval = setInterval(() => {
+    if (conn.session) {
+      console.log(`[SMPP - ${conn.name}] Sending enquire_link heartbeat...`);
+      conn.session.enquire_link({}, (pdu) => {
         if (pdu.command_status !== 0) {
-          console.error('[SMPP] Heartbeat enquire_link failed. Reconnecting...');
-          reconnect();
+          console.error(`[SMPP - ${conn.name}] Heartbeat enquire_link failed. Reconnecting...`);
+          reconnect(key);
         }
       });
     }
   }, 30000);
 }
 
-function stopEnquireLink() {
-  if (enquireLinkInterval) {
-    clearInterval(enquireLinkInterval);
-    enquireLinkInterval = null;
+function stopEnquireLink(key) {
+  const conn = connections[key];
+  if (conn.enquireLinkInterval) {
+    clearInterval(conn.enquireLinkInterval);
+    conn.enquireLinkInterval = null;
   }
 }
 
-function reconnect() {
-  stopEnquireLink();
-  if (session) {
+function reconnect(key) {
+  stopEnquireLink(key);
+  const conn = connections[key];
+  if (conn.session) {
     try {
-      session.close();
+      conn.session.close();
     } catch (e) {}
-    session = null;
+    conn.session = null;
   }
-  isConnecting = false;
-  console.log('[SMPP] Reconnecting in 5 seconds...');
-  setTimeout(connectSMPP, 5000);
+  conn.isConnecting = false;
+  console.log(`[SMPP - ${conn.name}] Reconnecting in 5 seconds...`);
+  setTimeout(() => connectSMPP(key), 5000);
+}
+
+// ── Outgoing SMS Routing Logic ───────────────────────────────────────────────
+
+function getRoute(log) {
+  const promoSenderIds = (process.env.SMPP_PROMO_SENDER_IDS || '')
+    .split(',')
+    .map(id => id.trim().toUpperCase())
+    .filter(Boolean);
+
+  const senderIdUpper = log.senderId.trim().toUpperCase();
+  
+  // If the senderId is in the list of promo sender IDs, route to promo
+  if (promoSenderIds.includes(senderIdUpper)) {
+    return 'promo';
+  }
+  
+  // Custom keyword heuristics
+  if (senderIdUpper.includes('PROMO') || senderIdUpper.includes('MARKETING')) {
+    return 'promo';
+  }
+
+  return 'tx';
 }
 
 // ── Outgoing SMS Queue Processing (Supabase Database Queue) ───────────────────
@@ -108,8 +149,8 @@ function reconnect() {
 async function processQueue() {
   if (isProcessing) return;
   
-  // Ensure we are fully bound before sending
-  if (!session || isConnecting) {
+  // Ensure we have at least one active connection
+  if (!connections.tx.session && !connections.promo.session) {
     return;
   }
   
@@ -131,27 +172,37 @@ async function processQueue() {
 
     console.log(`[Worker] Found ${pendingLogs.length} pending messages to dispatch.`);
 
+    let skippedAny = false;
     for (const log of pendingLogs) {
-      await sendSMS(log);
+      const result = await sendSMS(log);
+      if (result && result.skipped) {
+        skippedAny = true;
+      }
       
       // Enforce pacing delay (approx. 50ms per message to respect the 20 SMS/sec limit)
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
+
+    // Delay re-polling if we skipped messages because a route was down
+    const nextPollDelay = skippedAny ? 5000 : 100;
+    setTimeout(processQueue, nextPollDelay);
   } catch (error) {
     console.error('[Worker] Error in queue processing loop:', error);
+    setTimeout(processQueue, 1000);
   } finally {
     isProcessing = false;
-    // Immediately check queue again for any new pending tasks
-    setTimeout(processQueue, 100);
   }
 }
 
 // Submit a single message via SMPP
 async function sendSMS(log) {
+  const routeKey = getRoute(log);
+  const conn = connections[routeKey];
+
   return new Promise((resolve) => {
-    if (!session) {
-      console.error(`[Worker] Cannot send message ${log.id}: No active SMPP session.`);
-      resolve();
+    if (!conn.session) {
+      console.warn(`[Worker] Cannot send message ${log.id}: Route [${conn.name}] is not connected. Skipping for now.`);
+      resolve({ skipped: true });
       return;
     }
 
@@ -186,9 +237,9 @@ async function sendSMS(log) {
       pduParams.short_message = log.message;
     }
 
-    console.log(`[Worker] Submitting SMS log ${log.id} to recipient ${cleanRecipient} via ${cleanSenderId}...`);
+    console.log(`[Worker] Submitting SMS log ${log.id} to recipient ${cleanRecipient} via route [${conn.name}] using ${cleanSenderId}...`);
 
-    session.submit_sm(pduParams, async (pdu) => {
+    conn.session.submit_sm(pduParams, async (pdu) => {
       try {
         if (pdu.command_status === 0) {
           console.log(`[Worker] SMS ${log.id} successfully submitted. Message ID: ${pdu.message_id}`);
@@ -200,7 +251,7 @@ async function sendSMS(log) {
             }
           });
         } else {
-          console.error(`[Worker] SMS ${log.id} submission failed. SMPP Error code: ${pdu.command_status}`);
+          console.error(`[Worker] SMS ${log.id} submission failed on route [${conn.name}]. SMPP Error code: ${pdu.command_status}`);
           await prisma.smsLog.update({
             where: { id: log.id },
             data: { status: 'failed' }
@@ -213,6 +264,7 @@ async function sendSMS(log) {
     });
   });
 }
+
 
 // ── Inbound Mobile-Originated (MO) SMS Delivery ──────────────────────────────
 
@@ -337,6 +389,7 @@ async function handleIncomingDeliverSM(pdu) {
 
 // ── Startup ──────────────────────────────────────────────────────────────────
 
-// Start the worker process
-connectSMPP();
-console.log('[Worker] Standalone Background Worker started.');
+// Start the worker process for both routes
+connectSMPP('tx');
+connectSMPP('promo');
+console.log('[Worker] Standalone Background Worker started (Dual Route: TX & PROMO).');

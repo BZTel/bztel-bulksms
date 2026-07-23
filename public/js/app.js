@@ -40,6 +40,21 @@ async function initApp() {
   const tokenFromUrl = urlParams.get('token');
   const errorFromUrl = urlParams.get('error');
 
+  const paymentStatus = urlParams.get('status');
+  const paymentCredits = urlParams.get('credits');
+  const paymentMessage = urlParams.get('message');
+
+  if (paymentStatus === 'success') {
+    const creds = paymentCredits ? Number(paymentCredits).toLocaleString() : 'requested';
+    showToast(`Payment successful! Credited ${creds} SMS credits to your wallet.`, 'success');
+    state.currentView = 'wallet';
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (paymentStatus === 'error') {
+    showToast(paymentMessage || 'Online checkout payment failed', 'error');
+    state.currentView = 'wallet';
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   if (errorFromUrl) {
     showToast(decodeURIComponent(errorFromUrl), 'error');
     // Clean query parameters from URL
@@ -169,6 +184,9 @@ function setupModalEvents() {
   // Open modal
   topupTrigger.addEventListener('click', () => {
     topupModal.classList.remove('hidden');
+    // Set default tab on open
+    const tabFlw = document.getElementById('pay-tab-flw');
+    if (tabFlw) tabFlw.click();
   });
 
   // Close modal
@@ -183,6 +201,35 @@ function setupModalEvents() {
     }
   });
 
+  // Dual-payment Tab Switches
+  const payTabFlw = document.getElementById('pay-tab-flw');
+  const payTabBank = document.getElementById('pay-tab-bank');
+  const paneFlw = document.getElementById('payment-pane-flw');
+  const paneBank = document.getElementById('payment-pane-bank');
+
+  if (payTabFlw && payTabBank) {
+    payTabFlw.addEventListener('click', () => {
+      payTabFlw.classList.add('active');
+      payTabBank.classList.remove('active');
+      paneFlw.classList.remove('hidden');
+      paneBank.classList.add('hidden');
+    });
+
+    payTabBank.addEventListener('click', () => {
+      payTabBank.classList.add('active');
+      payTabFlw.classList.remove('active');
+      paneBank.classList.remove('hidden');
+      paneFlw.classList.add('hidden');
+
+      // Populate unique reference for bank transfer dynamically
+      const bankRef = document.getElementById('bank-transfer-ref');
+      if (bankRef && state.user) {
+        const timestamp = Date.now().toString().slice(-6);
+        bankRef.innerText = `BZ-${state.user.id}-${timestamp}`;
+      }
+    });
+  }
+
   // Pricing selection handler
   pricingCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -193,20 +240,20 @@ function setupModalEvents() {
       const price = card.getAttribute('data-price');
       
       selectedCreditsInput.value = credits;
-      paySubmitBtn.innerText = `Pay $${price} & Add Credits`;
+      paySubmitBtn.innerText = `Pay ₦${price} & Add Credits`;
     });
   });
 
-  // Form Submit (simulated payment process)
+  // Form Submit: Flutterwave Checkout Link
   topupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     paySubmitBtn.disabled = true;
-    paySubmitBtn.innerText = 'Processing simulated payment...';
+    paySubmitBtn.innerText = 'Initializing Flutterwave checkout...';
 
     const credits = parseInt(selectedCreditsInput.value);
 
     try {
-      const response = await fetch('/api/auth/topup', {
+      const response = await fetch('/api/billing/flutterwave/initialize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -216,29 +263,89 @@ function setupModalEvents() {
       });
 
       const data = await response.json();
-      if (response.ok) {
-        state.user.balance = data.balance;
-        updateUIHeader();
-        showToast(data.message, 'success');
-        topupModal.classList.add('hidden');
-        
-        // If on dashboard, re-render to update credit card value
-        if (state.currentView === 'dashboard') {
-          navigateTo('dashboard');
-        }
+      if (response.ok && data.link) {
+        showToast('Redirecting to secure Flutterwave checkout...', 'success');
+        window.location.href = data.link; // Redirect user
       } else {
-        showToast(data.error || 'Failed to complete transaction', 'error');
+        showToast(data.error || 'Failed to initialize payment', 'error');
+        paySubmitBtn.disabled = false;
       }
     } catch (error) {
       showToast('Connection error, try again later', 'error');
-    } finally {
       paySubmitBtn.disabled = false;
-      // Reset text
+    } finally {
       const activeCard = document.querySelector('.pricing-card.selected') || document.querySelector('.pricing-card.popular');
-      const price = activeCard ? activeCard.getAttribute('data-price') : '39.99';
-      paySubmitBtn.innerText = `Pay $${price} & Add Credits`;
+      const price = activeCard ? activeCard.getAttribute('data-price') : '60,000';
+      paySubmitBtn.innerText = `Pay ₦${price} & Add Credits`;
     }
   });
+
+  // Manual Bank Transfer Elements Wiring
+  const bankPackageSelect = document.getElementById('bank-package-select');
+  const bankCustomWrapper = document.getElementById('bank-custom-credits-wrapper');
+  if (bankPackageSelect && bankCustomWrapper) {
+    bankPackageSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        bankCustomWrapper.classList.remove('hidden');
+        document.getElementById('bank-custom-credits').required = true;
+      } else {
+        bankCustomWrapper.classList.add('hidden');
+        document.getElementById('bank-custom-credits').required = false;
+      }
+    });
+  }
+
+  const bankForm = document.getElementById('bank-transfer-form');
+  const bankSubmitBtn = document.getElementById('bank-submit-btn');
+  if (bankForm && bankSubmitBtn) {
+    bankForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      bankSubmitBtn.disabled = true;
+      bankSubmitBtn.innerText = 'Submitting notification...';
+
+      const selectVal = bankPackageSelect.value;
+      let credits = 0;
+      if (selectVal === 'custom') {
+        credits = parseInt(document.getElementById('bank-custom-credits').value);
+        if (isNaN(credits) || credits <= 0) {
+          showToast('Please specify a valid credits amount', 'warning');
+          bankSubmitBtn.disabled = false;
+          bankSubmitBtn.innerText = 'Notify Admin of Transfer';
+          return;
+        }
+      } else {
+        credits = parseInt(selectVal);
+      }
+
+      const reference = document.getElementById('bank-transfer-input-ref').value;
+
+      try {
+        const response = await fetch('/api/billing/bank-transfer/notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.token}`
+          },
+          body: JSON.stringify({ credits, reference })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message, 'success');
+          topupModal.classList.add('hidden');
+          bankForm.reset();
+          bankCustomWrapper.classList.add('hidden');
+        } else {
+          showToast(data.error || 'Failed to submit notification', 'error');
+        }
+      } catch (error) {
+        showToast('Connection error submitting transfer notification', 'error');
+      } finally {
+        bankSubmitBtn.disabled = false;
+        bankSubmitBtn.innerText = 'Notify Admin of Transfer';
+      }
+    });
+  }
 }
 
 // Fetch Profile

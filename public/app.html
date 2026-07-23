@@ -199,56 +199,100 @@
         <button id="close-topup-btn" class="close-btn">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="modal-desc">Top up your balance instantly. Select a package below to add credits to your account.</p>
-        
-        <div class="pricing-grid">
-          <div class="pricing-card" data-credits="1000" data-price="9.99">
-            <span class="pricing-badge">Basic</span>
-            <div class="credits-count">1,000</div>
-            <span class="credits-label">SMS Credits</span>
-            <div class="price">$9.99</div>
-            <span class="price-per-sms">0.99¢ / SMS</span>
-          </div>
-          <div class="pricing-card popular" data-credits="5000" data-price="39.99">
-            <span class="pricing-badge">Growth</span>
-            <div class="credits-count">5,000</div>
-            <span class="credits-label">SMS Credits</span>
-            <div class="price">$39.99</div>
-            <span class="price-per-sms">0.79¢ / SMS</span>
-          </div>
-          <div class="pricing-card" data-credits="25000" data-price="149.99">
-            <span class="pricing-badge">Pro</span>
-            <div class="credits-count">25,000</div>
-            <span class="credits-label">SMS Credits</span>
-            <div class="price">$149.99</div>
-            <span class="price-per-sms">0.59¢ / SMS</span>
-          </div>
+        <!-- Payment Mode Tabs -->
+        <div class="admin-toggle-row" style="margin-bottom: 20px; display: flex; width: 100%;">
+          <button type="button" class="admin-toggle-btn active" id="pay-tab-flw" style="flex: 1; text-align: center;">Online Payment</button>
+          <button type="button" class="admin-toggle-btn" id="pay-tab-bank" style="flex: 1; text-align: center;">Bank Transfer</button>
         </div>
 
-        <form id="topup-form" class="topup-payment-form mt-4">
-          <input type="hidden" id="selected-credits" value="5000">
-          <div class="form-group">
-            <label for="card-name">Cardholder Name</label>
-            <input type="text" id="card-name" class="form-control" required placeholder="John Doe" value="John Doe">
+        <!-- Tab 1: Flutterwave -->
+        <div id="payment-pane-flw">
+          <p class="modal-desc">Top up your balance instantly using cards, USSD, or online banking via Flutterwave.</p>
+          
+          <div class="pricing-grid">
+            <div class="pricing-card" data-credits="1000" data-price="15,000">
+              <span class="pricing-badge">Basic</span>
+              <div class="credits-count">1,000</div>
+              <span class="credits-label">SMS Credits</span>
+              <div class="price">₦15,000</div>
+              <span class="price-per-sms">₦15.00 / SMS</span>
+            </div>
+            <div class="pricing-card popular" data-credits="5000" data-price="60,000">
+              <span class="pricing-badge">Growth</span>
+              <div class="credits-count">5,000</div>
+              <span class="credits-label">SMS Credits</span>
+              <div class="price">₦60,000</div>
+              <span class="price-per-sms">₦12.00 / SMS</span>
+            </div>
+            <div class="pricing-card" data-credits="25000" data-price="225,000">
+              <span class="pricing-badge">Pro</span>
+              <div class="credits-count">25,000</div>
+              <span class="credits-label">SMS Credits</span>
+              <div class="price">₦225,000</div>
+              <span class="price-per-sms">₦9.00 / SMS</span>
+            </div>
           </div>
-          <div class="form-row">
-            <div class="form-group flex-2">
-              <label for="card-number">Card Number</label>
-              <input type="text" id="card-number" class="form-control" required placeholder="4111 2222 3333 4444" value="4111 2222 3333 4444">
+
+          <form id="topup-form" class="mt-4">
+            <input type="hidden" id="selected-credits" value="5000">
+            <button type="submit" class="btn btn-primary btn-block" id="pay-submit-btn" style="padding: 14px;">
+              Pay ₦60,000 & Add Credits
+            </button>
+          </form>
+        </div>
+
+        <!-- Tab 2: Manual Bank Transfer -->
+        <div id="payment-pane-bank" class="hidden">
+          <p class="modal-desc">Transfer funds manually to our bank account. The administrator will review and credit your account upon verification.</p>
+          
+          <!-- Bank Details Box -->
+          <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); padding: 18px; border-radius: var(--border-radius-sm); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Bank Name:</span>
+              <strong style="color: var(--text-primary); font-size: 0.85rem;">Guaranty Trust Bank (GTBank)</strong>
             </div>
-            <div class="form-group flex-1">
-              <label for="card-expiry">Expiry</label>
-              <input type="text" id="card-expiry" class="form-control" required placeholder="MM/YY" value="12/28">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Account Number:</span>
+              <strong style="color: var(--accent-color); font-size: 0.95rem; font-family: monospace; letter-spacing: 1px;">0123456789</strong>
             </div>
-            <div class="form-group flex-1">
-              <label for="card-cvc">CVC</label>
-              <input type="password" id="card-cvc" class="form-control" required placeholder="123" value="123">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Account Name:</span>
+              <strong style="color: var(--text-primary); font-size: 0.85rem;">BZTel Communications</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted); font-size: 0.8rem;">Unique Reference:</span>
+              <strong id="bank-transfer-ref" style="color: var(--warning-color); font-size: 0.9rem; font-family: monospace;">BZ-MEMBER-REF</strong>
             </div>
           </div>
-          <button type="submit" class="btn btn-primary btn-block mt-4" id="pay-submit-btn">
-            Pay $39.99 & Add Credits
-          </button>
-        </form>
+
+          <form id="bank-transfer-form">
+            <div class="form-group">
+              <label for="bank-package-select">Select Credit Package</label>
+              <select id="bank-package-select" class="form-control" style="background: var(--bg-tertiary); color: var(--text-primary);">
+                <option value="1000" data-price="15000">1,000 Credits (₦15,000)</option>
+                <option value="5000" data-price="60000" selected>5,000 Credits (₦60,000)</option>
+                <option value="25000" data-price="225000">25,000 Credits (₦225,000)</option>
+                <option value="custom">Custom Credits Amount...</option>
+              </select>
+            </div>
+
+            <!-- Custom credits wrapper (hidden by default) -->
+            <div id="bank-custom-credits-wrapper" class="form-group hidden mt-2">
+              <label for="bank-custom-credits">Credits Amount</label>
+              <input type="number" id="bank-custom-credits" class="form-control" placeholder="e.g. 2000" min="100">
+              <small style="color: var(--text-muted); font-size: 0.72rem;">Custom credits cost ₦12 per credit.</small>
+            </div>
+
+            <div class="form-group mt-2">
+              <label for="bank-transfer-input-ref">Your Payment Reference Code</label>
+              <input type="text" id="bank-transfer-input-ref" class="form-control" placeholder="Enter BZ- Reference or Transaction ID" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-4" id="bank-submit-btn" style="padding: 14px; background: var(--warning-color); border-color: var(--warning-color);">
+              Notify Admin of Transfer
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>

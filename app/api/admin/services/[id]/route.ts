@@ -39,10 +39,67 @@ export async function PATCH(
       return NextResponse.json({ error: 'Service request not found' }, { status: 404 });
     }
 
-    const updated = await prisma.serviceRequest.update({
-      where: { id: requestId },
-      data: { status }
-    });
+    let updated;
+    
+    // Check if we are approving a manual Bank Transfer request
+    const isApprovingBankTransfer = 
+      existing.serviceType === 'Bank Transfer' && 
+      status === 'Approved' && 
+      existing.status !== 'Approved';
+
+    if (isApprovingBankTransfer) {
+      // Parse credits from description: e.g. "Bank Transfer verification request. Credits: 5000 | Reference: BZ-1-168"
+      const creditsMatch = existing.description.match(/Credits:\s*(\d+)/i);
+      const creditsToLoad = creditsMatch ? parseInt(creditsMatch[1], 10) : 0;
+
+      if (creditsToLoad <= 0) {
+        return NextResponse.json({ error: 'Could not parse a valid credits amount from the request description' }, { status: 400 });
+      }
+
+      updated = await prisma.$transaction(async (tx) => {
+        // Fetch current user balance
+        const user = await tx.user.findUnique({
+          where: { id: existing.userId },
+          select: { balance: true }
+        });
+
+        if (!user) {
+          throw new Error('USER_NOT_FOUND');
+        }
+
+        const balanceBefore = user.balance;
+        const balanceAfter = balanceBefore + creditsToLoad;
+
+        // Credit user balance
+        await tx.user.update({
+          where: { id: existing.userId },
+          data: { balance: balanceAfter }
+        });
+
+        // Write purchase transaction log
+        await tx.transaction.create({
+          data: {
+            userId: existing.userId,
+            type: 'purchase',
+            amount: creditsToLoad,
+            balanceBefore,
+            balanceAfter,
+            description: `Bank Transfer Top-Up — ${creditsToLoad.toLocaleString()} SMS Credits`,
+          }
+        });
+
+        // Update request status
+        return await tx.serviceRequest.update({
+          where: { id: requestId },
+          data: { status }
+        });
+      });
+    } else {
+      updated = await prisma.serviceRequest.update({
+        where: { id: requestId },
+        data: { status }
+      });
+    }
 
     const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
     await logAuditEvent(
@@ -61,7 +118,10 @@ export async function PATCH(
         repName: updated.repName,
       }
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'USER_NOT_FOUND') {
+      return NextResponse.json({ error: 'Customer account not found' }, { status: 404 });
+    }
     console.error('Admin update service request error:', error);
     return NextResponse.json({ error: 'Failed to update custom service request' }, { status: 500 });
   }
