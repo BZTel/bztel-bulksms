@@ -36,6 +36,9 @@ export async function GET(req: Request) {
       // Parse customer metadata
       const userId = Number(verifiedTx.meta.userId);
       const credits = Number(verifiedTx.meta.credits);
+      const redeemPoints = verifiedTx.meta.redeemPoints === 'true';
+      const pointsToRedeem = Number(verifiedTx.meta.pointsToRedeem || '0');
+      const paidAmount = Number(verifiedTx.amount);
 
       if (isNaN(userId) || isNaN(credits) || credits <= 0) {
         console.error('[FLW Callback] Invalid metadata values in transaction:', verifiedTx.meta);
@@ -60,7 +63,7 @@ export async function GET(req: Request) {
       await prisma.$transaction(async (tx) => {
         const user = await tx.user.findUnique({
           where: { id: userId },
-          select: { balance: true },
+          select: { balance: true, loyaltyPoints: true },
         });
 
         if (!user) {
@@ -70,13 +73,46 @@ export async function GET(req: Request) {
         const balanceBefore = user.balance;
         const balanceAfter = balanceBefore + credits;
 
-        // 1. Update user balance
+        let finalLoyaltyPoints = user.loyaltyPoints;
+
+        // 1. If points were redeemed, deduct them
+        if (redeemPoints && pointsToRedeem > 0) {
+          const actualRedeem = Math.min(finalLoyaltyPoints, pointsToRedeem);
+          finalLoyaltyPoints -= actualRedeem;
+
+          await tx.loyaltyLedger.create({
+            data: {
+              userId,
+              amount: -actualRedeem,
+              description: `Redeemed points for ₦${(actualRedeem * 100).toLocaleString()} discount on refill (Ref: FLW-${transactionId})`
+            }
+          });
+        }
+
+        // 2. Calculate and award earned loyalty points: 1 point per ₦1000 spent
+        const pointsEarned = Math.floor(paidAmount / 1000);
+        if (pointsEarned > 0) {
+          finalLoyaltyPoints += pointsEarned;
+          
+          await tx.loyaltyLedger.create({
+            data: {
+              userId,
+              amount: pointsEarned,
+              description: `Earned points from ₦${paidAmount.toLocaleString()} refill (Ref: FLW-${transactionId})`
+            }
+          });
+        }
+
+        // 3. Update user balance and loyalty points
         await tx.user.update({
           where: { id: userId },
-          data: { balance: balanceAfter },
+          data: { 
+            balance: balanceAfter,
+            loyaltyPoints: finalLoyaltyPoints
+          },
         });
 
-        // 2. Log payment transaction
+        // 4. Log payment transaction
         await tx.transaction.create({
           data: {
             userId,
@@ -84,7 +120,7 @@ export async function GET(req: Request) {
             amount: credits,
             balanceBefore,
             balanceAfter,
-            description: `Flutterwave Online Refill (Ref ID: FLW-${transactionId})`,
+            description: `Flutterwave Online Refill (Ref ID: FLW-${transactionId})${redeemPoints ? ` — Points Discount Applied` : ''}`,
           },
         });
       });

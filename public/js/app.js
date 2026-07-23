@@ -181,12 +181,92 @@ function setupModalEvents() {
   const selectedCreditsInput = document.getElementById('selected-credits');
   const paySubmitBtn = document.getElementById('pay-submit-btn');
 
+  function updateLoyaltyUI() {
+    const points = state.user?.loyalty_points || 0;
+    
+    // 1. Flutterwave calculations
+    const activeCard = document.querySelector('.pricing-card.selected') || document.querySelector('.pricing-card.popular');
+    let flwPrice = activeCard ? parseInt(activeCard.getAttribute('data-price').replace(/,/g, '')) : 60000;
+    
+    const flwContainer = document.getElementById('flw-loyalty-discount-container');
+    const flwLabel = document.getElementById('flw-loyalty-points-label');
+    const flwCheckbox = document.getElementById('flw-use-loyalty-points');
+
+    if (points > 0 && flwContainer && flwLabel) {
+      flwContainer.classList.remove('hidden');
+      const maxDiscount = flwPrice * 0.5;
+      const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+      const pointsToRedeem = Math.min(points, maxPointsNeeded);
+      const discount = pointsToRedeem * 100;
+      
+      flwLabel.innerHTML = `You have <strong>${points}</strong> points. Redeem <strong>${pointsToRedeem}</strong> points for a <strong>₦${discount.toLocaleString()}</strong> discount.`;
+      
+      if (flwCheckbox && flwCheckbox.checked) {
+        paySubmitBtn.innerText = `Pay ₦${(flwPrice - discount).toLocaleString()} & Add Credits`;
+      } else {
+        paySubmitBtn.innerText = `Pay ₦${flwPrice.toLocaleString()} & Add Credits`;
+      }
+    } else {
+      flwContainer?.classList.add('hidden');
+      if (flwCheckbox) flwCheckbox.checked = false;
+      paySubmitBtn.innerText = `Pay ₦${flwPrice.toLocaleString()} & Add Credits`;
+    }
+
+    // 2. Bank calculations
+    const bankSelect = document.getElementById('bank-package-select');
+    let bankPrice = 60000;
+    if (bankSelect) {
+      if (bankSelect.value === 'custom') {
+        const customCredits = parseInt(document.getElementById('bank-custom-credits').value) || 0;
+        bankPrice = customCredits * 12;
+      } else {
+        const opt = bankSelect.options[bankSelect.selectedIndex];
+        bankPrice = opt ? parseInt(opt.getAttribute('data-price') || '60000') : 60000;
+      }
+    }
+
+    const bankContainer = document.getElementById('bank-loyalty-discount-container');
+    const bankLabel = document.getElementById('bank-loyalty-points-label');
+    const bankCheckbox = document.getElementById('bank-use-loyalty-points');
+
+    if (points > 0 && bankContainer && bankLabel) {
+      bankContainer.classList.remove('hidden');
+      const maxDiscount = bankPrice * 0.5;
+      const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+      const pointsToRedeem = Math.min(points, maxPointsNeeded);
+      const discount = pointsToRedeem * 100;
+
+      bankLabel.innerHTML = `You have <strong>${points}</strong> points. Redeem <strong>${pointsToRedeem}</strong> points for a <strong>₦${discount.toLocaleString()}</strong> discount.`;
+
+      if (bankCheckbox && bankCheckbox.checked) {
+        bankSubmitBtn.innerText = `Notify Admin (₦${(bankPrice - discount).toLocaleString()})`;
+      } else {
+        bankSubmitBtn.innerText = `Notify Admin of Transfer`;
+      }
+    } else {
+      bankContainer?.classList.add('hidden');
+      if (bankCheckbox) bankCheckbox.checked = false;
+      bankSubmitBtn.innerText = `Notify Admin of Transfer`;
+    }
+  }
+
   // Open modal
-  topupTrigger.addEventListener('click', () => {
+  topupTrigger.addEventListener('click', async () => {
     topupModal.classList.remove('hidden');
+    // Refresh user state first to fetch points
+    try {
+      const res = await apiFetch('/api/auth/me');
+      if (res.ok) {
+        const data = await res.json();
+        state.user = data.user;
+        updateUIHeader();
+      }
+    } catch (err) {}
+    
     // Set default tab on open
     const tabFlw = document.getElementById('pay-tab-flw');
     if (tabFlw) tabFlw.click();
+    updateLoyaltyUI();
   });
 
   // Close modal
@@ -213,6 +293,7 @@ function setupModalEvents() {
       payTabBank.classList.remove('active');
       paneFlw.classList.remove('hidden');
       paneBank.classList.add('hidden');
+      updateLoyaltyUI();
     });
 
     payTabBank.addEventListener('click', () => {
@@ -227,6 +308,7 @@ function setupModalEvents() {
         const timestamp = Date.now().toString().slice(-6);
         bankRef.innerText = `BZ-${state.user.id}-${timestamp}`;
       }
+      updateLoyaltyUI();
     });
   }
 
@@ -237,12 +319,15 @@ function setupModalEvents() {
       card.classList.add('selected');
       
       const credits = card.getAttribute('data-credits');
-      const price = card.getAttribute('data-price');
-      
       selectedCreditsInput.value = credits;
-      paySubmitBtn.innerText = `Pay ₦${price} & Add Credits`;
+      updateLoyaltyUI();
     });
   });
+
+  // Bind checkbox listeners
+  document.getElementById('flw-use-loyalty-points')?.addEventListener('change', updateLoyaltyUI);
+  document.getElementById('bank-use-loyalty-points')?.addEventListener('change', updateLoyaltyUI);
+  document.getElementById('bank-custom-credits')?.addEventListener('input', updateLoyaltyUI);
 
   // Form Submit: Flutterwave Checkout Link
   topupForm.addEventListener('submit', async (e) => {
@@ -251,6 +336,7 @@ function setupModalEvents() {
     paySubmitBtn.innerText = 'Initializing Flutterwave checkout...';
 
     const credits = parseInt(selectedCreditsInput.value);
+    const redeemPoints = document.getElementById('flw-use-loyalty-points')?.checked || false;
 
     try {
       const response = await fetch('/api/billing/flutterwave/initialize', {
@@ -259,7 +345,7 @@ function setupModalEvents() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${state.token}`
         },
-        body: JSON.stringify({ credits })
+        body: JSON.stringify({ credits, redeemPoints })
       });
 
       const data = await response.json();
@@ -274,9 +360,7 @@ function setupModalEvents() {
       showToast('Connection error, try again later', 'error');
       paySubmitBtn.disabled = false;
     } finally {
-      const activeCard = document.querySelector('.pricing-card.selected') || document.querySelector('.pricing-card.popular');
-      const price = activeCard ? activeCard.getAttribute('data-price') : '60,000';
-      paySubmitBtn.innerText = `Pay ₦${price} & Add Credits`;
+      updateLoyaltyUI();
     }
   });
 
@@ -292,6 +376,7 @@ function setupModalEvents() {
         bankCustomWrapper.classList.add('hidden');
         document.getElementById('bank-custom-credits').required = false;
       }
+      updateLoyaltyUI();
     });
   }
 
@@ -318,6 +403,22 @@ function setupModalEvents() {
       }
 
       const reference = document.getElementById('bank-transfer-input-ref').value;
+      const redeemPoints = document.getElementById('bank-use-loyalty-points')?.checked || false;
+
+      let pointsToRedeem = 0;
+      if (redeemPoints) {
+        let bankPrice = 60000;
+        if (selectVal === 'custom') {
+          bankPrice = credits * 12;
+        } else {
+          const opt = bankPackageSelect.options[bankPackageSelect.selectedIndex];
+          bankPrice = opt ? parseInt(opt.getAttribute('data-price') || '60000') : 60000;
+        }
+        const points = state.user?.loyalty_points || 0;
+        const maxDiscount = bankPrice * 0.5;
+        const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+        pointsToRedeem = Math.min(points, maxPointsNeeded);
+      }
 
       try {
         const response = await fetch('/api/billing/bank-transfer/notify', {
@@ -326,7 +427,7 @@ function setupModalEvents() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${state.token}`
           },
-          body: JSON.stringify({ credits, reference })
+          body: JSON.stringify({ credits, reference, pointsToRedeem })
         });
 
         const data = await response.json();

@@ -78,36 +78,64 @@ export function renderWalletView(root, state) {
       </div>
     </div>
 
-    <!-- Transaction History Table -->
-    <div class="panel glass">
-      <div class="panel-header">
-        <h3 class="panel-title">Transaction History</h3>
-        <div class="group-filters-bar" id="tx-filter-bar" style="margin:0;">
-          <span class="filter-chip active" data-filter="all">All</span>
-          <span class="filter-chip" data-filter="credit">Credits</span>
-          <span class="filter-chip" data-filter="debit">Debits</span>
+    <!-- Split Layout: Transactions + Loyalty -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
+      <!-- Transaction History Table -->
+      <div class="panel glass" style="margin-bottom: 0;">
+        <div class="panel-header">
+          <h3 class="panel-title">Transaction History</h3>
+          <div class="group-filters-bar" id="tx-filter-bar" style="margin:0;">
+            <span class="filter-chip active" data-filter="all">All</span>
+            <span class="filter-chip" data-filter="credit">Credits</span>
+            <span class="filter-chip" data-filter="debit">Debits</span>
+          </div>
+        </div>
+
+        <div class="table-container" style="max-height:480px;overflow-y:auto;">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th style="text-align:right;">Amount</th>
+                <th style="text-align:right;">Balance After</th>
+              </tr>
+            </thead>
+            <tbody id="tx-tbody">
+              <tr>
+                <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
+                  Loading transactions...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div class="table-container" style="max-height:480px;overflow-y:auto;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Date & Time</th>
-              <th>Description</th>
-              <th>Type</th>
-              <th style="text-align:right;">Amount</th>
-              <th style="text-align:right;">Balance After</th>
-            </tr>
-          </thead>
-          <tbody id="tx-tbody">
-            <tr>
-              <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
-                Loading transactions...
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Loyalty Card -->
+      <div class="panel glass" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 0;">
+        <div class="panel-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; margin-bottom: 4px;">
+          <h3 class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+            <svg style="width: 20px; height: 20px; color: var(--warning-color);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+            Loyalty Rewards
+          </h3>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 18px; border-radius: 12px; text-align: center; position: relative; overflow: hidden;">
+          <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Available Points</div>
+          <div id="loyalty-points-display" style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: var(--warning-color); line-height: 1;">0</div>
+          <div id="loyalty-cash-value" style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;">Worth ₦0 in Discounts</div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">Points Statement</h4>
+          <div id="loyalty-ledgers-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; padding-right: 4px;">
+            <div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.8rem;">Loading points statement...</div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -140,15 +168,17 @@ async function initWallet(state) {
 
 async function loadWalletData(state, silent = false) {
   try {
-    const [balRes, txRes] = await Promise.all([
+    const [balRes, txRes, loyaltyRes] = await Promise.all([
       apiFetch('/api/auth/me'),
-      apiFetch('/api/billing/transactions')
+      apiFetch('/api/billing/transactions'),
+      apiFetch('/api/billing/loyalty')
     ]);
 
-    if (!balRes.ok || !txRes.ok) return;
+    if (!balRes.ok || !txRes.ok || !loyaltyRes.ok) return;
 
     const { user } = await balRes.json();
     const { transactions, summary } = await txRes.json();
+    const loyaltyData = await loyaltyRes.json();
 
     // Update hero balance
     document.getElementById('hero-balance').textContent = user.balance.toLocaleString();
@@ -160,7 +190,40 @@ async function loadWalletData(state, silent = false) {
 
     // Sync global state balance
     state.user.balance = user.balance;
+    state.user.loyalty_points = loyaltyData.loyalty_points;
     updateUIHeader();
+
+    // Update loyalty details
+    document.getElementById('loyalty-points-display').textContent = loyaltyData.loyalty_points.toLocaleString();
+    document.getElementById('loyalty-cash-value').textContent = `Worth ₦${(loyaltyData.loyalty_points * 100).toLocaleString()} in Discounts`;
+
+    // Render loyalty statement list
+    const ledgerContainer = document.getElementById('loyalty-ledgers-container');
+    if (ledgerContainer) {
+      const ledgers = loyaltyData.ledgers || [];
+      if (ledgers.length === 0) {
+        ledgerContainer.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.8rem;">No points history yet.</div>`;
+      } else {
+        ledgerContainer.innerHTML = ledgers.map(l => {
+          const date = new Date(l.created_at);
+          const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+          const amountSign = l.amount > 0 ? `+${l.amount}` : `${l.amount}`;
+          const amountColor = l.amount > 0 ? '#10b981' : '#ef4444';
+          
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); background: rgba(255,255,255,0.01);">
+              <div>
+                <div style="font-size: 0.78rem; font-weight: 500; max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${l.description}">
+                  ${l.description}
+                </div>
+                <div style="font-size: 0.65rem; color: var(--text-muted);">${dateStr}</div>
+              </div>
+              <strong style="color: ${amountColor}; font-size: 0.85rem; font-family: monospace;">${amountSign}</strong>
+            </div>
+          `;
+        }).join('');
+      }
+    }
 
     allTransactions = transactions;
     renderTable(getFiltered());

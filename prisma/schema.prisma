@@ -34,6 +34,8 @@ model User {
   subUsers         User[]             @relation("UserToUser")
   virtualNumbers   VirtualNumber[]
   voiceLogs        VoiceLog[]
+  loyaltyPoints    Int                @default(0) @map("loyalty_points")
+  loyaltyLedgers   LoyaltyLedger[]
 
   @@map("users")
 }
@@ -88,6 +90,17 @@ model ApiKey {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("api_keys")
+}
+
+model LoyaltyLedger {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  amount      Int
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("loyalty_ledgers")
 }
 
 model Transaction {

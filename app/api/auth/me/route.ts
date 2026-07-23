@@ -18,6 +18,7 @@ export async function GET(req: Request) {
         role: true,
         parentUserId: true,
         virtualNumbers: true,
+        loyaltyPoints: true,
       },
     });
 
@@ -28,15 +29,15 @@ export async function GET(req: Request) {
     // Resolve shared wallet balance for team coworkers
     const ownerId = user.parentUserId || user.id;
     let balance = user.balance;
+    let loyaltyPoints = user.loyaltyPoints;
 
-    if (user.parentUserId) {
-      const owner = await prisma.user.findUnique({
-        where: { id: ownerId },
-        select: { balance: true },
-      });
-      if (owner) {
-        balance = owner.balance;
-      }
+    const owner = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { balance: true, loyaltyPoints: true },
+    });
+    if (owner) {
+      balance = owner.balance;
+      loyaltyPoints = owner.loyaltyPoints;
     }
 
     // Transform to snake_case format compatible with original frontend
@@ -46,6 +47,7 @@ export async function GET(req: Request) {
       balance,
       role: user.role,
       parent_user_id: user.parentUserId,
+      loyalty_points: loyaltyPoints,
       virtualNumbers: user.virtualNumbers.map((vn) => ({
         id: vn.id,
         number: vn.number,

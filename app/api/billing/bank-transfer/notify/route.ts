@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { credits, reference } = await req.json();
+    const { credits, reference, pointsToRedeem } = await req.json();
 
     if (!credits || isNaN(credits) || Number(credits) <= 0) {
       return NextResponse.json({ error: 'Valid credits amount is required' }, { status: 400 });
@@ -21,8 +21,9 @@ export async function POST(req: Request) {
     const creditsNum = Number(credits);
     const cleanRef = reference.trim();
     const ownerId = authUser.owner_id;
+    const redeemedCount = Number(pointsToRedeem || '0');
 
-    console.log(`[Bank Transfer Notify] User ${ownerId} notified of NGN transfer for ${creditsNum} credits. Ref: ${cleanRef}`);
+    console.log(`[Bank Transfer Notify] User ${ownerId} notified of NGN transfer for ${creditsNum} credits. Ref: ${cleanRef} | RedeemedPoints: ${redeemedCount}`);
 
     // Create a ServiceRequest for manual admin review
     const request = await prisma.serviceRequest.create({
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
         serviceType: 'Bank Transfer',
         repName: authUser.email,
         phone: 'Manual',
-        description: `Bank Transfer verification request. Credits: ${creditsNum} | Reference: ${cleanRef}`,
+        description: `Bank Transfer verification request. Credits: ${creditsNum} | Reference: ${cleanRef}${redeemedCount > 0 ? ` | RedeemedPoints: ${redeemedCount}` : ''}`,
         status: 'Reviewing',
       },
     });

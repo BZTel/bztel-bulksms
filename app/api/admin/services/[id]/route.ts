@@ -57,10 +57,10 @@ export async function PATCH(
       }
 
       updated = await prisma.$transaction(async (tx) => {
-        // Fetch current user balance
+        // Fetch current user balance and loyalty points
         const user = await tx.user.findUnique({
           where: { id: existing.userId },
-          select: { balance: true }
+          select: { balance: true, loyaltyPoints: true }
         });
 
         if (!user) {
@@ -70,10 +70,51 @@ export async function PATCH(
         const balanceBefore = user.balance;
         const balanceAfter = balanceBefore + creditsToLoad;
 
-        // Credit user balance
+        let finalLoyaltyPoints = user.loyaltyPoints;
+
+        // Parse points to redeem from description
+        const pointsMatch = existing.description.match(/RedeemedPoints:\s*(\d+)/i);
+        const pointsToRedeem = pointsMatch ? parseInt(pointsMatch[1], 10) : 0;
+
+        if (pointsToRedeem > 0) {
+          const actualRedeem = Math.min(finalLoyaltyPoints, pointsToRedeem);
+          finalLoyaltyPoints -= actualRedeem;
+
+          await tx.loyaltyLedger.create({
+            data: {
+              userId: existing.userId,
+              amount: -actualRedeem,
+              description: `Redeemed points for ₦${(actualRedeem * 100).toLocaleString()} discount on refill (Request ID: ${requestId})`
+            }
+          });
+        }
+
+        // Calculate points earned: 1 point per ₦1000 spent
+        let pointsEarned = 0;
+        if (creditsToLoad === 1000) pointsEarned = 15;
+        else if (creditsToLoad === 5000) pointsEarned = 60;
+        else if (creditsToLoad === 25000) pointsEarned = 225;
+        else pointsEarned = Math.floor((creditsToLoad * 12) / 1000);
+
+        if (pointsEarned > 0) {
+          finalLoyaltyPoints += pointsEarned;
+          
+          await tx.loyaltyLedger.create({
+            data: {
+              userId: existing.userId,
+              amount: pointsEarned,
+              description: `Earned points from Custom Service top-up (Request ID: ${requestId})`
+            }
+          });
+        }
+
+        // Credit user balance and update loyalty points
         await tx.user.update({
           where: { id: existing.userId },
-          data: { balance: balanceAfter }
+          data: { 
+            balance: balanceAfter,
+            loyaltyPoints: finalLoyaltyPoints
+          }
         });
 
         // Write purchase transaction log
@@ -84,7 +125,7 @@ export async function PATCH(
             amount: creditsToLoad,
             balanceBefore,
             balanceAfter,
-            description: `Bank Transfer Top-Up — ${creditsToLoad.toLocaleString()} SMS Credits`,
+            description: `Bank Transfer Top-Up — ${creditsToLoad.toLocaleString()} SMS Credits${pointsToRedeem > 0 ? ' (Points Discount Applied)' : ''}`,
           }
         });
 

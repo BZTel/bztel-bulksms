@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
@@ -8,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { credits } = await req.json();
+    const { credits, redeemPoints } = await req.json();
     if (!credits || isNaN(credits) || Number(credits) <= 0) {
       return NextResponse.json({ error: 'Valid credits amount is required' }, { status: 400 });
     }
@@ -25,6 +26,27 @@ export async function POST(req: Request) {
       amountInNgn = 225000;
     } else {
       amountInNgn = creditsNum * 12; // Fallback NGN 12 per credit
+    }
+
+    let pointsToRedeem = 0;
+    let discount = 0;
+
+    if (redeemPoints) {
+      const user = await prisma.user.findUnique({
+        where: { id: authUser.owner_id },
+        select: { loyaltyPoints: true }
+      });
+
+      const currentPoints = user?.loyaltyPoints || 0;
+      if (currentPoints > 0) {
+        // Calculate max points that can be redeemed (up to 50% discount)
+        const maxDiscountNgn = amountInNgn * 0.5;
+        const maxPointsNeeded = Math.ceil(maxDiscountNgn / 100);
+        
+        pointsToRedeem = Math.min(currentPoints, maxPointsNeeded);
+        discount = pointsToRedeem * 100;
+        amountInNgn = Math.max(0, amountInNgn - discount);
+      }
     }
 
     const flwSecret = process.env.FLW_SECRET_KEY || 'FLWSECK_TEST-mock-secret-key-123';
@@ -48,6 +70,9 @@ export async function POST(req: Request) {
         meta: {
           userId: authUser.owner_id,
           credits: creditsNum,
+          redeemPoints: redeemPoints ? 'true' : 'false',
+          pointsToRedeem: String(pointsToRedeem),
+          discount: String(discount),
         },
         customer: {
           email: authUser.email,
