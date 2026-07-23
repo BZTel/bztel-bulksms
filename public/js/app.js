@@ -394,16 +394,10 @@ export function updateUIHeader() {
   state.previousBalance = targetBalance;
   document.getElementById('sidebar-user-email').innerText = state.user.email;
   
-  // Update sidebar wallet badge NGN
-  const walletBadge = document.getElementById('sidebar-wallet-balance');
-  if (walletBadge) {
-    walletBadge.innerText = `NGN ${targetBalance.toFixed(2)}`;
-    
-    // Also update dashboard or wallet hero balance card if present in DOM
-    const heroBalanceEl = document.getElementById('hero-balance');
-    if (heroBalanceEl) {
-      heroBalanceEl.innerText = targetBalance.toLocaleString();
-    }
+  // Update dashboard or wallet hero balance card if present in DOM
+  const heroBalanceEl = document.getElementById('hero-balance');
+  if (heroBalanceEl) {
+    heroBalanceEl.innerText = targetBalance.toLocaleString();
   }
 
   // Set initials icon

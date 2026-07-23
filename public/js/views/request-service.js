@@ -15,8 +15,8 @@ export function renderRequestServiceView(root, state) {
             <label for="service-type">Service Category</label>
             <select id="service-type" class="form-control" required>
               <option value="">-- Choose Service --</option>
-              <option value="Sender ID Registration">Dedicated Sender ID Registration (NGN 150.00)</option>
-              <option value="Dedicated Shortcode">Dedicated Alphanumeric Shortcode (NGN 1,200.00/mo)</option>
+              <option value="Sender ID Registration">Dedicated Sender ID Registration</option>
+              <option value="Dedicated Shortcode">Dedicated Alphanumeric Shortcode</option>
               <option value="WhatsApp Business API">WhatsApp Business Official API Setup</option>
               <option value="Voice Broadcast Route">High-Volume Custom Voice Broadcast Route</option>
               <option value="Custom CRM Integration">Custom API / CRM Integration Support</option>

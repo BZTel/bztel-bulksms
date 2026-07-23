@@ -1,18 +1,21 @@
 import { apiFetch, showToast, updateUIHeader, navigateTo } from '../app.js';
 
 export function renderDashboardView(container, state) {
+  const dismissedUpdate = localStorage.getItem('dismissed-banner-update') === 'true';
+  const dismissedTip = localStorage.getItem('dismissed-banner-tip') === 'true';
+
   container.innerHTML = `
     <!-- Dismissible Banners -->
     <div id="dash-banners">
-      <div class="dash-banner dash-banner-info" id="banner-update">
+      <div class="dash-banner dash-banner-info" id="banner-update" style="${dismissedUpdate ? 'display: none;' : ''}">
         <svg style="width:16px;height:16px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span>You're all set! Welcome to your Bztel dashboard. Start sending messages in seconds.</span>
-        <button class="dash-banner-close" onclick="this.closest('.dash-banner').style.display='none'">&times;</button>
+        <button class="dash-banner-close">&times;</button>
       </div>
-      <div class="dash-banner dash-banner-tip" id="banner-tip">
+      <div class="dash-banner dash-banner-tip" id="banner-tip" style="${dismissedTip ? 'display: none;' : ''}">
         <svg style="width:16px;height:16px;flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         <span><strong>Personalization Wins</strong> — Use names, order details, or location. Messages that feel human get opened. Generic ones sometimes get ignored.</span>
-        <button class="dash-banner-close" onclick="this.closest('.dash-banner').style.display='none'">&times;</button>
+        <button class="dash-banner-close">&times;</button>
       </div>
     </div>
 
@@ -222,6 +225,23 @@ async function initDashboard(state) {
   if (topupBtn) {
     topupBtn.addEventListener('click', () => {
       document.getElementById('topup-trigger-btn')?.click();
+    });
+  }
+
+  // Handle banner dismissals persistently in localStorage
+  const closeUpdateBtn = document.querySelector('#banner-update .dash-banner-close');
+  if (closeUpdateBtn) {
+    closeUpdateBtn.addEventListener('click', () => {
+      document.getElementById('banner-update').style.display = 'none';
+      localStorage.setItem('dismissed-banner-update', 'true');
+    });
+  }
+
+  const closeTipBtn = document.querySelector('#banner-tip .dash-banner-close');
+  if (closeTipBtn) {
+    closeTipBtn.addEventListener('click', () => {
+      document.getElementById('banner-tip').style.display = 'none';
+      localStorage.setItem('dismissed-banner-tip', 'true');
     });
   }
 

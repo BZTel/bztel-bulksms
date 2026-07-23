@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import nodemailer from 'nodemailer';
 
 // GET tickets
 export async function GET(req: Request) {
@@ -59,6 +60,46 @@ export async function POST(req: Request) {
         status: 'Open',
       },
     });
+
+    // Send email notification to Bztel support inbox
+    const host = process.env.SMTP_HOST;
+    const port = parseInt(process.env.SMTP_PORT || '587');
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASSWORD;
+    const from = process.env.SMTP_FROM || 'clientservice@bztel.net';
+
+    if (host && user && pass) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host,
+          port,
+          secure: port === 465,
+          auth: { user, pass }
+        } as any);
+
+        await transporter.sendMail({
+          from: `"Bztel Support System" <${from}>`,
+          to: 'clientservice@bztel.net',
+          subject: `[New Ticket - ${priority.toUpperCase()}] ${subject.trim()}`,
+          html: `
+            <h2>New Support Ticket Created</h2>
+            <p><strong>From User Email:</strong> ${authUser.email} (User ID: ${ownerId})</p>
+            <p><strong>Subject:</strong> ${subject.trim()}</p>
+            <p><strong>Priority Level:</strong> ${priority.toUpperCase()}</p>
+            <hr style="border: 0; border-top: 1px solid #eee;" />
+            <p><strong>Ticket Description:</strong></p>
+            <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: sans-serif; font-size: 0.95rem; line-height: 1.5; color: #334155;">
+              ${description.trim()}
+            </div>
+          `
+        });
+        console.log(`[Support Ticket SMTP] Notification sent successfully to clientservice@bztel.net`);
+      } catch (err) {
+        console.error('[Support Ticket SMTP] Error sending mail notification:', err);
+      }
+    } else {
+      console.log('[Support Ticket SMTP] SMTP not configured. Support email notification skipped.');
+    }
 
     return NextResponse.json({
       message: 'Support ticket created successfully',
