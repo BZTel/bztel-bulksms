@@ -3,6 +3,7 @@ import { renderAdminSenderIdsView } from './views/admin-sender-ids.js';
 import { renderAdminServicesView } from './views/admin-services.js';
 import { renderAdminTicketsView } from './views/admin-tickets.js';
 import { renderAdminContactMessagesView } from './views/admin-contact-messages.js';
+import { renderAdminAuditLogsView } from './views/admin-audit-logs.js';
 
 // ─── Admin State ─────────────────────────────────────────────
 const state = {
@@ -147,7 +148,8 @@ function renderView(viewName) {
     'sender-ids': 'Sender ID Verification Requests',
     services: 'Custom Service Requests',
     tickets: 'Support Tickets',
-    'contact-messages': 'Website Inquiries'
+    'contact-messages': 'Website Inquiries',
+    'audit-logs': 'System Audit & Security Logs'
   };
   document.getElementById('admin-view-title').textContent = titles[viewName] || 'Admin';
 
@@ -166,6 +168,9 @@ function renderView(viewName) {
       break;
     case 'contact-messages':
       renderAdminContactMessagesView(root, state);
+      break;
+    case 'audit-logs':
+      renderAdminAuditLogsView(root, state);
       break;
     default:
       renderAdminUsersView(root, state);
