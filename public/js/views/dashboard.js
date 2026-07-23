@@ -18,7 +18,7 @@ export function renderDashboardView(container, state) {
 
     <!-- KPI Row -->
     <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
-      <div class="kpi-card glass">
+      <div class="kpi-card glass clickable" id="kpi-card-campaigns">
         <div class="kpi-header">
           <span>Recent Campaigns</span>
           <svg class="kpi-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -29,7 +29,7 @@ export function renderDashboardView(container, state) {
         <div class="kpi-desc">SMS batches sent</div>
       </div>
 
-      <div class="kpi-card glass">
+      <div class="kpi-card glass clickable" id="kpi-card-contacts">
         <div class="kpi-header">
           <span>Contacts</span>
           <svg class="kpi-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -40,7 +40,7 @@ export function renderDashboardView(container, state) {
         <div class="kpi-desc">Saved contacts</div>
       </div>
 
-      <div class="kpi-card glass">
+      <div class="kpi-card glass clickable" id="kpi-card-credits">
         <div class="kpi-header">
           <span>Credit Used</span>
           <svg class="kpi-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -196,6 +196,19 @@ export function renderDashboardView(container, state) {
 }
 
 async function initDashboard(state) {
+  // KPI Click Navigation
+  document.getElementById('kpi-card-campaigns')?.addEventListener('click', () => {
+    navigateTo('campaign-history');
+  });
+
+  document.getElementById('kpi-card-contacts')?.addEventListener('click', () => {
+    navigateTo('contacts');
+  });
+
+  document.getElementById('kpi-card-credits')?.addEventListener('click', () => {
+    navigateTo('wallet');
+  });
+
   // Add Sender ID → jump to SMS sender settings
   const addSenderBtn = document.getElementById('add-sender-id-btn');
   if (addSenderBtn) {
