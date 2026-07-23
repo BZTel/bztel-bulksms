@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const history = await prisma.smsLog.findMany({
       where: { userId: ownerId },
       orderBy: { sentAt: 'desc' },
-      take: 100,
+      take: 500,
     });
 
     // Map fields back to snake_case format compatible with original dashboard frontend
@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       credits: log.credits,
       status: log.status,
       sent_at: log.sentAt,
+      batch_id: log.batchId,
     }));
 
     return NextResponse.json({ history: legacyHistory });

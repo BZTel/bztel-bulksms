@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
+import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
   try {
@@ -120,6 +121,8 @@ export async function POST(req: Request) {
         },
       });
 
+      const batchId = randomUUID();
+
       const logPromises = recipientList.map((phone) =>
         tx.smsLog.create({
           data: {
@@ -129,6 +132,7 @@ export async function POST(req: Request) {
             message: rawMessage,
             credits: creditsPerMessage,
             status: 'pending',
+            batchId,
           },
           select: { id: true }
         })

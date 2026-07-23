@@ -111,6 +111,9 @@ export async function GET(req: Request) {
           });
 
           // Insert SMS log (pending)
+          const dateStr = new Date().toISOString().slice(0, 10);
+          const batchId = `birthday_${campaign.id}_${dateStr}`;
+
           return tx.smsLog.create({
             data: {
               userId: campaign.userId,
@@ -119,6 +122,7 @@ export async function GET(req: Request) {
               message: msg,
               credits: 1,
               status: 'pending',
+              batchId,
             },
           });
         });

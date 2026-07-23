@@ -62,6 +62,7 @@ model SmsLog {
   status     String   @default("pending")
   sentAt     DateTime @default(now()) @map("sent_at")
   providerId String?  @map("provider_id")
+  batchId    String?  @map("batch_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sms_logs")

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
+import { randomUUID } from 'crypto';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent'];
 
@@ -113,6 +114,8 @@ export async function POST(req: Request) {
         },
       });
 
+      const batchId = randomUUID();
+
       // Bulk insert outbox messages
       const bulkData = recipientList.map((rawPhone) => {
         const cleanPhone = rawPhone.replace(/[\s+()-]/g, '');
@@ -126,6 +129,7 @@ export async function POST(req: Request) {
           message: personalizedMsg,
           credits: creditsPerMessage,
           status: 'pending',
+          batchId,
         };
       });
 
