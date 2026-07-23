@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import { triggerWorker } from '@/lib/queue';
+import { checkContent, suspendUser } from '@/lib/safeguard';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent'];
 
@@ -23,6 +24,16 @@ export async function POST(req: Request) {
 
     if (!senderId || !recipients || !message) {
       return NextResponse.json({ error: 'Sender ID, Recipients, and Message are required' }, { status: 400 });
+    }
+
+    // Run security safeguard checks on sender ID and message content
+    const checkResult = checkContent(senderId, message);
+    if (checkResult.blocked) {
+      console.warn(`[Security Alert] SMS blocked for user ${ownerId}. Reason: ${checkResult.reason}`);
+      await suspendUser(ownerId, senderId, message);
+      return NextResponse.json({ 
+        error: 'Forbidden: Security policy violation detected. Your account has been suspended.' 
+      }, { status: 403 });
     }
 
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();

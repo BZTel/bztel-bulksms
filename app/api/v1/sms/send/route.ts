@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { triggerWorker } from '@/lib/queue';
+import { checkContent, suspendUser } from '@/lib/safeguard';
 
 export async function POST(req: Request) {
   try {
@@ -22,10 +23,33 @@ export async function POST(req: Request) {
 
     const ownerId = keyData.userId;
 
+    const user = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { status: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User associated with key not found' }, { status: 404 });
+    }
+
+    if (user.status === 'suspended') {
+      return NextResponse.json({ error: 'Forbidden: Account is suspended.' }, { status: 403 });
+    }
+
     const { senderId, recipients, message } = await req.json();
 
     if (!senderId || !recipients || !message) {
       return NextResponse.json({ error: 'Sender ID, Recipients, and Message are required' }, { status: 400 });
+    }
+
+    // Run security safeguard checks on sender ID and message content
+    const checkResult = checkContent(senderId, message);
+    if (checkResult.blocked) {
+      console.warn(`[Security Alert] API SMS blocked for user ${ownerId}. Reason: ${checkResult.reason}`);
+      await suspendUser(ownerId, senderId, message);
+      return NextResponse.json({ 
+        error: 'Forbidden: Security policy violation detected. Your account has been suspended.' 
+      }, { status: 403 });
     }
 
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();

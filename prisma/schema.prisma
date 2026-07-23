@@ -24,7 +24,6 @@ model User {
   contacts         Contact[]
   drafts           Draft[]
   emailLogs        EmailLog[]
-  incomingMessages IncomingMessage[]
   senderIds        SenderId[]
   serviceRequests  ServiceRequest[]
   smsLogs          SmsLog[]
@@ -193,19 +192,6 @@ model VirtualNumber {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("virtual_numbers")
-}
-
-model IncomingMessage {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @map("user_id")
-  from       String
-  to         String
-  message    String
-  providerId String?  @map("provider_id")
-  receivedAt DateTime @default(now()) @map("received_at")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("incoming_messages")
 }
 
 model Draft {

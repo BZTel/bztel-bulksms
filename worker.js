@@ -144,22 +144,102 @@ function getRoute(log) {
   return 'tx';
 }
 
+// ── Timezone & Scheduling Heuristics (Nigeria WAT = UTC+1) ───────────────────
+
+function getNigeriaTime() {
+  const d = new Date();
+  // Get UTC time in milliseconds, then add 1 hour for West Africa Time (WAT = UTC+1)
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  const watDate = new Date(utc + (3600000 * 1));
+  return {
+    hours: watDate.getHours(),
+    minutes: watDate.getMinutes(),
+    timeString: `${watDate.getHours().toString().padStart(2, '0')}:${watDate.getMinutes().toString().padStart(2, '0')}`
+  };
+}
+
+function getAllowedRoutes() {
+  const { hours, minutes } = getNigeriaTime();
+  const minutesSinceMidnight = hours * 60 + minutes;
+
+  // Transactional allowed: 8:00 AM to 8:00 PM WAT
+  const startOfBroadcast = 8 * 60; // 08:00
+  const endOfBroadcast = 20 * 60; // 20:00
+  
+  // Promotional allowed: 8:45 AM to 7:30 PM WAT
+  const startOfPromo = 8 * 60 + 45; // 08:45
+  const endOfPromo = 19 * 60 + 30; // 19:30
+
+  return {
+    tx: minutesSinceMidnight >= startOfBroadcast && minutesSinceMidnight < endOfBroadcast,
+    promo: minutesSinceMidnight >= startOfPromo && minutesSinceMidnight < endOfPromo
+  };
+}
+
 // ── Outgoing SMS Queue Processing (Supabase Database Queue) ───────────────────
 
 async function processQueue() {
   if (isProcessing) return;
-  
-  // Ensure we have at least one active connection
-  if (!connections.tx.session && !connections.promo.session) {
+
+  const allowed = getAllowedRoutes();
+
+  // If neither route is allowed (night blackout: 8:00 PM - 8:00 AM WAT), pause queue processing
+  if (!allowed.tx && !allowed.promo) {
+    const { timeString } = getNigeriaTime();
+    console.log(`[Worker] Preemptive night blackout active (WAT: ${timeString}). Dispatches paused until 8:00 AM.`);
+    isProcessing = false;
+    setTimeout(processQueue, 30000); // Check again in 30 seconds
+    return;
+  }
+
+  // Ensure corresponding connection is active
+  const canSendTx = allowed.tx && !!connections.tx.session;
+  const canSendPromo = allowed.promo && !!connections.promo.session;
+
+  if (!canSendTx && !canSendPromo) {
+    isProcessing = false;
+    setTimeout(processQueue, 5000); // Check again in 5 seconds (active route is down/disconnected)
     return;
   }
   
   isProcessing = true;
 
   try {
-    // Pull pending messages from the Supabase database
+    const promoSenderIds = (process.env.SMPP_PROMO_SENDER_IDS || '')
+      .split(',')
+      .map(id => id.trim().toUpperCase())
+      .filter(Boolean);
+
+    // Build the dynamic where clause based on active and allowed time windows
+    const whereClause = { status: 'pending' };
+
+    if (canSendTx && !canSendPromo) {
+      // TX open, Promo closed: Exclude all promotional messages to prevent queue starvation
+      whereClause.NOT = [
+        { senderId: { in: promoSenderIds } },
+        { senderId: { contains: 'PROMO' } },
+        { senderId: { contains: 'Promo' } },
+        { senderId: { contains: 'promo' } },
+        { senderId: { contains: 'MARKETING' } },
+        { senderId: { contains: 'Marketing' } },
+        { senderId: { contains: 'marketing' } }
+      ];
+    } else if (!canSendTx && canSendPromo) {
+      // Promo open, TX closed (theoretical): Fetch ONLY promotional messages
+      whereClause.OR = [
+        { senderId: { in: promoSenderIds } },
+        { senderId: { contains: 'PROMO' } },
+        { senderId: { contains: 'Promo' } },
+        { senderId: { contains: 'promo' } },
+        { senderId: { contains: 'MARKETING' } },
+        { senderId: { contains: 'Marketing' } },
+        { senderId: { contains: 'marketing' } }
+      ];
+    }
+
+    // Pull pending messages from the Supabase database matching the schedule filter
     const pendingLogs = await prisma.smsLog.findMany({
-      where: { status: 'pending' },
+      where: whereClause,
       take: 20 // Pull batch size corresponding to the 20 SMS/sec limit
     });
 
@@ -345,43 +425,8 @@ async function handleIncomingDeliverSM(pdu) {
     }
 
     const message = pdu.short_message && pdu.short_message.message ? pdu.short_message.message.toString() : '';
-    
-    if (!from || !to || !message) {
-      console.warn('[Worker] Received incomplete deliver_sm message payload. Skipping DB save.');
-      return;
-    }
-
-    console.log(`[Worker] Inbound message received from: ${from} | to: ${to} | content: "${message}"`);
-
-    // Find the virtual number mapping in Supabase database
-    let virtualNumRecord = await prisma.virtualNumber.findFirst({
-      where: { number: to }
-    });
-
-    // Fallback suffix match (handles formatting discrepancies like leading '+' or country codes)
-    if (!virtualNumRecord) {
-      const sanitizedTo = to.replace(/[^0-9]/g, '');
-      const allNumbers = await prisma.virtualNumber.findMany();
-      virtualNumRecord = allNumbers.find(vn => {
-        const sanitizedVn = vn.number.replace(/[^0-9]/g, '');
-        return sanitizedTo.endsWith(sanitizedVn) || sanitizedVn.endsWith(sanitizedTo);
-      }) || null;
-    }
-
-    if (virtualNumRecord) {
-      const incomingMsg = await prisma.incomingMessage.create({
-        data: {
-          userId: virtualNumRecord.userId,
-          from,
-          to,
-          message,
-          providerId: pdu.message_id || 'smpp_delivered'
-        }
-      });
-      console.log(`[Worker] Saved incoming message in database. Log ID: ${incomingMsg.id}`);
-    } else {
-      console.warn(`[Worker] Received message for an unmapped virtual number: ${to}`);
-    }
+    console.log(`[Worker] Inbound message received from: "${from}" to: "${to}" | content: "${message}". Two-way SMS is disabled. Ignoring.`);
+    return;
   } catch (err) {
     console.error('[Worker] Error processing incoming deliver_sm:', err);
   }

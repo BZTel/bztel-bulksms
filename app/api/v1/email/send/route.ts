@@ -22,6 +22,19 @@ export async function POST(req: Request) {
 
     const ownerId = keyData.userId;
 
+    const dbUser = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { status: true }
+    });
+
+    if (!dbUser) {
+      return NextResponse.json({ error: 'User associated with key not found' }, { status: 404 });
+    }
+
+    if (dbUser.status === 'suspended') {
+      return NextResponse.json({ error: 'Forbidden: Account is suspended.' }, { status: 403 });
+    }
+
     const { recipients, subject, bodyHtml, senderName } = await req.json();
 
     if (!recipients || !subject || !bodyHtml) {
@@ -122,7 +135,7 @@ export async function POST(req: Request) {
         port,
         secure: port === 465,
         auth: { user, pass }
-      });
+      } as any);
 
       recipientList.forEach((recipient) => {
         transporter.sendMail({

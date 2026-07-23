@@ -74,6 +74,7 @@ export function renderSMSView(root, state) {
               <div class="form-group mt-2">
                 <label for="sms-recipients">Recipients (Phone Numbers)</label>
                 <textarea id="sms-recipients" class="form-control" placeholder="Enter phone numbers separated by commas (e.g. +1234567890, +9876543210)" required style="min-height: 80px;"></textarea>
+                <div id="sms-recipient-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; max-height: 100px; overflow-y: auto; padding: 2px;"></div>
                 <small id="recipient-count-display" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">0 recipients detected.</small>
               </div>
 
@@ -589,6 +590,24 @@ function recalculateSMSCost() {
   const text = recipientsInput.value || '';
   const recipients = text.split(',').map(r => r.trim()).filter(Boolean);
   const recipientCount = recipients.length;
+
+  // Update preview validation chips dynamically
+  const chipsContainer = document.getElementById('sms-recipient-chips');
+  if (chipsContainer) {
+    if (recipients.length === 0) {
+      chipsContainer.innerHTML = '';
+    } else {
+      const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+      chipsContainer.innerHTML = recipients.slice(0, 30).map(phone => {
+        const cleanPhone = phone.replace(/[\s()\-]/g, '');
+        const isValid = phoneRegex.test(cleanPhone);
+        const badgeClass = isValid ? 'valid' : 'invalid';
+        const icon = isValid ? '✓' : '✕';
+        return `<span class="recipient-badge ${badgeClass}">${icon} ${phone}</span>`;
+      }).join('') + (recipients.length > 30 ? `<span class="recipient-badge valid" style="background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25); color: #a5b4fc;">+ ${recipients.length - 30} more</span>` : '');
+    }
+  }
+
   recipientCountDisplay.innerText = `${recipientCount} recipient${recipientCount !== 1 ? 's' : ''} detected.`;
 
   const messageText = messageInput.value || '';

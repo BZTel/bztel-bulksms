@@ -11,7 +11,6 @@ import { renderRequestServiceView } from './views/request-service.js';
 import { renderHelpView } from './views/help.js';
 import { renderMoreView } from './views/more.js';
 import { renderVoiceView } from './views/voice.js';
-import { renderInboxView } from './views/inbox.js';
 import { renderEmailBlastView } from './views/email-blast.js';
 
 // Global Application State
@@ -20,7 +19,8 @@ const state = {
   token: localStorage.getItem('token') || null,
   currentView: 'dashboard',
   statsInterval: null,
-  currentChannel: 'sms'
+  currentChannel: 'sms',
+  previousBalance: null
 };
 
 // Initialize Application
@@ -379,18 +379,51 @@ export async function fetchUserProfile() {
 export function updateUIHeader() {
   if (!state.user) return;
 
-  document.getElementById('balance-count').innerText = state.user.balance.toLocaleString();
+  const balanceCountEl = document.getElementById('balance-count');
+  const targetBalance = state.user.balance;
+
+  if (balanceCountEl) {
+    if (state.previousBalance === null || state.previousBalance === targetBalance) {
+      balanceCountEl.innerText = targetBalance.toLocaleString();
+    } else {
+      // Animate the counter increment
+      animateValue(balanceCountEl, state.previousBalance, targetBalance, 800);
+    }
+  }
+
+  state.previousBalance = targetBalance;
   document.getElementById('sidebar-user-email').innerText = state.user.email;
   
   // Update sidebar wallet badge NGN
   const walletBadge = document.getElementById('sidebar-wallet-balance');
   if (walletBadge) {
-    walletBadge.innerText = `NGN ${state.user.balance.toFixed(2)}`;
+    walletBadge.innerText = `NGN ${targetBalance.toFixed(2)}`;
+    
+    // Also update dashboard or wallet hero balance card if present in DOM
+    const heroBalanceEl = document.getElementById('hero-balance');
+    if (heroBalanceEl) {
+      heroBalanceEl.innerText = targetBalance.toLocaleString();
+    }
   }
 
   // Set initials icon
   const initials = state.user.email.substring(0, 2).toUpperCase();
   document.getElementById('user-initials').innerText = initials;
+}
+
+// Dynamic numeric scroll animation helper
+function animateValue(element, start, end, duration) {
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    const currentValue = Math.floor(progress * (end - start) + start);
+    element.innerText = currentValue.toLocaleString();
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
 }
 
 // Routing Navigation
@@ -445,9 +478,6 @@ export function navigateTo(viewName) {
       break;
     case 'email-blast':
       renderEmailBlastView(root, state);
-      break;
-    case 'inbox':
-      renderInboxView(root, state);
       break;
     case 'voice':
       renderVoiceView(root, state);

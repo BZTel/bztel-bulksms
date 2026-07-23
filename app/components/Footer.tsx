@@ -4,8 +4,8 @@ export default function Footer() {
       <div className="footer-grid-l">
         <div className="footer-logo-box-l">
           <div className="logo-l" style={{ color: '#ffffff' }}>
-            <svg className="logo-l-icon" fill="currentColor" viewBox="0 0 24 24" style={{ width: '24px', height: '24px' }}>
-              <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm6 13c0 1.1-.9 2-2 2h-6V7h5.5c1.1 0 2 .9 2 2 0 .73-.4 1.36-1 1.72.6.36 1 .99 1 1.72v2.56zM10 9h4v2h-4V9zm0 4h4v2h-4v-2z" />
+            <svg className="logo-l-icon" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ width: '24px', height: '24px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
             <span style={{ fontSize: '1.25rem' }}>BZTel</span>
           </div>

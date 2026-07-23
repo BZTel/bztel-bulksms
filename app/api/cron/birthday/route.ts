@@ -72,14 +72,19 @@ export async function GET(req: Request) {
           continue;
         }
 
-        // Check user balance
+        // Check user balance and status
         const user = await prisma.user.findUnique({
           where: { id: campaign.userId },
-          select: { balance: true },
+          select: { balance: true, status: true },
         });
 
         if (!user || user.balance < 1) {
           console.warn(`[Birthday Daemon] User ${campaign.userId} has insufficient balance to send birthday wish.`);
+          continue;
+        }
+
+        if (user.status === 'suspended') {
+          console.warn(`[Birthday Daemon] User ${campaign.userId} is suspended. Skipping campaign execution.`);
           continue;
         }
 
