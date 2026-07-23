@@ -2054,9 +2054,23 @@ textarea.form-control {
     gap: 12px !important;
   }
   
-  .kpi-grid, .dashboard-grid, .wallet-stats-row, .wallet-split-layout, .platform-stats-grid, .pricing-grid {
+  .kpi-grid, .dashboard-grid, .wallet-stats-row, .wallet-split-layout, .platform-stats-grid, .pricing-grid, .composer-layout {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+  
+  .balance-label {
+    display: none !important;
+  }
+  
+  .custom-table td code {
+    word-break: break-all !important;
+    white-space: normal !important;
+  }
+
+  .code-box {
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
   }
   
   .admin-toolbar {

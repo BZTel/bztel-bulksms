@@ -60,7 +60,7 @@ export function renderWalletView(root, state) {
     </div>
 
     <!-- Summary Stats -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+    <div class="wallet-stats-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
       <div class="panel glass" style="padding:22px;text-align:center;">
         <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Total Purchased</div>
         <div id="stat-credited" style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#10b981;">—</div>
@@ -79,7 +79,7 @@ export function renderWalletView(root, state) {
     </div>
 
     <!-- Split Layout: Transactions + Loyalty -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
+    <div class="wallet-split-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
       <!-- Transaction History Table -->
       <div class="panel glass" style="margin-bottom: 0;">
         <div class="panel-header">
