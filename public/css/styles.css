@@ -2001,12 +2001,27 @@ textarea.form-control {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100%;
+    height: 100% !important;
     width: var(--sidebar-width);
     transform: translateX(-100%);
     transition: var(--transition-smooth);
     z-index: 100;
     box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+    border-right: 1px solid var(--glass-border) !important;
+    border-bottom: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .sidebar-nav {
+    flex-direction: column !important;
+    padding: 20px 12px !important;
+    overflow-y: auto !important;
+    gap: 8px !important;
+  }
+  
+  .sidebar-brand {
+    display: flex !important;
   }
   
   .sidebar.active {
