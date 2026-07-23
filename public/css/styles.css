@@ -2031,12 +2031,50 @@ textarea.form-control {
   
   .form-row {
     flex-direction: column !important;
-    gap: 0 !important;
+    gap: 12px !important;
   }
   
   .form-row-layout {
     grid-template-columns: 1fr !important;
-    gap: 0 !important;
+    gap: 12px !important;
+  }
+  
+  .kpi-grid, .dashboard-grid, .wallet-stats-row, .wallet-split-layout, .platform-stats-grid, .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .admin-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  
+  .group-filters-bar {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    max-width: 100% !important;
+    padding-bottom: 6px !important;
+  }
+  
+  .filter-chip {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .modal-content {
+    width: 94% !important;
+    margin: 20px auto !important;
+    padding: 20px !important;
+  }
+
+  .table-container {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
   .top-bar-actions {

@@ -409,3 +409,17 @@
   cursor: not-allowed !important;
 }
 
+/* ─── Admin Responsive Overrides ────────────────────────────── */
+@media (max-width: 768px) {
+  .platform-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  
+  .admin-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+}
+
