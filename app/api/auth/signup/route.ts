@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         data: {
           email,
           passwordHash,
-          balance: 10,
+          balance: 2,
           role: 'Owner',
           status: 'active',
         },
@@ -57,9 +57,9 @@ export async function POST(req: Request) {
         data: {
           userId: newUser.id,
           type: 'signup_bonus',
-          amount: 10,
+          amount: 2,
           balanceBefore: 0,
-          balanceAfter: 10,
+          balanceAfter: 2,
           description: 'Account signup — welcome bonus credits',
         },
       });
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       user: {
         id: result.id,
         email,
-        balance: 10
+        balance: result.balance
       }
     }, { status: 201 });
   } catch (error) {

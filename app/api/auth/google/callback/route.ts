@@ -97,7 +97,7 @@ export async function GET(req: Request) {
           data: {
             email,
             passwordHash: null, // Social login users do not need a password
-            balance: 10,
+            balance: 2,
             role: 'Owner',
             status: 'active',
           },
@@ -107,9 +107,9 @@ export async function GET(req: Request) {
           data: {
             userId: newUser.id,
             type: 'signup_bonus',
-            amount: 10,
+            amount: 2,
             balanceBefore: 0,
-            balanceAfter: 10,
+            balanceAfter: 2,
             description: 'Account signup (Google) — welcome bonus credits',
           },
         });

@@ -1,4 +1,7 @@
+import { renderAdminDashboardView } from './views/admin-dashboard.js';
 import { renderAdminUsersView } from './views/admin-users.js';
+import { renderAdminSmsLogsView } from './views/admin-sms-logs.js';
+import { renderAdminTransactionsView } from './views/admin-transactions.js';
 import { renderAdminSenderIdsView } from './views/admin-sender-ids.js';
 import { renderAdminServicesView } from './views/admin-services.js';
 import { renderAdminTicketsView } from './views/admin-tickets.js';
@@ -25,7 +28,7 @@ async function initAdmin() {
     const ok = await verifyAdminToken();
     if (ok) {
       showAdminApp();
-      renderView('users');
+      renderView('dashboard');
       return;
     }
   }
@@ -109,7 +112,7 @@ function setupLoginForm() {
       localStorage.setItem('adminToken', data.token);
 
       showAdminApp();
-      renderView('users');
+      renderView('dashboard');
       showToast(`Welcome, ${data.user.email}!`, 'success');
     } catch (err) {
       errBox.textContent = 'Connection error. Is the server running?';
@@ -144,18 +147,30 @@ function renderView(viewName) {
   });
 
   const titles = { 
+    dashboard: 'Platform Overview & Gateway Status',
     users: 'Customer Accounts',
+    'sms-logs': 'Global SMS Dispatch Log',
+    transactions: 'Global Transaction Ledger',
     'sender-ids': 'Sender ID Verification Requests',
     services: 'Custom Service Requests',
     tickets: 'Support Tickets',
     'contact-messages': 'Website Inquiries',
     'audit-logs': 'System Audit & Security Logs'
   };
-  document.getElementById('admin-view-title').textContent = titles[viewName] || 'Admin';
+  document.getElementById('admin-view-title').textContent = titles[viewName] || 'Admin Portal';
 
   switch (viewName) {
+    case 'dashboard':
+      renderAdminDashboardView(root, state);
+      break;
     case 'users':
       renderAdminUsersView(root, state);
+      break;
+    case 'sms-logs':
+      renderAdminSmsLogsView(root, state);
+      break;
+    case 'transactions':
+      renderAdminTransactionsView(root, state);
       break;
     case 'sender-ids':
       renderAdminSenderIdsView(root, state);
@@ -173,7 +188,7 @@ function renderView(viewName) {
       renderAdminAuditLogsView(root, state);
       break;
     default:
-      renderAdminUsersView(root, state);
+      renderAdminDashboardView(root, state);
   }
 }
 

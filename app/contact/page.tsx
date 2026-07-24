@@ -141,24 +141,6 @@ export default function ContactPage() {
           {/* Right: Office Info & Hours */}
           <div className="software-content-l reveal reveal-right reveal-active" style={{ paddingLeft: '20px', gap: '24px', display: 'flex', flexDirection: 'column' }}>
             <div>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginBottom: '12px' }}>Office Locations</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ borderLeft: '2px solid var(--accent-purple)', paddingLeft: '12px' }}>
-                  <strong style={{ color: 'var(--text-dark)', fontSize: '0.9rem', display: 'block' }}>San Francisco (Headquarters)</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>100 Pine Street, San Francisco, CA 94111, USA</span>
-                </div>
-                <div style={{ borderLeft: '2px solid var(--accent-purple)', paddingLeft: '12px' }}>
-                  <strong style={{ color: 'var(--text-dark)', fontSize: '0.9rem', display: 'block' }}>London Office</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>25 Ropemaker Street, London, EC2Y 9LY, UK</span>
-                </div>
-                <div style={{ borderLeft: '2px solid var(--accent-purple)', paddingLeft: '12px' }}>
-                  <strong style={{ color: 'var(--text-dark)', fontSize: '0.9rem', display: 'block' }}>Lagos Office</strong>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>15 Kingsway Road, Ikoyi, Lagos, Nigeria</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginBottom: '12px' }}>Helpdesk & Support</h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-slate)', lineHeight: 1.5 }}>For general issues and developer questions, email our dispatch desk:</p>
               <a href="mailto:clientservice@bztel.net" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: '0.95rem', marginTop: '4px', display: 'inline-block' }}>clientservice@bztel.net</a>
