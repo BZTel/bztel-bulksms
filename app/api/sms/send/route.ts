@@ -118,8 +118,20 @@ export async function POST(req: Request) {
 
       // Bulk insert outbox messages with normalized E.164 phone numbers
       const bulkData = recipientList.map((e164Phone) => {
-        const contactName = contactsMap.get(e164Phone) || 'Customer';
-        const personalizedMsg = rawMessage.replace(/\[Name\]/gi, contactName);
+        const contactName = contactsMap.get(e164Phone);
+        let personalizedMsg = rawMessage;
+
+        if (contactName && contactName.trim()) {
+          personalizedMsg = personalizedMsg.replace(/\[Name\]/gi, contactName.trim());
+        } else {
+          // Cleanly remove [Name] placeholder without leaving double spaces or awkward 'Customer' fallbacks
+          personalizedMsg = personalizedMsg
+            .replace(/,\s*\[Name\]/gi, '')
+            .replace(/\[Name\],\s*/gi, '')
+            .replace(/\[Name\]/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+        }
 
         return {
           userId: ownerId,

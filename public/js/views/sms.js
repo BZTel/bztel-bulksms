@@ -87,8 +87,10 @@ export function renderSMSView(root, state) {
                   </div>
                 </div>
                 <textarea id="sms-message" class="form-control" placeholder="Type your broadcast message here... Use [Name] to personalize." required style="min-height: 110px;"></textarea>
-                <div style="display: flex; justify-content: space-between; margin-top: 4px; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <span style="color: var(--accent-color); font-size: 0.75rem;">💡 Personalization: insert <strong>[Name]</strong> placeholder</span>
+                <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <button type="button" id="btn-insert-name-tag" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                    + Insert [Name]
+                  </button>
                   <span class="char-counter" id="sms-char-counter" style="margin-top:0;">0 characters (1 page) | 1 credit per SMS</span>
                 </div>
               </div>
@@ -257,6 +259,22 @@ function setupGlobalViewListeners() {
       submitText.innerText = 'Dispatch Broadcast';
     }
   });
+
+  // Insert [Name] tag pill click
+  const insertNameBtn = document.getElementById('btn-insert-name-tag');
+  if (insertNameBtn) {
+    insertNameBtn.addEventListener('click', () => {
+      const msgInput = document.getElementById('sms-message');
+      if (!msgInput) return;
+      const start = msgInput.selectionStart || msgInput.value.length;
+      const end = msgInput.selectionEnd || msgInput.value.length;
+      const text = msgInput.value;
+      msgInput.value = text.substring(0, start) + '[Name]' + text.substring(end);
+      msgInput.focus();
+      msgInput.selectionStart = msgInput.selectionEnd = start + 6;
+      recalculateSMSCost();
+    });
+  }
 
   // Dynamic cost calculations setup
   const recipientsInput = document.getElementById('sms-recipients');
