@@ -548,7 +548,7 @@ export function navigateTo(viewName) {
     birthday: 'Birthday Campaign Scheduler',
     teams: 'Team Collaboration Hub',
     wallet: 'Wallet & Billing Details',
-    'campaign-history': 'Campaign History Logs',
+    'campaign-history': 'Sent Messages Logs',
     'request-service': 'Request Custom Service',
     help: 'Support Desk & FAQs',
     more: 'More Settings & Resources'

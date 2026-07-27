@@ -107,7 +107,7 @@ export function renderDashboardView(container, state) {
       <div class="panel glass">
         <div class="panel-header">
           <h3 class="panel-title">Delivery Summary</h3>
-          <button class="btn btn-secondary btn-sm" onclick="document.querySelector('.nav-item[data-view=campaign-history]').click()" style="padding:4px 12px;font-size:0.75rem;">View History</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.querySelector('.nav-item[data-view=campaign-history]').click()" style="padding:4px 12px;font-size:0.75rem;">View Sent Messages</button>
         </div>
         <div id="delivery-summary-body">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">

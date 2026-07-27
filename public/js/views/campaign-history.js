@@ -9,14 +9,14 @@ export function renderCampaignHistoryView(root, state) {
   root.innerHTML = `
     <div class="panel glass">
       <div class="panel-header" style="flex-wrap: wrap; gap: 16px;">
-        <h3 class="panel-title">SMS Campaign Logs</h3>
+        <h3 class="panel-title">Sent Messages Logs</h3>
         
         <!-- Search & Filter Actions -->
         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-left: auto;">
           <input type="text" id="log-search-input" class="form-control" placeholder="Search sender, message, or phone..." style="max-width: 250px; padding: 8px 12px; font-size: 0.85rem;">
           
           <select id="log-status-filter" class="form-control" style="max-width: 150px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;">
-            <option value="all">All Campaigns</option>
+            <option value="all">All Messages</option>
             <option value="sent">Has Delivered</option>
             <option value="failed">Has Failed</option>
             <option value="pending">Has Pending</option>
@@ -28,7 +28,7 @@ export function renderCampaignHistoryView(root, state) {
         <table class="custom-table">
           <thead>
             <tr>
-              <th>Campaign ID</th>
+              <th>Dispatch ID</th>
               <th>Sender ID</th>
               <th>Message Preview</th>
               <th>Total Sent</th>
@@ -52,7 +52,7 @@ export function renderCampaignHistoryView(root, state) {
     <div id="campaign-details-modal" class="modal-overlay hidden">
       <div class="modal-card modal-lg glass" style="max-width: 600px; width: 95%;">
         <div class="modal-header">
-          <h3 id="details-modal-title" style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0; font-size: 1.2rem; color: var(--text-primary);">Campaign Details</h3>
+          <h3 id="details-modal-title" style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0; font-size: 1.2rem; color: var(--text-primary);">Sent Message Details</h3>
           <button id="close-details-btn" class="close-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer;">&times;</button>
         </div>
         <div class="modal-body" style="padding: 20px; max-height: 75vh; overflow-y: auto;">
