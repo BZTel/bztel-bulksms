@@ -57,7 +57,9 @@ export default function ContactPage() {
         <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }} className="reveal reveal-scale reveal-active">
           <span className="hero-tag-l">GET IN TOUCH</span>
           <h1 className="hero-title-l" style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--text-dark)', marginBottom: '20px', lineHeight: 1.1 }}>Let&apos;s Start a Conversation</h1>
-          <p className="hero-subtitle-l" style={{ fontSize: '1.15rem', color: 'var(--text-slate)', maxWidth: '700px', margin: '0 auto 36px', lineHeight: 1.6 }}>Have questions about our simulated gateway, credit pricing, or need an enterprise custom software proposal? Our teams are here to help.</p>
+          <p className="hero-subtitle-l" style={{ fontSize: '1.15rem', color: 'var(--text-slate)', maxWidth: '700px', margin: '0 auto 36px', lineHeight: 1.6 }}>
+            Have questions about our gateway, credit pricing, or custom software proposals? We&apos;re just one message away — reach us directly on WhatsApp or drop us a message below.
+          </p>
         </div>
       </section>
 
@@ -140,6 +142,21 @@ export default function ContactPage() {
 
           {/* Right: Office Info & Hours */}
           <div className="software-content-l reveal reveal-right reveal-active" style={{ paddingLeft: '20px', gap: '24px', display: 'flex', flexDirection: 'column' }}>
+            {/* WhatsApp Contact Card */}
+            <div style={{ background: 'rgba(34, 197, 94, 0.06)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '24px', borderRadius: 'var(--border-radius-md)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <svg style={{ width: '24px', height: '24px', color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.004 2C6.51 2 2.014 6.5 2.014 12c0 2.14.67 4.125 1.82 5.766L2 22l4.392-1.156c1.63.882 3.486 1.383 5.612 1.383 5.493 0 9.99-4.5 9.99-10S17.496 2 12.004 2zm6.273 14.17c-.26.736-1.503 1.345-2.07 1.41-.5.06-1.15.1-3.32-.76-2.77-1.1-4.56-3.93-4.7-4.12-.14-.19-1.11-1.48-1.11-2.82 0-1.34.7-2 .95-2.26.26-.26.56-.32.74-.32.19 0 .38 0 .54.01.17.01.4.01.62.53.22.53.76 1.85.83 1.98.07.13.11.29.02.48-.09.19-.19.31-.37.52-.18.21-.38.48-.54.65-.18.19-.37.39-.16.74.21.35.94 1.55 2.01 2.5 1.39 1.23 2.56 1.62 2.92 1.8.36.18.57.15.79-.1.21-.24.93-1.08 1.18-1.45.25-.37.5-.31.84-.19.34.12 2.16 1.02 2.53 1.2.37.19.62.28.71.43.09.16.09.91-.17 1.65z"/>
+                </svg>
+                <strong style={{ color: 'var(--text-dark)', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>WhatsApp Direct Support</strong>
+              </div>
+              <p style={{ fontSize: '0.92rem', color: 'var(--text-slate)', margin: 0, fontWeight: 500 }}>We are just one message away!</p>
+              <a href="https://wa.me/23058609686" target="_blank" rel="noopener noreferrer" style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.15rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                +230 5860 9686 <span style={{ transition: 'transform 0.2s' }}>→</span>
+              </a>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Available Mon - Sun (24/7 Instant Response)</span>
+            </div>
+
             <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', marginBottom: '12px' }}>Helpdesk & Support</h3>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-slate)', lineHeight: 1.5 }}>For general issues and developer questions, email our dispatch desk:</p>

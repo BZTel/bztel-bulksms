@@ -154,7 +154,6 @@ func main() {
           
           <div className="hero-btns-l">
             <a href="/app" className="btn-l btn-l-primary" style={{ padding: '12px 28px' }}>Get Started Free</a>
-            <a href="#products" className="btn-l btn-l-secondary" style={{ padding: '12px 28px' }}>View API Docs &lt;/&gt;</a>
           </div>
 
           <div className="hero-benefits-l">
@@ -189,7 +188,7 @@ func main() {
         </div>
 
         {/* Code Block Sandbox */}
-        <div className="code-editor-l reveal reveal-right reveal-active" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div id="developer-sandbox" className="code-editor-l reveal reveal-right reveal-active" style={{ display: 'flex', flexDirection: 'column' }}>
           <div className="editor-header-l">
             <ul className="editor-tabs-l" id="hero-tabs">
               <li className={`editor-tab-l ${activeLang === 'curl' ? 'active' : ''}`} onClick={() => setActiveLang('curl')}>cURL</li>

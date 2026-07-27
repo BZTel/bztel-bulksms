@@ -597,13 +597,19 @@ function recalculateSMSCost() {
     if (recipients.length === 0) {
       chipsContainer.innerHTML = '';
     } else {
-      const phoneRegex = /^\+?[1-9]\d{7,14}$/;
+      const phoneRegex = /^(\+?[1-9]\d{7,14}|0[789][01]\d{8}|0[25]\d{8}|0\d{9,10})$/;
       chipsContainer.innerHTML = recipients.slice(0, 30).map(phone => {
         const cleanPhone = phone.replace(/[\s()\-]/g, '');
         const isValid = phoneRegex.test(cleanPhone);
         const badgeClass = isValid ? 'valid' : 'invalid';
         const icon = isValid ? '✓' : '✕';
-        return `<span class="recipient-badge ${badgeClass}">${icon} ${phone}</span>`;
+        
+        let displayHint = phone;
+        if (isValid && cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+          displayHint = `${phone} (→ +234${cleanPhone.slice(1)})`;
+        }
+        
+        return `<span class="recipient-badge ${badgeClass}">${icon} ${displayHint}</span>`;
       }).join('') + (recipients.length > 30 ? `<span class="recipient-badge valid" style="background: rgba(99, 102, 241, 0.08); border-color: rgba(99, 102, 241, 0.25); color: #a5b4fc;">+ ${recipients.length - 30} more</span>` : '');
     }
   }

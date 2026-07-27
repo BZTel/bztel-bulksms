@@ -274,6 +274,39 @@ async function processQueue() {
   }
 }
 
+function normalizePhone(phone) {
+  if (!phone) return '';
+  let digits = phone.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+
+  // 1. If already starts with known international country code (234, 233, 44, etc.), use as is
+  if (digits.startsWith('234') || digits.startsWith('233') || digits.startsWith('44')) {
+    return digits;
+  }
+
+  // 2. Nigerian 11-digit local format starting with '0' (e.g., 070..., 080..., 081..., 090..., 091...)
+  if (digits.startsWith('0') && digits.length === 11) {
+    return '234' + digits.slice(1);
+  }
+
+  // 3. Ghanaian 10-digit local format starting with '0' (e.g., 020..., 024..., 054...)
+  if (digits.startsWith('0') && digits.length === 10 && (digits.startsWith('02') || digits.startsWith('05'))) {
+    return '233' + digits.slice(1);
+  }
+
+  // 4. Nigerian 10-digit number missing leading zero (e.g., 7017193890, 8031234567, 9035477897)
+  if (digits.length === 10 && ['7', '8', '9'].includes(digits[0])) {
+    return '234' + digits;
+  }
+
+  // 5. Fallback for 10-digit local numbers starting with '0' -> convert leading '0' to '234'
+  if (digits.startsWith('0') && digits.length === 10) {
+    return '234' + digits.slice(1);
+  }
+
+  return digits;
+}
+
 // Submit a single message via SMPP
 async function sendSMS(log) {
   const routeKey = getRoute(log);
@@ -286,8 +319,8 @@ async function sendSMS(log) {
       return;
     }
 
-    // Clean phone number from non-digits (remove +, spaces, etc.) for destination address
-    const cleanRecipient = log.recipient.replace(/[^0-9]/g, '');
+    // Normalize phone number to E.164 format (e.g., 2347017193890) for destination address
+    const cleanRecipient = normalizePhone(log.recipient);
 
     // Check if Sender ID is alphanumeric
     const isAlphanumeric = /[a-zA-Z]/.test(log.senderId);

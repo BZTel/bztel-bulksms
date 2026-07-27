@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
+import { normalizeRecipientsList, normalizePhoneNumber } from '@/lib/phone';
 import { randomUUID } from 'crypto';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent'];
@@ -59,15 +60,14 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    let recipientList: string[] = [];
-    if (Array.isArray(recipients)) {
-      recipientList = recipients;
-    } else if (typeof recipients === 'string') {
-      recipientList = recipients.split(',').map(r => r.trim()).filter(Boolean);
-    }
+    const parsedRecipients = normalizeRecipientsList(recipients);
+    const recipientList = parsedRecipients.valid;
 
     if (recipientList.length === 0) {
-      return NextResponse.json({ error: 'Recipients list is empty' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Recipients list is empty or contains no valid phone numbers.',
+        invalid_recipients: parsedRecipients.invalid
+      }, { status: 400 });
     }
 
     const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
         select: { name: true, phone: true },
       });
 
-      const contactsMap = new Map(contacts.map(c => [c.phone.replace(/[\s+()-]/g, ''), c.name]));
+      const contactsMap = new Map(contacts.map(c => [normalizePhoneNumber(c.phone).normalized, c.name]));
 
       // Deduct owner balance
       await tx.user.update({
@@ -116,16 +116,15 @@ export async function POST(req: Request) {
 
       const batchId = randomUUID();
 
-      // Bulk insert outbox messages
-      const bulkData = recipientList.map((rawPhone) => {
-        const cleanPhone = rawPhone.replace(/[\s+()-]/g, '');
-        const contactName = contactsMap.get(cleanPhone) || 'Customer';
+      // Bulk insert outbox messages with normalized E.164 phone numbers
+      const bulkData = recipientList.map((e164Phone) => {
+        const contactName = contactsMap.get(e164Phone) || 'Customer';
         const personalizedMsg = rawMessage.replace(/\[Name\]/gi, contactName);
 
         return {
           userId: ownerId,
           senderId: cleanSenderId,
-          recipient: rawPhone.trim(),
+          recipient: e164Phone,
           message: personalizedMsg,
           credits: creditsPerMessage,
           status: 'pending',
