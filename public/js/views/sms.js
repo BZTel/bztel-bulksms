@@ -17,6 +17,7 @@ export function renderSMSView(root, state) {
       <div class="sms-layout-header">
         <div class="sub-tabs-bar">
           <button class="sub-tab-btn active" data-tab="templates">SMS Template</button>
+          <button class="sub-tab-btn" data-tab="personalized">Personalised Messaging</button>
           <button class="sub-tab-btn" data-tab="scheduled">Scheduled Messages</button>
           <button class="sub-tab-btn" data-tab="drafts">Drafts</button>
           <button class="sub-tab-btn" data-tab="international">International Messaging</button>
@@ -202,6 +203,8 @@ function switchTab(tabName) {
 function loadTabContent() {
   if (viewState.activeTab === 'templates') {
     loadTemplates(viewState.searchQuery);
+  } else if (viewState.activeTab === 'personalized') {
+    loadPersonalized(viewState.searchQuery);
   } else if (viewState.activeTab === 'scheduled') {
     loadScheduled(viewState.searchQuery);
   } else if (viewState.activeTab === 'drafts') {
@@ -561,6 +564,133 @@ function loadInternational(query = '') {
       </table>
     </div>
   `;
+}
+
+// ── Dedicated Personalised Messaging Tab Loader ──────────────────────
+function loadPersonalized(query = '') {
+  const container = document.getElementById('sms-tab-content');
+  if (!container) return;
+
+  const sampleTemplates = [
+    {
+      title: "Order Dispatch Notification",
+      tag: "E-Commerce",
+      text: "Hi [Name], your order #1042 has been confirmed and dispatched! Thank you for shopping with us."
+    },
+    {
+      title: "Appointment & Service Reminder",
+      tag: "Healthcare / Consulting",
+      text: "Hello [Name], this is a friendly reminder for your upcoming appointment tomorrow at 10:00 AM."
+    },
+    {
+      title: "Exclusive Customer Offer",
+      tag: "Marketing & Sales",
+      text: "Dear [Name], enjoy 20% OFF your next transaction this week. Use code BZ20 at checkout."
+    },
+    {
+      title: "Payment Receipt Confirmation",
+      tag: "Billing",
+      text: "Hi [Name], we have successfully received your payment. Thank you for your continued business!"
+    }
+  ];
+
+  let filtered = sampleTemplates;
+  if (query) {
+    filtered = sampleTemplates.filter(t => 
+      t.title.toLowerCase().includes(query) || 
+      t.text.toLowerCase().includes(query) || 
+      t.tag.toLowerCase().includes(query)
+    );
+  }
+
+  container.innerHTML = `
+    <div style="animation: fadeIn 0.25s ease-out;">
+      <!-- Header Banner -->
+      <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.05) 100%); border: 1px solid rgba(79, 70, 229, 0.18); border-radius: var(--border-radius-md); padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="max-width: 600px;">
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(79, 70, 229, 0.12); color: var(--accent-color); font-size: 0.75rem; font-weight: 700; padding: 3px 10px; border-radius: 9999px; margin-bottom: 8px;">
+            ✨ DEDICATED PERSONALISATION CONSOLE
+          </div>
+          <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0 0 6px;">Personalised Broadcast Hub</h3>
+          <p style="font-size: 0.88rem; color: var(--text-slate); margin: 0; line-height: 1.5;">
+            Dynamically address each recipient by their actual name using the <code>[Name]</code> tag. The system checks your Contacts Directory before dispatch and alerts you if any recipient number is missing a saved contact name.
+          </p>
+        </div>
+        <button id="btn-start-personalized-compose" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; background: var(--accent-color); font-weight: 700; border-radius: var(--border-radius-sm); font-size: 0.9rem;">
+          <span>Compose Personalised SMS ✨</span>
+        </button>
+      </div>
+
+      <!-- Feature Highlights Row -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 16px; border-radius: var(--border-radius-sm);">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: var(--accent-color);">🎯</span> Dynamic Tag Replacement
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
+            Insert <code>[Name]</code> anywhere in your text. Each recipient gets a custom message addressing them directly.
+          </p>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 16px; border-radius: var(--border-radius-sm);">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: #10b981;">🛡️</span> Contact Directory Guard
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
+            Blocks accidental dispatches if any recipient number is not saved in your Contacts Directory.
+          </p>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 16px; border-radius: var(--border-radius-sm);">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span style="color: #f59e0b;">⚡</span> 1-Click Insert Pill
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.45;">
+            Use the <code>+ Insert [Name]</code> button in the composer to drop tags instantly without typing errors.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section Title -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0; font-family: 'Outfit', sans-serif;">Starter Personalised Templates</h4>
+        <span style="font-size: 0.78rem; color: var(--text-muted);">Click any template to load into composer</span>
+      </div>
+
+      <!-- Templates Cards Grid -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+        ${filtered.map(t => `
+          <div class="card glass" style="padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; border: 1px solid var(--glass-border);">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 0.92rem; color: var(--text-primary); font-family: 'Outfit', sans-serif;">${t.title}</strong>
+                <span class="badge" style="font-size: 0.68rem; background: rgba(99, 102, 241, 0.1); color: var(--accent-color); border: 1px solid rgba(99, 102, 241, 0.2);">${t.tag}</span>
+              </div>
+              <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); padding: 10px; border-radius: 6px; font-size: 0.82rem; color: var(--text-slate); font-family: 'Inter', sans-serif; line-height: 1.45;">
+                ${t.text}
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm btn-use-personalized-tpl" data-text="${encodeURIComponent(t.text)}" style="width: 100%; padding: 8px; font-size: 0.8rem; border-radius: var(--border-radius-sm); font-weight: 600;">
+              Use Personalised Template ↗
+            </button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // Bind Compose Button
+  document.getElementById('btn-start-personalized-compose')?.addEventListener('click', () => {
+    openComposeModal('Hi [Name], ');
+  });
+
+  // Bind Template Cards Click
+  document.querySelectorAll('.btn-use-personalized-tpl').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const text = decodeURIComponent(e.currentTarget.getAttribute('data-text'));
+      openComposeModal(text);
+    });
+  });
 }
 
 // ── Compose Modal Actions ───────────────────────────────────────────
