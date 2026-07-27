@@ -1,7 +1,7 @@
 // Import View Modules
 import { renderAuthView } from './views/auth.js';
 import { renderDashboardView } from './views/dashboard.js';
-import { renderSMSView } from './views/sms.js';
+import { renderSMSView } from './views/sms.js?v=1.0.2';
 import { renderContactsView } from './views/contacts.js';
 import { renderWalletView } from './views/wallet.js';
 import { renderBirthdayView } from './views/birthday.js';
