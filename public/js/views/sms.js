@@ -546,7 +546,7 @@ function loadInternational(query = '') {
 }
 
 // ── Compose Modal Actions ───────────────────────────────────────────
-async function openComposeModal(initialText = '', draftId = null, senderId = 'BZTEL', recipients = '') {
+export async function openComposeModal(initialText = '', draftId = null, senderId = 'BZTEL', recipients = '') {
   const modal = document.getElementById('compose-modal');
   modal.classList.remove('hidden');
   
