@@ -96,6 +96,17 @@ export async function POST(req: Request) {
 
       const contactsMap = new Map(contacts.map(c => [normalizePhoneNumber(c.phone).normalized, c.name]));
 
+      // Enforce Contact Check for Personalization [Name]
+      const hasNameTag = /\[Name\]/gi.test(rawMessage);
+      if (hasNameTag) {
+        const missingNumbers = recipientList.filter(phone => !contactsMap.has(phone));
+        if (missingNumbers.length > 0) {
+          const err = new Error('MISSING_PERSONALIZATION_CONTACTS');
+          (err as any).missingNumbers = missingNumbers;
+          throw err;
+        }
+      }
+
       // Deduct owner balance
       await tx.user.update({
         where: { id: ownerId },
@@ -118,20 +129,8 @@ export async function POST(req: Request) {
 
       // Bulk insert outbox messages with normalized E.164 phone numbers
       const bulkData = recipientList.map((e164Phone) => {
-        const contactName = contactsMap.get(e164Phone);
-        let personalizedMsg = rawMessage;
-
-        if (contactName && contactName.trim()) {
-          personalizedMsg = personalizedMsg.replace(/\[Name\]/gi, contactName.trim());
-        } else {
-          // Cleanly remove [Name] placeholder without leaving double spaces or awkward 'Customer' fallbacks
-          personalizedMsg = personalizedMsg
-            .replace(/,\s*\[Name\]/gi, '')
-            .replace(/\[Name\],\s*/gi, '')
-            .replace(/\[Name\]/gi, '')
-            .replace(/\s{2,}/g, ' ')
-            .trim();
-        }
+        const contactName = contactsMap.get(e164Phone) || '';
+        const personalizedMsg = rawMessage.replace(/\[Name\]/gi, contactName.trim());
 
         return {
           userId: ownerId,
@@ -164,6 +163,13 @@ export async function POST(req: Request) {
     }
     if (error.message === 'INSUFFICIENT_CREDITS') {
       return NextResponse.json({ error: 'Insufficient credits for sending bulk SMS' }, { status: 400 });
+    }
+    if (error.message === 'MISSING_PERSONALIZATION_CONTACTS') {
+      const missing = error.missingNumbers || [];
+      return NextResponse.json({ 
+        error: `Personalization Error: ${missing.length} recipient number(s) (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '...' : ''}) were not found in your Contacts Directory. Please save them to your Contacts Directory first or remove [Name] to proceed.`,
+        missing_contacts: missing
+      }, { status: 400 });
     }
 
     console.error('Send SMS error:', error);

@@ -771,6 +771,9 @@ async function handleBroadcastComposerSubmit(e) {
           navigateTo('dashboard');
         }, 1200);
       } else {
+        if (data.missing_contacts && data.missing_contacts.length > 0) {
+          alert(`⚠️ Personalization Error\n\nThe following recipient number(s) were not found in your Contacts Directory:\n• ${data.missing_contacts.join('\n• ')}\n\nPlease save them to your Contacts Directory first or remove [Name] to proceed.`);
+        }
         showToast(data.error || 'Failed to send bulk SMS', 'error');
       }
     } catch (error) {
