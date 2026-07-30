@@ -105,65 +105,142 @@ export function renderWalletView(root, state) {
             <tbody id="tx-tbody">
               <tr>
                 <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
-                  Loading transactions...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+    <!-- Loyalty Rewards Panel & Stats Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+      
+      <!-- Loyalty Points Box -->
+      <div class="panel glass" style="margin: 0; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05)); border-color: rgba(99, 102, 241, 0.2);">
+        <div class="panel-header" style="border-bottom: 1px solid rgba(99, 102, 241, 0.15); padding-bottom: 10px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg style="width: 20px; height: 20px; color: var(--accent-color);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+            <h3 class="panel-title" style="font-size: 1rem; margin: 0; color: var(--text-primary);">Loyalty Rewards Program</h3>
+          </div>
+          <span style="font-size: 0.68rem; font-weight: 700; text-transform: uppercase; background: rgba(99,102,241,0.15); color: var(--accent-color); padding: 2px 8px; border-radius: 10px;">
+            Active VIP
+          </span>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Loyalty Points Balance</div>
+            <div id="loyalty-points-display" style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: var(--accent-color); line-height: 1.1; margin-top: 4px;">
+              ${(state.user?.loyalty_points || 0).toLocaleString()}
+            </div>
+            <div id="loyalty-cash-value" style="font-size: 0.75rem; color: #10b981; font-weight: 600; margin-top: 4px;">
+              Worth ₦${((state.user?.loyalty_points || 0) * 100).toLocaleString()} in Discounts
+            </div>
+          </div>
+          <div style="text-align: right; max-width: 180px;">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0; line-height: 1.4;">
+              Earn <strong>1 Point</strong> for every SMS top-up. Redeem points at checkout for up to <strong>50% off</strong>!
+            </p>
+          </div>
+        </div>
+
+        <!-- Recent Points Log -->
+        <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); padding: 12px;">
+          <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.05em;">Recent Points Activity</div>
+          <div id="loyalty-ledgers-container" style="display: flex; flex-direction: column; gap: 6px; max-height: 110px; overflow-y: auto;">
+            <div class="text-center" style="color: var(--text-muted); padding: 10px; font-size: 0.8rem;">Loading points history...</div>
+          </div>
         </div>
       </div>
 
-      <!-- Loyalty Card -->
-      <div class="panel glass" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 0;">
-        <div class="panel-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 12px; margin-bottom: 4px;">
-          <h3 class="panel-title" style="display: flex; align-items: center; gap: 8px;">
-            <svg style="width: 20px; height: 20px; color: var(--warning-color);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+      <!-- Quick Billing Stats Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="kpi-card glass" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
+          <div class="kpi-header">
+            <span>Total Credited</span>
+            <svg class="kpi-icon" style="color: #10b981;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            Loyalty Rewards
-          </h3>
-        </div>
-
-        <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 18px; border-radius: 12px; text-align: center; position: relative; overflow: hidden;">
-          <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px;">Available Points</div>
-          <div id="loyalty-points-display" style="font-family: 'Outfit', sans-serif; font-size: 2.8rem; font-weight: 800; color: var(--warning-color); line-height: 1;">0</div>
-          <div id="loyalty-cash-value" style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 6px;">Worth ₦0 in Discounts</div>
-        </div>
-
-        <div>
-          <h4 style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">Points Statement</h4>
-          <div id="loyalty-ledgers-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 240px; overflow-y: auto; padding-right: 4px;">
-            <div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.8rem;">Loading points statement...</div>
           </div>
+          <div id="stat-credited" class="kpi-value" style="color: #10b981;">0</div>
+          <div class="kpi-desc">Lifetime SMS credits added</div>
         </div>
+
+        <div class="kpi-card glass" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
+          <div class="kpi-header">
+            <span>Total Spent</span>
+            <svg class="kpi-icon" style="color: #ef4444;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+            </svg>
+          </div>
+          <div id="stat-debited" class="kpi-value" style="color: #ef4444;">0</div>
+          <div class="kpi-desc">Lifetime SMS credits spent</div>
+        </div>
+
+        <div class="kpi-card glass" style="margin: 0; grid-column: span 2; display: flex; align-items: center; justify-content: space-between; padding: 18px 24px;">
+          <div>
+            <div class="kpi-header" style="margin-bottom: 2px;">
+              <span>Total Billing Transactions</span>
+            </div>
+            <div class="kpi-desc">All top-ups, deductions & broadcasts</div>
+          </div>
+          <div id="stat-count" class="kpi-value" style="font-size: 2rem; margin: 0;">0</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Transactions Ledger Table -->
+    <div class="panel glass">
+      <div class="panel-header">
+        <h3 class="panel-title">Billing & Wallet Ledger</h3>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm tx-filter-btn active" data-filter="all">All</button>
+          <button class="btn btn-secondary btn-sm tx-filter-btn" data-filter="credit">Credits (+)</button>
+          <button class="btn btn-secondary btn-sm tx-filter-btn" data-filter="debit">Debits (-)</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Transaction Type</th>
+              <th>Description</th>
+              <th>Amount (Credits)</th>
+              <th>Balance After</th>
+            </tr>
+          </thead>
+          <tbody id="wallet-tx-tbody">
+            <tr>
+              <td colspan="5" class="text-center" style="color: var(--text-muted); padding: 30px;">Loading transaction history...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   `;
 
-  initWallet(state);
+  initWalletView(state);
 }
 
-async function initWallet(state) {
-  // "Add Credits" button triggers the existing topup modal
-  document.getElementById('wallet-topup-btn').addEventListener('click', () => {
-    const btn = document.getElementById('topup-trigger-btn');
-    if (btn) btn.click();
-  });
+function initWalletView(state) {
+  // Bind buy credits button
+  const buyBtn = document.getElementById('buy-credits-btn');
+  if (buyBtn) {
+    buyBtn.addEventListener('click', () => {
+      document.querySelector('.nav-item[data-view="buy-credits"]')?.click();
+    });
+  }
 
-  // Filter chips
-  document.querySelectorAll('#tx-filter-bar .filter-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      document.querySelectorAll('#tx-filter-bar .filter-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      activeFilter = chip.getAttribute('data-filter');
+  // Bind filter buttons
+  const filterBtns = document.querySelectorAll('.tx-filter-btn');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      e.currentTarget.classList.add('active');
+      activeFilter = e.currentTarget.getAttribute('data-filter');
       renderTable(getFiltered());
     });
   });
 
-  await loadWalletData(state);
-
-  // Auto-refresh every 5 seconds to pick up topup actions
-  state.statsInterval = setInterval(() => loadWalletData(state, true), 5000);
+  loadWalletData(state);
 }
 
 async function loadWalletData(state, silent = false) {
@@ -174,28 +251,39 @@ async function loadWalletData(state, silent = false) {
       apiFetch('/api/billing/loyalty')
     ]);
 
+    if (!isCurrentView('wallet')) return;
     if (!balRes.ok || !txRes.ok || !loyaltyRes.ok) return;
 
     const { user } = await balRes.json();
     const { transactions, summary } = await txRes.json();
     const loyaltyData = await loyaltyRes.json();
 
+    if (!isCurrentView('wallet')) return;
+
     // Update hero balance
-    document.getElementById('hero-balance').textContent = user.balance.toLocaleString();
+    const heroBal = document.getElementById('hero-balance');
+    if (heroBal) heroBal.textContent = user.balance.toLocaleString();
 
     // Update summary stats
-    document.getElementById('stat-credited').textContent = summary.total_credited.toLocaleString();
-    document.getElementById('stat-debited').textContent = summary.total_debited.toLocaleString();
-    document.getElementById('stat-count').textContent = summary.count.toLocaleString();
+    const statCredited = document.getElementById('stat-credited');
+    const statDebited = document.getElementById('stat-debited');
+    const statCount = document.getElementById('stat-count');
+    if (statCredited) statCredited.textContent = summary.total_credited.toLocaleString();
+    if (statDebited) statDebited.textContent = summary.total_debited.toLocaleString();
+    if (statCount) statCount.textContent = summary.count.toLocaleString();
 
     // Sync global state balance
-    state.user.balance = user.balance;
-    state.user.loyalty_points = loyaltyData.loyalty_points;
+    if (state.user) {
+      state.user.balance = user.balance;
+      state.user.loyalty_points = loyaltyData.loyalty_points;
+    }
     updateUIHeader();
 
     // Update loyalty details
-    document.getElementById('loyalty-points-display').textContent = loyaltyData.loyalty_points.toLocaleString();
-    document.getElementById('loyalty-cash-value').textContent = `Worth ₦${(loyaltyData.loyalty_points * 100).toLocaleString()} in Discounts`;
+    const ptsDisp = document.getElementById('loyalty-points-display');
+    const cashVal = document.getElementById('loyalty-cash-value');
+    if (ptsDisp) ptsDisp.textContent = loyaltyData.loyalty_points.toLocaleString();
+    if (cashVal) cashVal.textContent = `Worth ₦${(loyaltyData.loyalty_points * 100).toLocaleString()} in Discounts`;
 
     // Render loyalty statement list
     const ledgerContainer = document.getElementById('loyalty-ledgers-container');
@@ -211,14 +299,14 @@ async function loadWalletData(state, silent = false) {
           const amountColor = l.amount > 0 ? '#10b981' : '#ef4444';
           
           return `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); background: rgba(255,255,255,0.01);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); background: rgba(255,255,255,0.01);">
               <div>
-                <div style="font-size: 0.78rem; font-weight: 500; max-width: 150px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${l.description}">
+                <div style="font-size: 0.75rem; font-weight: 500; max-width: 140px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${l.description}">
                   ${l.description}
                 </div>
                 <div style="font-size: 0.65rem; color: var(--text-muted);">${dateStr}</div>
               </div>
-              <strong style="color: ${amountColor}; font-size: 0.85rem; font-family: monospace;">${amountSign}</strong>
+              <strong style="color: ${amountColor}; font-size: 0.8rem; font-family: monospace;">${amountSign}</strong>
             </div>
           `;
         }).join('');
@@ -228,6 +316,7 @@ async function loadWalletData(state, silent = false) {
     allTransactions = transactions;
     renderTable(getFiltered());
   } catch (err) {
+    if (err.name === 'AbortError' || !isCurrentView('wallet')) return;
     if (!silent) showToast('Failed to load wallet data', 'error');
   }
 }

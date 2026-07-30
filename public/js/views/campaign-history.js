@@ -1,4 +1,4 @@
-import { apiFetch, showToast, navigateTo } from '../app.js';
+import { apiFetch, showToast, isCurrentView } from '../app.js';
 import { openComposeModal } from './sms.js';
 
 let fullHistoryCache = [];
@@ -126,6 +126,10 @@ export function renderCampaignHistoryView(root, state) {
 }
 
 async function initCampaignHistoryView() {
+  if (fullHistoryCache.length > 0) {
+    groupedCampaigns = groupLogsIntoCampaigns(fullHistoryCache);
+    renderCampaignsTable(groupedCampaigns);
+  }
   await loadFullHistory();
   setupFilters();
   setupModalEvents();
@@ -134,22 +138,30 @@ async function initCampaignHistoryView() {
 async function loadFullHistory() {
   try {
     const res = await apiFetch('/api/sms/history');
+    if (!isCurrentView('campaign-history')) return;
+
     if (!res.ok) {
-      document.getElementById('history-logs-tbody').innerHTML = `
-        <tr>
-          <td colspan="9" class="text-center" style="color: var(--error-color); padding: 30px;">
-            Failed to retrieve historical dispatch logs.
-          </td>
-        </tr>
-      `;
+      const tbody = document.getElementById('history-logs-tbody');
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center" style="color: var(--error-color); padding: 30px;">
+              Failed to retrieve historical dispatch logs.
+            </td>
+          </tr>
+        `;
+      }
       return;
     }
 
     const data = await res.json();
+    if (!isCurrentView('campaign-history')) return;
+
     fullHistoryCache = data.history || [];
     groupedCampaigns = groupLogsIntoCampaigns(fullHistoryCache);
     renderCampaignsTable(groupedCampaigns);
   } catch (error) {
+    if (error.name === 'AbortError' || !isCurrentView('campaign-history')) return;
     showToast('Network error loading dispatch history', 'error');
   }
 }

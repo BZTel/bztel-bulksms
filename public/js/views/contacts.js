@@ -1,4 +1,4 @@
-import { apiFetch, showToast } from '../app.js';
+import { apiFetch, showToast, isCurrentView } from '../app.js';
 
 let cachedContacts = []; // Cache list locally
 let activeTab = 'contacts';
@@ -150,6 +150,16 @@ async function initContacts(state) {
   setupSearch();
   setupBulkActions();
   setupGroupNewInputToggles();
+
+  if (cachedContacts.length > 0) {
+    populateGroupSelectors();
+    if (activeTab === 'contacts') {
+      renderContactsTable(getFilteredContacts());
+    } else {
+      renderGroupsGrid();
+    }
+  }
+
   await loadContactsData();
 }
 
@@ -249,9 +259,12 @@ function switchTab(tab) {
 async function loadContactsData() {
   try {
     const res = await apiFetch('/api/contacts');
+    if (!isCurrentView('contacts')) return;
     if (!res.ok) return;
 
     const data = await res.json();
+    if (!isCurrentView('contacts')) return;
+
     cachedContacts = data.contacts || [];
     
     populateGroupSelectors();
@@ -262,6 +275,7 @@ async function loadContactsData() {
       renderGroupsGrid();
     }
   } catch (error) {
+    if (error.name === 'AbortError' || !isCurrentView('contacts')) return;
     showToast('Failed to load contacts', 'error');
   }
 }

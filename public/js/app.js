@@ -21,7 +21,9 @@ const state = {
   currentView: 'dashboard',
   statsInterval: null,
   currentChannel: 'sms',
-  previousBalance: null
+  previousBalance: null,
+  viewAbortController: null,
+  viewCache: {}
 };
 
 // Initialize Application
@@ -512,6 +514,12 @@ function animateValue(element, start, end, duration) {
 export function navigateTo(viewName) {
   state.currentView = viewName;
   
+  // Abort any pending network requests from previous view
+  if (state.viewAbortController) {
+    state.viewAbortController.abort();
+  }
+  state.viewAbortController = new AbortController();
+
   // Hide loader
   document.getElementById('app-loader').classList.add('hidden');
 
@@ -675,6 +683,11 @@ export function showToast(message, type = 'info') {
   }, 4000);
 }
 
+// Helper: Check if a view module is still currently active
+export function isCurrentView(viewName) {
+  return state.currentView === viewName;
+}
+
 // Helper: Make API calls with auth token automatically attached
 export async function apiFetch(url, options = {}) {
   console.log('[apiFetch] Fetching:', url, 'token:', state.token);
@@ -687,22 +700,33 @@ export async function apiFetch(url, options = {}) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers
-  });
+  // Attach AbortController signal unless explicitly skipped
+  const signal = options.signal || (options.skipAbort ? undefined : state.viewAbortController?.signal);
 
-  console.log('[apiFetch] Response from:', url, 'status:', res.status);
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      signal
+    });
 
-  // If token expired, log out automatically
-  if (res.status === 401) {
-    console.log('[apiFetch] 401 Unauthorized received, triggering logout...');
-    logout();
-    showToast('Session expired. Please log in again.', 'warning');
-    throw new Error('Unauthorized');
+    console.log('[apiFetch] Response from:', url, 'status:', res.status);
+
+    // If token expired, log out automatically
+    if (res.status === 401) {
+      console.log('[apiFetch] 401 Unauthorized received, triggering logout...');
+      logout();
+      showToast('Session expired. Please log in again.', 'warning');
+      throw new Error('Unauthorized');
+    }
+
+    return res;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('[apiFetch] Request aborted due to view navigation:', url);
+    }
+    throw err;
   }
-
-  return res;
 }
 
 // Telemetry Server-Sent Events (SSE) connection management

@@ -1,4 +1,4 @@
-import { apiFetch, showToast, updateUIHeader, navigateTo } from '../app.js';
+import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView } from '../app.js';
 
 export function renderDashboardView(container, state) {
   const dismissedUpdate = localStorage.getItem('dismissed-banner-update') === 'true';
@@ -263,6 +263,8 @@ async function loadDashboardData(state, silent = false) {
       apiFetch('/api/sender-ids')
     ]);
 
+    if (!isCurrentView('dashboard')) return;
+
     let approvedSenderIds = ['BZTEL'];
     if (senderIdsRes && senderIdsRes.ok) {
       try {
@@ -276,9 +278,12 @@ async function loadDashboardData(state, silent = false) {
       }
     }
 
+    if (!isCurrentView('dashboard')) return;
+
     // ── SMS Stats ──────────────────────────────────────────────────
     if (statsRes.ok) {
       const stats = await statsRes.json();
+      if (!isCurrentView('dashboard')) return;
       state.user.balance = stats.balance;
       updateUIHeader();
 
