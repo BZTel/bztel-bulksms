@@ -40,7 +40,7 @@ async function verifyAdminToken() {
   try {
     const res = await adminFetch('/api/admin/users');
     if (res.ok) return true;
-    if (res.status === 403) {
+    if (res.status === 401) {
       adminLogout(false);
       return false;
     }
@@ -272,7 +272,7 @@ export async function adminFetch(url, options = {}) {
     headers['Authorization'] = `Bearer ${state.adminToken}`;
   }
   const res = await fetch(url, { ...options, headers });
-  if (res.status === 403) {
+  if (res.status === 401) {
     adminLogout(false);
     showToast('Session expired. Please log in again.', 'error');
     throw new Error('Unauthorized');

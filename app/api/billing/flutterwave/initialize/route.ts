@@ -15,39 +15,10 @@ export async function POST(req: Request) {
     }
 
     const creditsNum = Number(credits);
-    let amountInNgn = 0;
-
-    // Map packages to costs
-    if (creditsNum === 1000) {
-      amountInNgn = 15000;
-    } else if (creditsNum === 5000) {
-      amountInNgn = 60000;
-    } else if (creditsNum === 25000) {
-      amountInNgn = 225000;
-    } else {
-      amountInNgn = creditsNum * 12; // Fallback NGN 12 per credit
-    }
-
-    let pointsToRedeem = 0;
-    let discount = 0;
-
-    if (redeemPoints) {
-      const user = await prisma.user.findUnique({
-        where: { id: authUser.owner_id },
-        select: { loyaltyPoints: true }
-      });
-
-      const currentPoints = user?.loyaltyPoints || 0;
-      if (currentPoints > 0) {
-        // Calculate max points that can be redeemed (up to 50% discount)
-        const maxDiscountNgn = amountInNgn * 0.5;
-        const maxPointsNeeded = Math.ceil(maxDiscountNgn / 100);
-        
-        pointsToRedeem = Math.min(currentPoints, maxPointsNeeded);
-        discount = pointsToRedeem * 100;
-        amountInNgn = Math.max(0, amountInNgn - discount);
-      }
-    }
+    // Flat rate pricing: 1 Credit = 6.5 Naira (NGN 6.50)
+    const amountInNgn = Math.round(creditsNum * 6.5 * 100) / 100;
+    const pointsToRedeem = 0;
+    const discount = 0;
 
     const flwSecret = process.env.FLW_SECRET_KEY || 'FLWSECK_TEST-mock-secret-key-123';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.bztel.net';

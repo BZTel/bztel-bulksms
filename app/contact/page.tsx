@@ -151,8 +151,8 @@ export default function ContactPage() {
                 <strong style={{ color: 'var(--text-dark)', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>WhatsApp Direct Support</strong>
               </div>
               <p style={{ fontSize: '0.92rem', color: 'var(--text-slate)', margin: 0, fontWeight: 500 }}>We are just one message away!</p>
-              <a href="https://wa.me/23058609686" target="_blank" rel="noopener noreferrer" style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.15rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                +230 5860 9686 <span style={{ transition: 'transform 0.2s' }}>→</span>
+              <a href="https://wa.me/2348149346429" target="_blank" rel="noopener noreferrer" style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.15rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                +234 814 934 6429 <span style={{ transition: 'transform 0.2s' }}>→</span>
               </a>
               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Available Mon - Sun (24/7 Instant Response)</span>
             </div>

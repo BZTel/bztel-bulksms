@@ -23,7 +23,7 @@ export function renderAuthView(container, state) {
 
           <div class="auth-form-body-wrapper">
             <h2 class="auth-form-title">${isLogin ? "Welcome Back!" : "Get Started"}</h2>
-            <p class="auth-form-subtitle">${isLogin ? "Login to your BZTel account" : "Create your BZTel developer account"}</p>
+            <p class="auth-form-subtitle">${isLogin ? "Login to your BZTel account" : "Create your BZTel account"}</p>
 
             <form id="auth-form" class="auth-form-element">
               <div class="form-group-with-icon">

@@ -12,6 +12,7 @@ import { renderHelpView } from './views/help.js';
 import { renderMoreView } from './views/more.js';
 import { renderVoiceView } from './views/voice.js';
 import { renderEmailBlastView } from './views/email-blast.js';
+import { renderBuyCreditsView } from './views/buy-credits.js';
 
 // Global Application State
 const state = {
@@ -250,23 +251,9 @@ function setupModalEvents() {
     }
   }
 
-  // Open modal
-  topupTrigger.addEventListener('click', async () => {
-    topupModal.classList.remove('hidden');
-    // Refresh user state first to fetch points
-    try {
-      const res = await apiFetch('/api/auth/me');
-      if (res.ok) {
-        const data = await res.json();
-        state.user = data.user;
-        updateUIHeader();
-      }
-    } catch (err) {}
-    
-    // Set default tab on open
-    const tabFlw = document.getElementById('pay-tab-flw');
-    if (tabFlw) tabFlw.click();
-    updateLoyaltyUI();
+  // Open Buy Credits view on trigger click
+  topupTrigger.addEventListener('click', () => {
+    navigateTo('buy-credits');
   });
 
   // Close modal
@@ -548,6 +535,7 @@ export function navigateTo(viewName) {
     birthday: 'Birthday Campaign Scheduler',
     teams: 'Team Collaboration Hub',
     wallet: 'Wallet & Billing Details',
+    'buy-credits': 'Buy SMS Credits',
     'campaign-history': 'Sent Messages Logs',
     'request-service': 'Request Custom Service',
     help: 'Support Desk & FAQs',
@@ -588,6 +576,9 @@ export function navigateTo(viewName) {
       break;
     case 'wallet':
       renderWalletView(root, state);
+      break;
+    case 'buy-credits':
+      renderBuyCreditsView(root, state);
       break;
     case 'campaign-history':
       renderCampaignHistoryView(root, state);
@@ -704,8 +695,8 @@ export async function apiFetch(url, options = {}) {
   console.log('[apiFetch] Response from:', url, 'status:', res.status);
 
   // If token expired, log out automatically
-  if (res.status === 403) {
-    console.log('[apiFetch] 403 Forbidden received, triggering logout...');
+  if (res.status === 401) {
+    console.log('[apiFetch] 401 Unauthorized received, triggering logout...');
     logout();
     showToast('Session expired. Please log in again.', 'warning');
     throw new Error('Unauthorized');

@@ -2154,3 +2154,17 @@ textarea.form-control {
   border-color: rgba(239, 68, 68, 0.25);
   color: #f87171;
 }
+
+/* Dedicated Buy Credits View Styles */
+.pricing-card.active-package {
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px var(--accent-color), 0 12px 24px rgba(99, 102, 241, 0.15) !important;
+  background: var(--bg-secondary) !important;
+}
+
+@media (max-width: 900px) {
+  .buy-credits-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
