@@ -1,11 +1,13 @@
 import { apiFetch, showToast, navigateTo, fetchUserProfile } from '../app.js';
+import { SYSTEM_TEMPLATES } from '../templates-data.js';
 
 // Module level state for the view
 let viewState = {
   activeTab: 'templates',
   searchQuery: '',
   appState: null,
-  currentDraftId: null
+  currentDraftId: null,
+  selectedCategory: 'all'
 };
 
 export function renderSMSView(root, state) {
@@ -298,86 +300,193 @@ function setupGlobalViewListeners() {
 // ── SMS Templates Tab Loader ──────────────────────────────────────────
 async function loadTemplates(query = '') {
   const container = document.getElementById('sms-tab-content');
-  container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--text-muted);">Fetching saved templates...</div>`;
+  container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--text-muted);">Loading message templates library...</div>`;
 
   try {
-    const response = await apiFetch('/api/sms/templates');
-    if (!response.ok) {
-      container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Error loading templates. Please try again.</div>`;
-      return;
+    let userTemplates = [];
+    try {
+      const response = await apiFetch('/api/sms/templates');
+      if (response.ok) {
+        const data = await response.json();
+        userTemplates = (data.templates || []).map(t => ({
+          id: `custom-${t.id}`,
+          originalId: t.id,
+          category: 'My Custom Templates',
+          title: t.name,
+          content: t.content,
+          isCustom: true,
+          created_at: t.created_at
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to load custom user templates:', err);
     }
 
-    const data = await response.json();
-    let templates = data.templates || [];
+    // Format system templates
+    const sysTemplates = SYSTEM_TEMPLATES.map(t => ({
+      id: t.id,
+      category: t.category,
+      title: t.title,
+      content: t.content,
+      isCustom: false
+    }));
 
-    // Filter by query
+    const allTemplates = [...sysTemplates, ...userTemplates];
+
+    // Categories list
+    const categories = [
+      { id: 'all', label: 'All Templates' },
+      { id: 'Transactional', label: 'Transactional' },
+      { id: 'Promotional', label: 'Promotional' },
+      { id: 'Religious', label: 'Religious & Faith' },
+      { id: 'Educational', label: 'Educational' },
+      { id: 'Healthcare & General', label: 'Healthcare & General' },
+      { id: 'My Custom Templates', label: 'My Custom Templates' }
+    ];
+
+    const selectedCat = viewState.selectedCategory || 'all';
+
+    // Filter by Category & Query
+    let filtered = allTemplates;
+    if (selectedCat !== 'all') {
+      filtered = filtered.filter(t => t.category === selectedCat);
+    }
+
     if (query) {
-      templates = templates.filter(t => 
-        t.name.toLowerCase().includes(query) || 
-        t.content.toLowerCase().includes(query)
+      const q = query.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.title.toLowerCase().includes(q) || 
+        t.content.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q)
       );
     }
 
-    if (templates.length === 0) {
-      // Show empty state matching screenshot
+    // Build Category Filter Chips HTML
+    const chipsHtml = `
+      <div class="template-category-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--glass-border);">
+        ${categories.map(cat => `
+          <button class="chip-filter ${selectedCat === cat.id ? 'active' : ''}" data-cat="${cat.id}" style="
+            padding:7px 16px;
+            border-radius:20px;
+            font-size:0.8rem;
+            font-weight:600;
+            cursor:pointer;
+            transition:all 0.2s;
+            border:1px solid ${selectedCat === cat.id ? 'var(--accent-color)' : 'var(--glass-border)'};
+            background:${selectedCat === cat.id ? 'var(--accent-gradient)' : 'var(--bg-tertiary)'};
+            color:${selectedCat === cat.id ? '#fff' : 'var(--text-secondary)'};
+          ">
+            ${cat.label}
+          </button>
+        `).join('')}
+      </div>
+    `;
+
+    if (filtered.length === 0) {
       container.innerHTML = `
-        <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out;">
+        ${chipsHtml}
+        <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:40px 20px;">
           <div class="empty-state-icon">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
           <div class="empty-state-title">No Message Templates Found</div>
-          <div class="empty-state-desc">It seems you have no message templates yet, create one using the button below</div>
-          <button id="empty-state-create-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Create Template</button>
+          <div class="empty-state-desc">No templates match the selected category or search filters.</div>
+          <button id="empty-state-create-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Create Custom Template</button>
         </div>
       `;
-      document.getElementById('empty-state-create-btn').addEventListener('click', openCreateTemplateModal);
+      bindCategoryChipEvents();
+      document.getElementById('empty-state-create-btn')?.addEventListener('click', openCreateTemplateModal);
       return;
     }
 
-    // Render templates table
+    // Render Cards Grid
     container.innerHTML = `
-      <div class="table-responsive" style="animation: fadeIn 0.2s ease-out;">
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Content</th>
-              <th>Message Type</th>
-              <th>Updated At</th>
-              <th style="text-align: right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${templates.map(t => {
-              const dateDisplay = new Date(t.created_at || Date.now()).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              });
-              const textSnippet = t.content.length > 50 ? t.content.substring(0, 47) + '...' : t.content;
-              return `
-                <tr>
-                  <td style="font-weight: 600; color: var(--text-primary);">${t.name}</td>
-                  <td style="color: var(--text-secondary); max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${t.content}">${textSnippet}</td>
-                  <td><span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.2);">Bulk SMS</span></td>
-                  <td style="color: var(--text-muted); font-size: 0.82rem;">${dateDisplay}</td>
-                  <td style="text-align: right;">
-                    <button class="btn btn-secondary btn-sm use-template-btn mr-2" data-content="${encodeURIComponent(t.content)}" style="padding: 6px 12px;">Use</button>
-                    <button class="btn btn-danger btn-sm delete-template-btn" data-id="${t.id}" style="background: var(--error-color); padding: 6px 12px;">Delete</button>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+      ${chipsHtml}
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(310px, 1fr));gap:18px;animation: fadeIn 0.2s ease-out;">
+        ${filtered.map(t => {
+          let badgeBg = 'rgba(99, 102, 241, 0.1)';
+          let badgeColor = '#a5b4fc';
+          if (t.category === 'Promotional') { badgeBg = 'rgba(16, 185, 129, 0.1)'; badgeColor = '#34d399'; }
+          else if (t.category === 'Religious') { badgeBg = 'rgba(245, 158, 11, 0.1)'; badgeColor = '#fbbf24'; }
+          else if (t.category === 'Educational') { badgeBg = 'rgba(59, 130, 246, 0.1)'; badgeColor = '#60a5fa'; }
+          else if (t.category === 'Healthcare & General') { badgeBg = 'rgba(236, 72, 153, 0.1)'; badgeColor = '#f472b6'; }
+          else if (t.isCustom) { badgeBg = 'rgba(168, 85, 247, 0.1)'; badgeColor = '#c084fc'; }
+
+          return `
+            <div class="template-card" style="
+              background: var(--bg-tertiary);
+              border: 1px solid var(--glass-border);
+              border-radius: 14px;
+              padding: 20px;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            " onmouseover="this.style.transform='translateY(-3px)';this.style.borderColor='rgba(99, 102, 241, 0.4)';"
+               onmouseout="this.style.transform='none';this.style.borderColor='var(--glass-border)';">
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+                  <span class="badge" style="background:${badgeBg};color:${badgeColor};border:1px solid ${badgeColor}33;font-size:0.68rem;padding:3px 8px;border-radius:10px;">
+                    ${t.category}
+                  </span>
+                  ${t.isCustom ? `<button class="delete-template-btn" data-id="${t.originalId}" title="Delete template" style="background:none;border:none;color:var(--error-color);cursor:pointer;padding:2px 6px;font-size:0.8rem;">✕</button>` : ''}
+                </div>
+                <h4 style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700;margin:0 0 10px 0;color:var(--text-primary);">
+                  ${t.title}
+                </h4>
+                <div style="
+                  background: rgba(0,0,0,0.15);
+                  border: 1px solid var(--glass-border);
+                  border-radius: 10px;
+                  padding: 12px;
+                  font-size: 0.82rem;
+                  color: var(--text-secondary);
+                  line-height: 1.55;
+                  margin-bottom: 16px;
+                  max-height: 120px;
+                  overflow-y: auto;
+                  word-break: break-word;
+                ">
+                  ${t.content}
+                </div>
+              </div>
+
+              <div style="display:flex;gap:10px;align-items:center;margin-top:auto;">
+                <button class="btn btn-primary btn-sm use-template-btn" data-content="${encodeURIComponent(t.content)}" style="
+                  flex:1;
+                  padding:8px 14px;
+                  font-size:0.82rem;
+                  font-weight:700;
+                  background:var(--accent-color);
+                  border-color:var(--accent-color);
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  gap:6px;
+                ">
+                  <svg style="width:14px;height:14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Use & Send
+                </button>
+                <button class="btn btn-secondary btn-sm copy-template-btn" data-content="${encodeURIComponent(t.content)}" style="
+                  padding:8px 12px;
+                  font-size:0.82rem;
+                " title="Copy template text">
+                  Copy
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
 
-    // Attach row action event listeners
+    bindCategoryChipEvents();
+
+    // Attach Use & Send handlers
     document.querySelectorAll('.use-template-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const text = decodeURIComponent(e.currentTarget.getAttribute('data-content'));
@@ -385,14 +494,37 @@ async function loadTemplates(query = '') {
       });
     });
 
+    // Attach Copy handlers
+    document.querySelectorAll('.copy-template-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const text = decodeURIComponent(e.currentTarget.getAttribute('data-content'));
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Template content copied to clipboard!', 'success');
+        }).catch(() => {
+          showToast('Failed to copy text', 'error');
+        });
+      });
+    });
+
+    // Attach Delete handlers for custom user templates
     document.querySelectorAll('.delete-template-btn').forEach(btn => {
       btn.addEventListener('click', handleDeleteTemplateClick);
     });
 
   } catch (error) {
     console.error('Load templates error:', error);
-    container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Connection error loading templates.</div>`;
+    container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Error loading templates.</div>`;
   }
+}
+
+function bindCategoryChipEvents() {
+  document.querySelectorAll('.template-category-chips .chip-filter').forEach(chip => {
+    chip.addEventListener('click', (e) => {
+      const cat = e.currentTarget.getAttribute('data-cat');
+      viewState.selectedCategory = cat;
+      loadTemplates(viewState.searchQuery);
+    });
+  });
 }
 
 async function handleDeleteTemplateClick(e) {
@@ -751,33 +883,50 @@ function recalculateSMSCost() {
 // Quick templates pills load inside compose modal
 async function loadComposeQuickTemplates() {
   const pillsList = document.getElementById('template-quick-pills');
+  if (!pillsList) return;
+
   pillsList.innerHTML = '';
 
+  let userTemplates = [];
   try {
     const response = await apiFetch('/api/sms/templates');
-    if (!response.ok) return;
+    if (response.ok) {
+      const data = await response.json();
+      userTemplates = (data.templates || []).map(t => ({ name: t.name, content: t.content }));
+    }
+  } catch (err) {}
 
-    const data = await response.json();
-    const templates = data.templates || [];
+  const sysPills = SYSTEM_TEMPLATES.slice(0, 8).map(t => ({ name: t.title, content: t.content }));
+  const combined = [...userTemplates, ...sysPills];
 
-    if (templates.length === 0) return;
+  pillsList.innerHTML = combined.map(t => {
+    return `<span class="template-quick-pill" data-content="${encodeURIComponent(t.content)}" title="Click to insert template text" style="
+      padding:4px 10px;
+      background:rgba(99, 102, 241, 0.1);
+      border:1px solid rgba(99, 102, 241, 0.25);
+      color:var(--text-primary);
+      border-radius:12px;
+      font-size:0.75rem;
+      cursor:pointer;
+      display:inline-block;
+      margin-right:6px;
+      margin-bottom:6px;
+      transition:all 0.2s;
+    ">${t.name}</span>`;
+  }).join('');
 
-    pillsList.innerHTML = templates.slice(0, 4).map(t => {
-      return `<span class="template-quick-pill" data-content="${encodeURIComponent(t.content)}" title="Insert Template">${t.name}</span>`;
-    }).join('');
-
-    // Attach pill events
-    document.querySelectorAll('.template-quick-pill').forEach(pill => {
-      pill.addEventListener('click', (e) => {
-        const content = decodeURIComponent(e.currentTarget.getAttribute('data-content'));
-        document.getElementById('sms-message').value = content;
+  // Attach pill events
+  document.querySelectorAll('#template-quick-pills .template-quick-pill').forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      const content = decodeURIComponent(e.currentTarget.getAttribute('data-content'));
+      const msgField = document.getElementById('sms-message');
+      if (msgField) {
+        msgField.value = content;
         recalculateSMSCost();
-        showToast(`Inserted template: ${e.currentTarget.innerText}`, 'info');
-      });
+        showToast(`Loaded template: ${e.currentTarget.innerText}`, 'info');
+      }
     });
-  } catch (error) {
-    console.error('Error loading quick templates pills:', error);
-  }
+  });
 }
 
 // Handle SMS Broadcaster submission
