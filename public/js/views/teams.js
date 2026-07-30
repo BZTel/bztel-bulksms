@@ -191,3 +191,8 @@ function setupInviteForm(state) {
     }
   });
 }
+
+// Dedicated Entry Functions for Sidebar Routing
+export function renderRolesView(root, state) {
+  renderTeamsView(root, state);
+}

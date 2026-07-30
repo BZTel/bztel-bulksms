@@ -380,3 +380,12 @@ function getTypeBadge(type) {
   const t = types[type] || { label: type, color: '#6b7280', bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)' };
   return `<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:600;background:${t.bg};color:${t.color};border:1px solid ${t.border};">${t.label}</span>`;
 }
+
+// Dedicated Entry Functions for Sidebar Routing
+export function renderTransactionsView(root, state) {
+  renderWalletView(root, state);
+  setTimeout(() => {
+    const txTable = document.getElementById('tx-tbody');
+    if (txTable) txTable.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}

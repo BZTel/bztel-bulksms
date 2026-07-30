@@ -4,7 +4,8 @@ let cachedContacts = []; // Cache list locally
 let activeTab = 'contacts';
 let selectedGroupFilter = null;
 
-export function renderContactsView(root, state) {
+export function renderContactsView(root, state, initialTab = 'contacts') {
+  activeTab = initialTab;
   root.innerHTML = `
     <div class="composer-layout">
       <!-- Left side: Contacts Directory -->
@@ -810,4 +811,21 @@ function setupBulkActions() {
       }
     });
   }
+}
+
+// Dedicated Entry Functions for Sidebar Routing
+export function renderContactGroupsView(root, state) {
+  renderContactsView(root, state, 'groups');
+}
+
+export function renderImportContactsView(root, state) {
+  renderContactsView(root, state, 'contacts');
+  setTimeout(() => {
+    const importInput = document.getElementById('csv-file');
+    if (importInput) importInput.scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+
+export function renderBlacklistView(root, state) {
+  renderContactsView(root, state, 'contacts');
 }

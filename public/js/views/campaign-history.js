@@ -425,3 +425,8 @@ function setupFilters() {
   searchInput?.addEventListener('input', applyFilters);
   statusFilter?.addEventListener('change', applyFilters);
 }
+
+// Dedicated Entry Functions for Sidebar Routing
+export function renderVoiceHistoryView(root, state) {
+  navigateTo('voice');
+}

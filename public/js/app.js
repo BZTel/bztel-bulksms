@@ -8,11 +8,11 @@ import {
   renderScheduledSMSView, 
   renderSMSDraftsView 
 } from './views/sms.js?v=1.0.2';
-import { renderContactsView } from './views/contacts.js';
-import { renderWalletView } from './views/wallet.js';
+import { renderContactsView, renderContactGroupsView, renderImportContactsView } from './views/contacts.js';
+import { renderWalletView, renderTransactionsView } from './views/wallet.js';
 import { renderBirthdayView } from './views/birthday.js';
 import { renderTeamsView } from './views/teams.js';
-import { renderCampaignHistoryView } from './views/campaign-history.js';
+import { renderCampaignHistoryView, renderVoiceHistoryView } from './views/campaign-history.js';
 import { renderRequestServiceView } from './views/request-service.js';
 import { renderHelpView } from './views/help.js';
 import { renderMoreView } from './views/more.js';
@@ -551,12 +551,16 @@ export function navigateTo(viewName) {
     'sms-drafts': 'Saved Message Drafts',
     voice: 'Voice Broadcasting Composer',
     contacts: 'Contacts Directory',
+    'contact-groups': 'Contact Groups & Lists',
+    'import-contacts': 'Import Contacts Console',
     'email-blast': 'Email Blast Campaign Console',
     birthday: 'Birthday Campaign Scheduler',
     teams: 'Team Collaboration Hub',
-    wallet: 'Wallet & Billing Details',
+    wallet: 'Wallet Overview & Billing',
     'buy-credits': 'Buy SMS Credits',
-    'campaign-history': 'Sent Messages Logs',
+    transactions: 'Transaction Statements & Receipts',
+    'campaign-history': 'Sent SMS Broadcast Logs',
+    'voice-history': 'Voice Broadcast Logs',
     'sender-ids': 'Sender IDs Directory',
     'api-keys': 'Developer API Keys & Webhooks',
     'request-service': 'Request Custom Service',
@@ -602,6 +606,12 @@ export function navigateTo(viewName) {
     case 'contacts':
       renderContactsView(root, state);
       break;
+    case 'contact-groups':
+      renderContactGroupsView(root, state);
+      break;
+    case 'import-contacts':
+      renderImportContactsView(root, state);
+      break;
     case 'birthday':
       renderBirthdayView(root, state);
       break;
@@ -614,8 +624,14 @@ export function navigateTo(viewName) {
     case 'buy-credits':
       renderBuyCreditsView(root, state);
       break;
+    case 'transactions':
+      renderTransactionsView(root, state);
+      break;
     case 'campaign-history':
       renderCampaignHistoryView(root, state);
+      break;
+    case 'voice-history':
+      renderVoiceHistoryView(root, state);
       break;
     case 'sender-ids':
       renderSenderIdsView(root, state);
