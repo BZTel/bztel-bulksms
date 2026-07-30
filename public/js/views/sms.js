@@ -16,14 +16,11 @@ export function renderSMSView(root, state, initialTab = 'templates') {
   
   root.innerHTML = `
     <div class="sms-view-container" style="animation: slideUp 0.3s ease-out;">
-      <!-- Layout Header with Tabs and Actions -->
-      <div class="sms-layout-header">
-        <div class="sub-tabs-bar">
-          <button class="sub-tab-btn active" data-tab="templates">SMS Template</button>
-          <button class="sub-tab-btn" data-tab="personalized">Personalised Messaging</button>
-          <button class="sub-tab-btn" data-tab="scheduled">Scheduled Messages</button>
-          <button class="sub-tab-btn" data-tab="drafts">Drafts</button>
-          <button class="sub-tab-btn" data-tab="international">International Messaging</button>
+      <!-- Layout Header with Dynamic Page Title and Actions -->
+      <div class="sms-layout-header" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; flex-direction: column;">
+          <h3 id="sms-page-title" style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">SMS Message Templates</h3>
+          <p id="sms-page-subtitle" style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Manage and reuse pre-crafted message templates for your campaigns.</p>
         </div>
         
         <div class="sms-header-actions">
@@ -190,14 +187,36 @@ function switchTab(tabName) {
     searchInput.value = '';
   }
 
-  // Update Active Tab Button styles
-  document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-    if (btn.getAttribute('data-tab') === tabName) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
+  // Update Page Title and Subtitle
+  const titleEl = document.getElementById('sms-page-title');
+  const subEl = document.getElementById('sms-page-subtitle');
+
+  const metaMap = {
+    templates: {
+      title: 'SMS Message Templates',
+      subtitle: 'Manage and reuse pre-crafted message templates for your campaigns.'
+    },
+    personalized: {
+      title: 'Personalized SMS Campaigns',
+      subtitle: 'Send customized messages using CSV merge tags (e.g. {name}, {account_no}).'
+    },
+    scheduled: {
+      title: 'Scheduled Messages Queue',
+      subtitle: 'Inspect and manage broadcasts queued for future date and time delivery.'
+    },
+    drafts: {
+      title: 'Saved Message Drafts',
+      subtitle: 'Resume, edit, or delete your saved campaign drafts.'
+    },
+    international: {
+      title: 'International Messaging Console',
+      subtitle: 'Dispatch global SMS broadcasts across international networks.'
     }
-  });
+  };
+
+  const meta = metaMap[tabName] || metaMap.templates;
+  if (titleEl) titleEl.textContent = meta.title;
+  if (subEl) subEl.textContent = meta.subtitle;
 
   // Load Content based on tab
   loadTabContent();
