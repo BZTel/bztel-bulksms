@@ -191,13 +191,35 @@ export function renderBuyCreditsView(root, state) {
         </div>
 
         <!-- Payment Mode Navigation Toggle -->
-        <div class="admin-toggle-row" style="margin-bottom: 20px; display: flex; width: 100%;">
-          <button type="button" class="admin-toggle-btn active" id="buy-tab-flw" style="flex: 1; text-align: center; padding: 10px; font-weight: 600;">
-            Online Payment
-          </button>
-          <button type="button" class="admin-toggle-btn" id="buy-tab-bank" style="flex: 1; text-align: center; padding: 10px; font-weight: 600;">
-            Bank Transfer
-          </button>
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);">
+              Select Payment Method
+            </span>
+            <span style="font-size: 0.72rem; color: var(--accent-color); font-weight: 600;">2 Options Available</span>
+          </div>
+
+          <div class="admin-toggle-row">
+            <button type="button" class="admin-toggle-btn active" id="buy-tab-flw" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 14px;">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700;">
+                <svg style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span>Online Payment</span>
+              </div>
+              <span style="font-size: 0.72rem; opacity: 0.85; font-weight: 500;">Cards, USSD, Apple Pay (Instant)</span>
+            </button>
+
+            <button type="button" class="admin-toggle-btn" id="buy-tab-bank" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 14px;">
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 700;">
+                <svg style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span>Bank Transfer</span>
+              </div>
+              <span style="font-size: 0.72rem; opacity: 0.85; font-weight: 500;">Direct Moniepoint Transfer</span>
+            </button>
+          </div>
         </div>
 
         <!-- Pane 1: Flutterwave Online Payment -->
