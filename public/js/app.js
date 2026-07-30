@@ -1,7 +1,13 @@
 // Import View Modules
 import { renderAuthView } from './views/auth.js';
 import { renderDashboardView } from './views/dashboard.js';
-import { renderSMSView } from './views/sms.js?v=1.0.2';
+import { 
+  renderSMSView, 
+  renderSMSTemplatesView, 
+  renderPersonalizedSMSView, 
+  renderScheduledSMSView, 
+  renderSMSDraftsView 
+} from './views/sms.js?v=1.0.2';
 import { renderContactsView } from './views/contacts.js';
 import { renderWalletView } from './views/wallet.js';
 import { renderBirthdayView } from './views/birthday.js';
@@ -539,6 +545,10 @@ export function navigateTo(viewName) {
   const titleMap = {
     dashboard: 'Dashboard Overview',
     sms: 'Bulk SMS Composer',
+    'sms-templates': 'SMS Message Templates',
+    'personalized-sms': 'Personalized SMS Campaigns',
+    'scheduled-sms': 'Scheduled Messages Queue',
+    'sms-drafts': 'Saved Message Drafts',
     voice: 'Voice Broadcasting Composer',
     contacts: 'Contacts Directory',
     'email-blast': 'Email Blast Campaign Console',
@@ -570,6 +580,18 @@ export function navigateTo(viewName) {
       break;
     case 'sms':
       renderSMSView(root, state);
+      break;
+    case 'sms-templates':
+      renderSMSTemplatesView(root, state);
+      break;
+    case 'personalized-sms':
+      renderPersonalizedSMSView(root, state);
+      break;
+    case 'scheduled-sms':
+      renderScheduledSMSView(root, state);
+      break;
+    case 'sms-drafts':
+      renderSMSDraftsView(root, state);
       break;
     case 'email-blast':
       renderEmailBlastView(root, state);

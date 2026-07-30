@@ -10,8 +10,9 @@ let viewState = {
   selectedCategory: 'all'
 };
 
-export function renderSMSView(root, state) {
+export function renderSMSView(root, state, initialTab = 'templates') {
   viewState.appState = state;
+  viewState.activeTab = initialTab;
   
   root.innerHTML = `
     <div class="sms-view-container" style="animation: slideUp 0.3s ease-out;">
@@ -1263,4 +1264,21 @@ function escapeHtml(unsafe) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+// Dedicated Entry Functions for Sidebar Routing
+export function renderSMSTemplatesView(root, state) {
+  renderSMSView(root, state, 'templates');
+}
+
+export function renderPersonalizedSMSView(root, state) {
+  renderSMSView(root, state, 'personalized');
+}
+
+export function renderScheduledSMSView(root, state) {
+  renderSMSView(root, state, 'scheduled');
+}
+
+export function renderSMSDraftsView(root, state) {
+  renderSMSView(root, state, 'drafts');
 }
