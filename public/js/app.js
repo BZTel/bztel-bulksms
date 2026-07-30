@@ -13,6 +13,8 @@ import { renderMoreView } from './views/more.js';
 import { renderVoiceView } from './views/voice.js';
 import { renderEmailBlastView } from './views/email-blast.js';
 import { renderBuyCreditsView } from './views/buy-credits.js';
+import { renderSenderIdsView } from './views/sender-ids.js';
+import { renderApiKeysView } from './views/api-keys.js';
 
 // Global Application State
 const state = {
@@ -545,6 +547,8 @@ export function navigateTo(viewName) {
     wallet: 'Wallet & Billing Details',
     'buy-credits': 'Buy SMS Credits',
     'campaign-history': 'Sent Messages Logs',
+    'sender-ids': 'Sender IDs Directory',
+    'api-keys': 'Developer API Keys & Webhooks',
     'request-service': 'Request Custom Service',
     help: 'Support Desk & FAQs',
     more: 'More Settings & Resources'
@@ -590,6 +594,12 @@ export function navigateTo(viewName) {
       break;
     case 'campaign-history':
       renderCampaignHistoryView(root, state);
+      break;
+    case 'sender-ids':
+      renderSenderIdsView(root, state);
+      break;
+    case 'api-keys':
+      renderApiKeysView(root, state);
       break;
     case 'request-service':
       renderRequestServiceView(root, state);
