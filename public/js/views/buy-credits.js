@@ -207,7 +207,7 @@ export function renderBuyCreditsView(root, state) {
                 </svg>
                 <span>Online Payment</span>
               </div>
-              <span style="font-size: 0.72rem; opacity: 0.85; font-weight: 500;">Cards, USSD, Apple Pay (Instant)</span>
+              <span style="font-size: 0.72rem; opacity: 0.85; font-weight: 500;">Cards & USSD (Instant)</span>
             </button>
 
             <button type="button" class="admin-toggle-btn" id="buy-tab-bank" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 14px;">

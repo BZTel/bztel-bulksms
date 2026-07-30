@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         tx_ref: txRef,
         amount: amountInNgn,
         currency: 'NGN',
+        payment_options: 'card,ussd,applepay,googlepay',
         redirect_url: `${appUrl}/api/billing/flutterwave/callback`,
         meta: {
           userId: authUser.owner_id,
