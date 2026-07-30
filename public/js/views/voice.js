@@ -5,13 +5,16 @@ export function renderVoiceView(root, state) {
     <div class="composer-layout" style="animation: slideUp 0.3s ease-out;">
       <!-- Left side: Voice Broadcast Composer -->
       <div class="panel glass">
-        <div class="panel-header">
-          <h3 class="panel-title">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 class="panel-title" style="margin: 0;">
             <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
             </svg>
             Voice Broadcast Composer
           </h3>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--accent-color); background: rgba(99, 102, 241, 0.12); padding: 4px 12px; border-radius: 12px;">
+            ${(state.user?.balance || 0).toLocaleString()} Voice Credits Available
+          </span>
         </div>
 
         <form id="voice-broadcast-form">
