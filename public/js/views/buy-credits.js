@@ -362,11 +362,13 @@ function initBuyCreditsLogic(state) {
           })
         });
 
-        if (res && res.link) {
+        const data = await res.json();
+
+        if (res.ok && data.link) {
           showToast('Redirecting to payment gateway...', 'success');
-          window.location.href = res.link;
+          window.location.href = data.link;
         } else {
-          showToast(res?.error || 'Failed to initialize online payment', 'error');
+          showToast(data.error || 'Failed to initialize online payment', 'error');
           flwBtn.disabled = false;
           updateCalculation(creditsVal);
         }
@@ -406,11 +408,13 @@ function initBuyCreditsLogic(state) {
           })
         });
 
-        if (res && (res.success || res.message)) {
-          showToast('Bank transfer notification submitted! Admin will credit your account upon verification.', 'success');
+        const data = await res.json();
+
+        if (res.ok) {
+          showToast(data.message || 'Bank transfer notification submitted! Admin will credit your account upon verification.', 'success');
           bankForm.reset();
         } else {
-          showToast(res?.error || 'Failed to submit notification', 'error');
+          showToast(data.error || 'Failed to submit notification', 'error');
         }
       } catch (err) {
         console.error('[BuyCredits] Bank transfer submission error:', err);
