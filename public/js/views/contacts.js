@@ -1,85 +1,74 @@
-import { apiFetch, showToast, isCurrentView } from '../app.js';
+import { apiFetch, showToast, isCurrentView, navigateTo } from '../app.js';
 
 let cachedContacts = []; // Cache list locally
-let activeTab = 'contacts';
 let selectedGroupFilter = null;
 
-export function renderContactsView(root, state, initialTab = 'contacts') {
-  activeTab = initialTab;
+// ── 1. ALL CONTACTS DIRECTORY VIEW ──────────────────────────────────────
+export function renderContactsView(root, state) {
   root.innerHTML = `
-    <div class="composer-layout">
+    <div class="composer-layout" style="animation: slideUp 0.3s ease-out;">
       <!-- Left side: Contacts Directory -->
       <div class="panel glass">
-        <div class="panel-header" style="flex-direction: column; align-items: stretch; gap: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 class="panel-title" style="margin-bottom: 0;">Contacts Directory</h3>
-            <div class="form-group mb-0" id="search-wrapper" style="margin-bottom: 0; min-width: 200px;">
-              <input type="text" id="contact-search" class="form-control" placeholder="Search numbers..." style="padding: 8px 12px; font-size: 0.85rem;">
+        <div class="panel-header" style="flex-direction: column; align-items: stretch; gap: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 class="panel-title" style="margin-bottom: 0;">All Contacts Directory</h3>
+              <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Manage recipient phone numbers and group assignments.</p>
             </div>
-          </div>
-          
-          <div class="tabs-nav" style="display: flex; gap: 16px; margin-top: 8px;">
-            <button class="tab-btn" id="tab-btn-contacts" style="background: none; border: none; color: var(--accent-color); border-bottom: 2px solid var(--accent-color); font-weight: 600; padding-bottom: 8px; font-size: 0.95rem; cursor: pointer; border-top: none; border-left: none; border-right: none;">All Contacts</button>
-            <button class="tab-btn" id="tab-btn-groups" style="background: none; border: none; color: var(--text-muted); border-bottom: 2px solid transparent; font-weight: 500; padding-bottom: 8px; font-size: 0.95rem; cursor: pointer; border-top: none; border-left: none; border-right: none;">Groups</button>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div class="form-group mb-0" id="search-wrapper" style="margin-bottom: 0; min-width: 200px;">
+                <input type="text" id="contact-search" class="form-control" placeholder="Search numbers..." style="padding: 8px 12px; font-size: 0.85rem;">
+              </div>
+              <button id="nav-to-import-btn" class="btn btn-secondary btn-sm" style="padding: 8px 14px; font-size: 0.8rem;">📥 Import CSV</button>
+            </div>
           </div>
         </div>
 
         <div style="padding: 16px;">
-          <!-- All Contacts Tab Pane -->
-          <div id="tab-pane-contacts" class="tab-pane">
-            <!-- Filter status bar -->
-            <div id="filter-status-bar" style="margin-bottom: 12px; display: none; align-items: center; gap: 8px;">
-              <span class="filter-chip active" style="font-size: 0.75rem; padding: 4px 10px; cursor: default; background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); color: var(--accent-color); display: flex; align-items: center; gap: 6px; border-radius: 9999px;">
-                Group: <strong id="current-group-filter-name"></strong>
-                <span id="clear-group-filter" style="cursor: pointer; font-weight: bold; font-size: 1.1rem; line-height: 1; margin-left: 4px;">&times;</span>
-              </span>
-            </div>
+          <!-- Filter status bar -->
+          <div id="filter-status-bar" style="margin-bottom: 12px; display: none; align-items: center; gap: 8px;">
+            <span class="filter-chip active" style="font-size: 0.75rem; padding: 4px 10px; cursor: default; background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); color: var(--accent-color); display: flex; align-items: center; gap: 6px; border-radius: 9999px;">
+              Filtered Group: <strong id="current-group-filter-name"></strong>
+              <span id="clear-group-filter" style="cursor: pointer; font-weight: bold; font-size: 1.1rem; line-height: 1; margin-left: 4px;">&times;</span>
+            </span>
+          </div>
 
-            <!-- Bulk actions bar -->
-            <div id="bulk-actions-bar" style="display: none; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; margin-bottom: 12px;">
-              <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-color);"><span id="selected-count">0</span> selected</span>
-              <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
-                <select id="bulk-group-select" class="form-control" style="padding: 4px 8px; font-size: 0.8rem; height: auto; width: 140px;">
-                  <!-- Dynamically populated options -->
-                </select>
-                <button id="apply-bulk-group-btn" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem;">Move to Group</button>
-                <button id="bulk-delete-btn" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Delete</button>
-              </div>
-            </div>
-
-            <div class="table-container" style="max-height: 480px; overflow-y: auto;">
-              <table class="custom-table">
-                <thead>
-                  <tr>
-                    <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-contacts" style="cursor: pointer;"></th>
-                    <th>Phone Number</th>
-                    <th style="width: 100px; text-align: center;">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="contacts-tbody">
-                  <tr>
-                    <td colspan="3" class="text-center" style="color: var(--text-muted); padding: 40px;">Loading contacts directory...</td>
-                  </tr>
-                </tbody>
-              </table>
+          <!-- Bulk actions bar -->
+          <div id="bulk-actions-bar" style="display: none; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; margin-bottom: 12px;">
+            <span style="font-size: 0.8rem; font-weight: 500; color: var(--text-color);"><span id="selected-count">0</span> selected</span>
+            <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+              <select id="bulk-group-select" class="form-control" style="padding: 4px 8px; font-size: 0.8rem; height: auto; width: 140px;">
+                <!-- Dynamically populated options -->
+              </select>
+              <button id="apply-bulk-group-btn" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem;">Move to Group</button>
+              <button id="bulk-delete-btn" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Delete</button>
             </div>
           </div>
 
-          <!-- Groups Tab Pane -->
-          <div id="tab-pane-groups" class="tab-pane" style="display: none;">
-            <div id="groups-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
-              <!-- dynamically populated cards -->
-            </div>
+          <div class="table-container" style="max-height: 480px; overflow-y: auto;">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-contacts" style="cursor: pointer;"></th>
+                  <th>Phone Number</th>
+                  <th style="width: 100px; text-align: center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="contacts-tbody">
+                <tr>
+                  <td colspan="3" class="text-center" style="color: var(--text-muted); padding: 40px;">Loading contacts directory...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <!-- Right side: Add contact & CSV import -->
+      <!-- Right side: Manual Add Contact -->
       <div class="flex-column gap-4">
-        <!-- Manual Add Contact -->
-        <div class="panel glass mb-4">
+        <div class="panel glass">
           <div class="panel-header">
-            <h3 class="panel-title">Add Contact</h3>
+            <h3 class="panel-title">+ Add New Contact</h3>
           </div>
           <form id="add-contact-form" style="padding: 16px;">
             <div class="form-group">
@@ -97,71 +86,142 @@ export function renderContactsView(root, state, initialTab = 'contacts') {
               <label for="contact-group-new">New Group Name</label>
               <input type="text" id="contact-group-new" class="form-control" placeholder="e.g. Marketing">
             </div>
-            <div class="form-group">
-              <label for="contact-birthdate">Birthdate (Optional)</label>
-              <input type="date" id="contact-birthdate" class="form-control">
-            </div>
             <button type="submit" class="btn btn-primary btn-block" id="contact-submit-btn">
               Save Contact(s)
             </button>
           </form>
         </div>
+      </div>
+    </div>
+  `;
 
-        <!-- CSV Bulk Importer -->
-        <div class="panel glass">
-          <div class="panel-header">
-            <h3 class="panel-title">Bulk CSV Import</h3>
-          </div>
-          
-          <div style="padding: 16px;">
-            <div class="form-group" style="margin-bottom: 12px;">
-              <label for="csv-group">Assign to Group</label>
-              <select id="csv-group" class="form-control">
+  document.getElementById('nav-to-import-btn')?.addEventListener('click', () => navigateTo('import-contacts'));
+  initContactsView('contacts');
+}
+
+// ── 2. DEDICATED CONTACT GROUPS VIEW ────────────────────────────────────
+export function renderContactGroupsView(root, state) {
+  root.innerHTML = `
+    <div class="panel glass" style="animation: slideUp 0.3s ease-out;">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; margin-bottom: 20px;">
+        <div>
+          <h3 class="panel-title" style="margin: 0; font-size: 1.25rem;">Contact Groups & Audience Segments</h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Organize recipient phone numbers into targeted marketing groups.</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <button id="btn-create-group-prompt" class="btn btn-primary btn-sm" style="padding: 10px 18px;">+ Create New Group</button>
+        </div>
+      </div>
+
+      <!-- Groups Grid -->
+      <div id="groups-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+        <div class="text-center" style="color: var(--text-muted); padding: 40px; grid-column: 1 / -1;">Loading group segments...</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-create-group-prompt')?.addEventListener('click', async () => {
+    const groupName = prompt('Enter new group name (e.g. VIP Customers, Staff):');
+    if (!groupName || !groupName.trim()) return;
+
+    try {
+      const res = await apiFetch('/api/contacts', {
+        method: 'POST',
+        body: JSON.stringify({ phone: '+00000000000', group_name: groupName.trim() })
+      });
+      if (res.ok) {
+        showToast(`Group "${groupName.trim()}" created successfully`, 'success');
+        await loadContactsData('groups');
+      } else {
+        showToast('Failed to create group', 'error');
+      }
+    } catch (err) {
+      showToast('Error creating group', 'error');
+    }
+  });
+
+  initContactsView('groups');
+}
+
+// ── 3. DEDICATED IMPORT CONTACTS VIEW ───────────────────────────────────
+export function renderImportContactsView(root, state) {
+  root.innerHTML = `
+    <div class="composer-layout" style="animation: slideUp 0.3s ease-out; max-width: 900px; margin: 0 auto;">
+      <div class="panel glass" style="padding: 32px;">
+        <div class="panel-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; margin-bottom: 24px;">
+          <h3 class="panel-title" style="font-size: 1.3rem; margin: 0;">📥 Bulk CSV Import Studio</h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Upload `.csv` or `.xlsx` files to import contacts directly into your audience directory.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+          <!-- Left: Dropzone Form -->
+          <div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="csv-group" style="font-weight: 600;">Target Group</label>
+              <select id="csv-group" class="form-control" style="padding: 10px 14px;">
                 <option value="Default">Default</option>
                 <option value="__NEW__">+ Create New Group...</option>
               </select>
             </div>
-            <div class="form-group" id="csv-group-new-wrapper" style="display: none; margin-bottom: 12px;">
-              <label for="csv-group-new">New Group Name</label>
-              <input type="text" id="csv-group-new" class="form-control" placeholder="e.g. Marketing">
+            <div class="form-group" id="csv-group-new-wrapper" style="display: none; margin-bottom: 16px;">
+              <label for="csv-group-new" style="font-weight: 600;">New Group Name</label>
+              <input type="text" id="csv-group-new" class="form-control" placeholder="e.g. Event Attendees">
             </div>
 
-            <div class="csv-dropzone" id="csv-dropzone" style="margin-top: 12px;">
-              <svg class="csv-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="csv-dropzone" id="csv-dropzone" style="padding: 40px 20px; border: 2px dashed var(--accent-color); border-radius: 12px; text-align: center; cursor: pointer; background: rgba(99,102,241,0.03); transition: all 0.2s;">
+              <svg class="csv-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 44px; height: 44px; color: var(--accent-color); margin-bottom: 12px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
               </svg>
-              <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Upload CSV File</div>
-              <div style="color: var(--text-muted); font-size: 0.75rem;">Click to browse or drop CSV here</div>
-              <div style="color: var(--accent-color); font-size: 0.7rem; margin-top: 8px; font-weight: 500;">Format: CSV with one phone number per line</div>
+              <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; color: var(--text-primary);">Drop your CSV file here</div>
+              <div style="color: var(--text-muted); font-size: 0.82rem;">or click to browse your computer</div>
               <input type="file" id="csv-file-input" accept=".csv" class="hidden">
             </div>
+          </div>
+
+          <!-- Right: Instructions & Template Format Guide -->
+          <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-top: 0;">CSV Formatting Instructions</h4>
+            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+              Ensure your CSV file contains one valid phone number per line formatted with international country codes (e.g. <code>+2348012345678</code> or <code>08012345678</code>).
+            </p>
+            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.78rem; color: var(--accent-color); margin: 12px 0;">
+              Phone Number<br>
+              +2348012345678<br>
+              +2348098765432<br>
+              +2348033344455
+            </div>
+            <button id="download-sample-csv-btn" style="background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%;">
+              📄 Download Sample CSV Template
+            </button>
           </div>
         </div>
       </div>
     </div>
   `;
 
-  initContacts(state);
+  document.getElementById('download-sample-csv-btn')?.addEventListener('click', () => {
+    const csvContent = "data:text/csv;charset=utf-8,Phone Number\n+2348012345678\n+2348098765432\n+2348033344455";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bztel_sample_contacts.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  initContactsView('import');
 }
 
-async function initContacts(state) {
-  setupTabs();
+// ── Shared Initializer ──────────────────────────────────────────────────
+async function initContactsView(targetMode = 'contacts') {
   setupAddForm();
   setupCSVImporter();
   setupSearch();
   setupBulkActions();
   setupGroupNewInputToggles();
 
-  if (cachedContacts.length > 0) {
-    populateGroupSelectors();
-    if (activeTab === 'contacts') {
-      renderContactsTable(getFilteredContacts());
-    } else {
-      renderGroupsGrid();
-    }
-  }
-
-  await loadContactsData();
+  await loadContactsData(targetMode);
 }
 
 function setupGroupNewInputToggles() {
@@ -200,97 +260,34 @@ function setupGroupNewInputToggles() {
   }
 }
 
-function setupTabs() {
-  const btnContacts = document.getElementById('tab-btn-contacts');
-  const btnGroups = document.getElementById('tab-btn-groups');
-  
-  if (btnContacts) {
-    btnContacts.addEventListener('click', () => {
-      switchTab('contacts');
-    });
-  }
-
-  if (btnGroups) {
-    btnGroups.addEventListener('click', () => {
-      switchTab('groups');
-    });
-  }
-
-  // Filter status bar clear button
-  const clearFilter = document.getElementById('clear-group-filter');
-  if (clearFilter) {
-    clearFilter.addEventListener('click', () => {
-      selectedGroupFilter = null;
-      const statusBar = document.getElementById('filter-status-bar');
-      if (statusBar) statusBar.style.display = 'none';
-      renderContactsTable(getFilteredContacts());
-    });
-  }
-}
-
-function switchTab(tab) {
-  activeTab = tab;
-  
-  const btnContacts = document.getElementById('tab-btn-contacts');
-  const btnGroups = document.getElementById('tab-btn-groups');
-  const paneContacts = document.getElementById('tab-pane-contacts');
-  const paneGroups = document.getElementById('tab-pane-groups');
-  const searchWrapper = document.getElementById('search-wrapper');
-
-  const activeTabStyle = 'color: var(--accent-color); border-bottom: 2px solid var(--accent-color); font-weight: 600; padding-bottom: 8px; font-size: 0.95rem; cursor: pointer; border-top: none; border-left: none; border-right: none; background: none;';
-  const inactiveTabStyle = 'color: var(--text-muted); border-bottom: 2px solid transparent; font-weight: 500; padding-bottom: 8px; font-size: 0.95rem; cursor: pointer; border-top: none; border-left: none; border-right: none; background: none;';
-
-  if (tab === 'contacts') {
-    if (btnContacts) btnContacts.setAttribute('style', activeTabStyle);
-    if (btnGroups) btnGroups.setAttribute('style', inactiveTabStyle);
-    if (paneContacts) paneContacts.style.display = 'block';
-    if (paneGroups) paneGroups.style.display = 'none';
-    if (searchWrapper) searchWrapper.style.display = 'block';
-    renderContactsTable(getFilteredContacts());
-  } else {
-    if (btnContacts) btnContacts.setAttribute('style', inactiveTabStyle);
-    if (btnGroups) btnGroups.setAttribute('style', activeTabStyle);
-    if (paneContacts) paneContacts.style.display = 'none';
-    if (paneGroups) paneGroups.style.display = 'block';
-    if (searchWrapper) searchWrapper.style.display = 'none';
-    renderGroupsGrid();
-  }
-}
-
-async function loadContactsData() {
+async function loadContactsData(targetMode = 'contacts') {
   try {
     const res = await apiFetch('/api/contacts');
-    if (!isCurrentView('contacts')) return;
     if (!res.ok) return;
 
     const data = await res.json();
-    if (!isCurrentView('contacts')) return;
-
     cachedContacts = data.contacts || [];
-    
+
     populateGroupSelectors();
-    
-    if (activeTab === 'contacts') {
+
+    if (targetMode === 'contacts') {
       renderContactsTable(getFilteredContacts());
-    } else {
+    } else if (targetMode === 'groups') {
       renderGroupsGrid();
     }
   } catch (error) {
-    if (error.name === 'AbortError' || !isCurrentView('contacts')) return;
+    if (error.name === 'AbortError') return;
     showToast('Failed to load contacts', 'error');
   }
 }
 
 function populateGroupSelectors() {
-  // Extract unique group names from cache
   const groups = new Set();
   cachedContacts.forEach(c => {
     if (c.group_name) groups.add(c.group_name.trim());
   });
-  // Always ensure Default is present
   groups.add('Default');
 
-  // Populate manual add group select
   const manualSelect = document.getElementById('contact-group');
   if (manualSelect) {
     const prevVal = manualSelect.value;
@@ -303,7 +300,6 @@ function populateGroupSelectors() {
     }
   }
 
-  // Populate CSV group select
   const csvSelect = document.getElementById('csv-group');
   if (csvSelect) {
     const prevVal = csvSelect.value;
@@ -316,7 +312,6 @@ function populateGroupSelectors() {
     }
   }
 
-  // Populate bulk move selector
   const bulkSelect = document.getElementById('bulk-group-select');
   if (bulkSelect) {
     bulkSelect.innerHTML = `<option value="" disabled selected>-- Move to Group --</option>` + 
@@ -344,7 +339,6 @@ function renderContactsTable(contacts) {
   const tbody = document.getElementById('contacts-tbody');
   if (!tbody) return;
 
-  // Uncheck select all header
   const selectAllHeader = document.getElementById('select-all-contacts');
   if (selectAllHeader) selectAllHeader.checked = false;
   updateBulkActionsBar();
@@ -376,229 +370,124 @@ function renderContactsTable(contacts) {
     `;
   }).join('');
 
-  // Attach single delete handlers
   document.querySelectorAll('.delete-contact-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       const id = e.currentTarget.getAttribute('data-id');
       if (!confirm('Are you sure you want to delete this contact?')) return;
-      
-      e.currentTarget.disabled = true;
-      e.currentTarget.innerText = '...';
-
       try {
-        const response = await apiFetch(`/api/contacts/${id}`, { method: 'DELETE' });
-        if (response.ok) {
-          showToast('Contact deleted successfully', 'success');
-          await loadContactsData();
+        const res = await apiFetch(`/api/contacts/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Contact deleted', 'success');
+          await loadContactsData('contacts');
         } else {
           showToast('Failed to delete contact', 'error');
-          e.currentTarget.disabled = false;
-          e.currentTarget.innerText = 'Delete';
         }
       } catch (err) {
-        showToast('Connection error deleting contact', 'error');
-        e.currentTarget.disabled = false;
-        e.currentTarget.innerText = 'Delete';
+        showToast('Error deleting contact', 'error');
       }
     });
   });
 
-  // Checkbox click handlers
-  document.querySelectorAll('.contact-select-checkbox').forEach(cb => {
+  const checkboxes = document.querySelectorAll('.contact-select-checkbox');
+  checkboxes.forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
   });
-
-  // Setup header checkbox listener again to match rows
-  setupCheckboxes();
-}
-
-function updateBulkActionsBar() {
-  const checkboxes = document.querySelectorAll('.contact-select-checkbox');
-  const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-  
-  const bar = document.getElementById('bulk-actions-bar');
-  const countLabel = document.getElementById('selected-count');
-
-  if (checkedCount > 0) {
-    if (countLabel) countLabel.innerText = checkedCount;
-    if (bar) bar.style.display = 'flex';
-  } else {
-    if (bar) bar.style.display = 'none';
-  }
-}
-
-function setupCheckboxes() {
-  const selectAll = document.getElementById('select-all-contacts');
-  if (!selectAll) return;
-
-  // Remove old event listener by cloning or assigning directly if not already done
-  selectAll.onchange = (e) => {
-    const checked = e.target.checked;
-    document.querySelectorAll('.contact-select-checkbox').forEach(cb => {
-      cb.checked = checked;
-    });
-    updateBulkActionsBar();
-  };
 }
 
 function renderGroupsGrid() {
   const grid = document.getElementById('groups-grid');
   if (!grid) return;
 
-  // Group counts
   const groupCounts = {};
   cachedContacts.forEach(c => {
-    const g = (c.group_name || 'Default').trim();
-    if (!groupCounts[g]) {
-      groupCounts[g] = 0;
-    }
-    groupCounts[g]++;
+    const gName = (c.group_name || 'Default').trim();
+    groupCounts[gName] = (groupCounts[gName] || 0) + 1;
   });
 
-  // Always ensure Default is listed even if empty
   if (!groupCounts['Default']) {
     groupCounts['Default'] = 0;
   }
 
   const groupNames = Object.keys(groupCounts).sort();
 
-  grid.innerHTML = groupNames.map(gName => {
-    const count = groupCounts[gName];
+  if (groupNames.length === 0) {
+    grid.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 40px; grid-column: 1 / -1;">No groups found.</div>`;
+    return;
+  }
+
+  grid.innerHTML = groupNames.map(g => {
+    const count = groupCounts[g];
     return `
-      <div class="panel glass" style="padding: 16px; border-radius: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; border: 1px solid var(--glass-border);">
+      <div class="panel glass" style="margin: 0; padding: 20px; border-radius: var(--border-radius-md); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
         <div>
-          <h4 style="margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text-color);">${gName}</h4>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${count.toLocaleString()} contact${count !== 1 ? 's' : ''}</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Group Segment</span>
+            <span class="badge" style="background: rgba(99, 102, 241, 0.12); color: var(--accent-color); font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">${count} contacts</span>
+          </div>
+          <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; font-family: 'Outfit', sans-serif;">${g}</h4>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 8px;">
-          <button class="btn btn-primary btn-sm view-group-btn" data-group="${gName}" style="padding: 4px 8px; font-size: 0.75rem; flex: 1;">View Contacts</button>
-          <button class="btn btn-secondary btn-sm add-to-group-btn" data-group="${gName}" style="padding: 4px 8px; font-size: 0.75rem; flex: 1;">Add Numbers</button>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button class="btn btn-secondary btn-sm view-group-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem;">
+            View Contacts &rarr;
+          </button>
         </div>
       </div>
     `;
   }).join('');
 
-  // View group button click listeners
   document.querySelectorAll('.view-group-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const group = e.currentTarget.getAttribute('data-group');
-      selectedGroupFilter = group;
-      
-      // Show current group filter UI
-      const statusBar = document.getElementById('filter-status-bar');
-      const filterName = document.getElementById('current-group-filter-name');
-      if (statusBar && filterName) {
-        filterName.innerText = group;
-        statusBar.style.display = 'flex';
-      }
-
-      switchTab('contacts');
+      const gName = e.currentTarget.getAttribute('data-group');
+      selectedGroupFilter = gName;
+      navigateTo('contacts');
     });
   });
-
-  // Add to group button click listeners
-  document.querySelectorAll('.add-to-group-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const group = e.currentTarget.getAttribute('data-group');
-      
-      // Set manual group select
-      const manualSelect = document.getElementById('contact-group');
-      if (manualSelect) {
-        manualSelect.value = group;
-        manualSelect.dispatchEvent(new Event('change'));
-      }
-
-      // Scroll to add form
-      const addForm = document.getElementById('add-contact-form');
-      if (addForm) {
-        addForm.scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('contact-phone').focus();
-      }
-      showToast(`Preset Add Contact group to: ${group}`, 'info');
-    });
-  });
-}
-
-function setupSearch() {
-  const searchInput = document.getElementById('contact-search');
-  if (searchInput) {
-    searchInput.addEventListener('input', filterAndSearchContacts);
-  }
-}
-
-function filterAndSearchContacts() {
-  if (activeTab === 'contacts') {
-    renderContactsTable(getFilteredContacts());
-  }
 }
 
 function setupAddForm() {
   const form = document.getElementById('add-contact-form');
-  const submitBtn = document.getElementById('contact-submit-btn');
-
   if (!form) return;
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const rawPhones = document.getElementById('contact-phone').value;
+    const phoneText = document.getElementById('contact-phone').value;
     const groupSelect = document.getElementById('contact-group');
     const newGroupInput = document.getElementById('contact-group-new');
-    const birthdate = document.getElementById('contact-birthdate').value;
 
-    let groupName = 'Default';
-    if (groupSelect) {
-      if (groupSelect.value === '__NEW__') {
-        groupName = newGroupInput.value.trim() || 'Default';
-      } else {
-        groupName = groupSelect.value;
-      }
+    let groupName = groupSelect.value;
+    if (groupName === '__NEW__') {
+      groupName = newGroupInput.value.trim();
     }
 
-    const phoneNumbers = rawPhones
-      .split(/[\n,;]+/)
-      .map(num => num.replace(/^["']|["']$/g, '').trim())
-      .filter(num => num.length > 0);
+    const phones = phoneText.split(/[\n,]+/).map(p => p.trim()).filter(Boolean);
+    if (phones.length === 0) return;
 
-    if (phoneNumbers.length === 0) {
-      showToast('Please enter at least one valid phone number', 'error');
-      return;
-    }
-
+    const submitBtn = document.getElementById('contact-submit-btn');
     submitBtn.disabled = true;
     submitBtn.innerText = 'Saving...';
 
     try {
-      const response = await apiFetch('/api/contacts/bulk', {
-        method: 'POST',
-        body: JSON.stringify({
-          contacts: phoneNumbers.map(phone => ({
-            name: phone,
-            phone: phone,
-            group_name: groupName,
-            birthdate: birthdate || null
-          }))
-        })
-      });
-
-      if (response.ok) {
-        showToast(`Successfully added ${phoneNumbers.length} contact(s)`, 'success');
-        document.getElementById('contact-phone').value = '';
-        if (newGroupInput) newGroupInput.value = '';
-        if (groupSelect) {
-          groupSelect.value = 'Default';
-          groupSelect.dispatchEvent(new Event('change'));
-        }
-        document.getElementById('contact-birthdate').value = '';
-        await loadContactsData();
-      } else {
-        const err = await response.json();
-        showToast(err.error || 'Failed to add contact(s)', 'error');
+      let successCount = 0;
+      for (const phone of phones) {
+        const res = await apiFetch('/api/contacts', {
+          method: 'POST',
+          body: JSON.stringify({ phone, group_name: groupName })
+        });
+        if (res.ok) successCount++;
       }
-    } catch (error) {
-      showToast('Connection error saving contact(s)', 'error');
+
+      showToast(`Saved ${successCount} contact(s)`, 'success');
+      form.reset();
+
+      const newGroupWrapper = document.getElementById('contact-group-new-wrapper');
+      if (newGroupWrapper) newGroupWrapper.style.display = 'none';
+
+      await loadContactsData('contacts');
+    } catch (err) {
+      showToast('Error saving contacts', 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerText = 'Save Contact';
+      submitBtn.innerText = 'Save Contact(s)';
     }
   });
 }
@@ -606,226 +495,79 @@ function setupAddForm() {
 function setupCSVImporter() {
   const dropzone = document.getElementById('csv-dropzone');
   const fileInput = document.getElementById('csv-file-input');
-
   if (!dropzone || !fileInput) return;
 
-  dropzone.addEventListener('click', () => {
-    fileInput.click();
-  });
+  dropzone.addEventListener('click', () => fileInput.click());
 
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--accent-color)';
-    dropzone.style.background = 'rgba(99, 102, 241, 0.05)';
-  });
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.style.borderColor = 'var(--glass-border)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = 'var(--glass-border)';
-    dropzone.style.background = 'rgba(255, 255, 255, 0.01)';
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleCSVFile(files[0]);
+    const groupSelect = document.getElementById('csv-group');
+    const newGroupInput = document.getElementById('csv-group-new');
+    let groupName = groupSelect?.value || 'Default';
+    if (groupName === '__NEW__') {
+      groupName = newGroupInput?.value.trim() || 'Default';
     }
-  });
 
-  fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-      handleCSVFile(e.target.files[0]);
-    }
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target.result;
+      const lines = text.split(/\r\n|\n/).map(l => l.trim()).filter(Boolean);
+      
+      let successCount = 0;
+      for (const line of lines) {
+        const phone = line.split(',')[0].trim().replace(/[^0-9+]/g, '');
+        if (phone.length >= 7) {
+          try {
+            const res = await apiFetch('/api/contacts', {
+              method: 'POST',
+              body: JSON.stringify({ phone, group_name: groupName })
+            });
+            if (res.ok) successCount++;
+          } catch (err) {}
+        }
+      }
+
+      showToast(`Imported ${successCount} contact(s) into "${groupName}"`, 'success');
+      fileInput.value = '';
+      navigateTo('contacts');
+    };
+    reader.readAsText(file);
   });
 }
 
-function handleCSVFile(file) {
-  if (!file.name.endsWith('.csv')) {
-    showToast('Please upload a valid CSV file (.csv)', 'error');
-    return;
-  }
+function setupSearch() {
+  const searchInput = document.getElementById('contact-search');
+  if (!searchInput) return;
 
-  const groupSelect = document.getElementById('csv-group');
-  const newGroupInput = document.getElementById('csv-group-new');
-  
-  let groupName = 'Default';
-  if (groupSelect) {
-    if (groupSelect.value === '__NEW__') {
-      groupName = newGroupInput.value.trim() || 'Default';
-    } else {
-      groupName = groupSelect.value;
-    }
-  }
-
-  const reader = new FileReader();
-  reader.onload = async (event) => {
-    const text = event.target.result;
-    const lines = text.split(/\r?\n/);
-    const parsedContacts = [];
-
-    // Parse each line (expect format: one phone number per line)
-    lines.forEach((line, index) => {
-      const rowVal = line.trim().replace(/^["']|["']$/g, '').trim();
-      if (!rowVal) return;
-
-      // If there are multiple columns, take the first one (phone number)
-      const phone = rowVal.split(',')[0].replace(/^["']|["']$/g, '').trim();
-      if (!phone) return;
-
-      // Skip common CSV headers
-      if (index === 0 && (phone.toLowerCase() === 'phone' || phone.toLowerCase() === 'phonenumber' || phone.toLowerCase() === 'phone number' || phone.toLowerCase() === 'name')) {
-        return;
-      }
-
-      parsedContacts.push({
-        name: phone,
-        phone: phone,
-        group_name: groupName,
-        birthdate: null
-      });
-    });
-
-    if (parsedContacts.length === 0) {
-      showToast('No valid contact entries found in CSV', 'warning');
-      return;
-    }
-
-    showToast(`Parsing CSV complete. Uploading ${parsedContacts.length} contacts...`, 'info');
-    
-    // Trigger bulk API upload
-    try {
-      const response = await apiFetch('/api/contacts/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ contacts: parsedContacts })
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        showToast(result.message, 'success');
-        if (newGroupInput) newGroupInput.value = '';
-        if (groupSelect) {
-          groupSelect.value = 'Default';
-          groupSelect.dispatchEvent(new Event('change'));
-        }
-        await loadContactsData();
-      } else {
-        showToast(result.error || 'Failed to bulk import contacts', 'error');
-      }
-    } catch (error) {
-      showToast('Connection error during bulk upload', 'error');
-    }
-  };
-
-  reader.onerror = () => {
-    showToast('Failed to read the file', 'error');
-  };
-
-  reader.readAsText(file);
+  searchInput.addEventListener('input', () => {
+    renderContactsTable(getFilteredContacts());
+  });
 }
 
 function setupBulkActions() {
-  const applyBtn = document.getElementById('apply-bulk-group-btn');
-  const deleteBtn = document.getElementById('bulk-delete-btn');
-
-  if (applyBtn) {
-    applyBtn.addEventListener('click', async () => {
-      const select = document.getElementById('bulk-group-select');
-      if (!select) return;
-
-      let groupName = select.value;
-      if (!groupName) {
-        showToast('Please select a target group', 'warning');
-        return;
-      }
-
-      if (groupName === '__NEW__') {
-        const promptVal = prompt('Enter new group name:');
-        if (!promptVal) return; // Cancelled or empty
-        groupName = promptVal.trim();
-        if (!groupName) return;
-      }
-
-      const checkboxes = document.querySelectorAll('.contact-select-checkbox:checked');
-      const contactIds = Array.from(checkboxes).map(cb => Number(cb.getAttribute('data-id')));
-
-      if (contactIds.length === 0) return;
-
-      applyBtn.disabled = true;
-      applyBtn.innerText = 'Moving...';
-
-      try {
-        const res = await apiFetch('/api/contacts/bulk', {
-          method: 'PATCH',
-          body: JSON.stringify({ contactIds, group_name: groupName })
-        });
-
-        if (res.ok) {
-          showToast(`Successfully moved ${contactIds.length} contact(s) to group: ${groupName}`, 'success');
-          await loadContactsData();
-        } else {
-          const err = await res.json();
-          showToast(err.error || 'Failed to update group', 'error');
-        }
-      } catch (err) {
-        showToast('Connection error updating group', 'error');
-      } finally {
-        applyBtn.disabled = false;
-        applyBtn.innerText = 'Move to Group';
-      }
-    });
-  }
-
-  if (deleteBtn) {
-    deleteBtn.addEventListener('click', async () => {
-      const checkboxes = document.querySelectorAll('.contact-select-checkbox:checked');
-      const contactIds = Array.from(checkboxes).map(cb => Number(cb.getAttribute('data-id')));
-
-      if (contactIds.length === 0) return;
-
-      if (!confirm(`Are you sure you want to delete the ${contactIds.length} selected contact(s)?`)) return;
-
-      deleteBtn.disabled = true;
-      deleteBtn.innerText = 'Deleting...';
-
-      try {
-        const res = await apiFetch('/api/contacts/bulk', {
-          method: 'DELETE',
-          body: JSON.stringify({ contactIds })
-        });
-
-        if (res.ok) {
-          showToast(`Successfully deleted ${contactIds.length} contact(s)`, 'success');
-          await loadContactsData();
-        } else {
-          const err = await res.json();
-          showToast(err.error || 'Failed to bulk delete contacts', 'error');
-        }
-      } catch (err) {
-        showToast('Connection error during deletion', 'error');
-      } finally {
-        deleteBtn.disabled = false;
-        deleteBtn.innerText = 'Delete';
-      }
+  const selectAll = document.getElementById('select-all-contacts');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      const checked = e.currentTarget.checked;
+      document.querySelectorAll('.contact-select-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkActionsBar();
     });
   }
 }
 
-// Dedicated Entry Functions for Sidebar Routing
-export function renderContactGroupsView(root, state) {
-  renderContactsView(root, state, 'groups');
-}
+function updateBulkActionsBar() {
+  const checkboxes = document.querySelectorAll('.contact-select-checkbox:checked');
+  const bar = document.getElementById('bulk-actions-bar');
+  const countSpan = document.getElementById('selected-count');
 
-export function renderImportContactsView(root, state) {
-  renderContactsView(root, state, 'contacts');
-  setTimeout(() => {
-    const importInput = document.getElementById('csv-file');
-    if (importInput) importInput.scrollIntoView({ behavior: 'smooth' });
-  }, 100);
-}
-
-export function renderBlacklistView(root, state) {
-  renderContactsView(root, state, 'contacts');
+  if (bar && countSpan) {
+    if (checkboxes.length > 0) {
+      bar.style.display = 'flex';
+      countSpan.innerText = checkboxes.length;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
 }
