@@ -2,98 +2,142 @@ import { apiFetch, showToast, navigateTo, fetchUserProfile } from '../app.js';
 
 export function renderVoiceView(root, state) {
   root.innerHTML = `
-    <div class="composer-layout" style="animation: slideUp 0.3s ease-out;">
-      <!-- Left side: Voice Broadcast Composer -->
-      <div class="panel glass">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
-          <h3 class="panel-title" style="margin: 0;">
-            <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-            Voice Broadcast Composer
-          </h3>
-          <span style="font-size: 0.78rem; font-weight: 700; color: var(--accent-color); background: rgba(99, 102, 241, 0.12); padding: 4px 12px; border-radius: 12px;">
-            ${(state.user?.balance || 0).toLocaleString()} Voice Credits Available
-          </span>
+    <div class="panel glass" style="animation: slideUp 0.3s ease-out; max-width: 760px; margin: 20px auto; padding: 28px; border-radius: var(--border-radius-md);">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; margin-bottom: 24px;">
+        <h3 class="panel-title" style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem;">
+          🎤 Voice Broadcast Composer
+        </h3>
+        <span style="font-size: 0.78rem; font-weight: 700; color: var(--accent-color); background: rgba(99, 102, 241, 0.12); padding: 4px 12px; border-radius: 12px;">
+          ${(state.user?.balance || 0).toLocaleString()} Voice Credits Available
+        </span>
+      </div>
+
+      <form id="voice-broadcast-form">
+        <div class="form-row-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+          <div class="form-group">
+            <label for="voice-sender" style="font-weight: 600;">Caller ID</label>
+            <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +2348012345678" required value="BZTEL_VOICE" style="padding: 10px 14px;">
+          </div>
+
+          <div class="form-group">
+            <label for="voice-type-select" style="font-weight: 600;">Broadcast Source Type</label>
+            <select id="voice-type-select" class="form-control" required style="padding: 10px 14px;">
+              <option value="tts">Text-to-Speech (TTS Script)</option>
+              <option value="audio">Audio File Link (.mp3)</option>
+            </select>
+          </div>
         </div>
 
-        <form id="voice-broadcast-form">
-          <div class="form-row-layout">
-            <div class="form-group">
-              <label for="voice-sender">Caller ID</label>
-              <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +2348012345678" required value="BZTEL_VOICE">
-            </div>
-
-            <div class="form-group">
-              <label for="voice-type-select">Broadcast Source</label>
-              <select id="voice-type-select" class="form-control" required>
-                <option value="tts">Text-to-Speech (TTS)</option>
-                <option value="audio">Audio File Link (.mp3)</option>
+        <!-- Recipients Header with Quick Contacts & Group Loader -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+            <label for="voice-recipients" style="font-weight: 600; margin-bottom: 0;">Recipients (Phone Numbers)</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" id="btn-voice-load-all" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
+                👥 Insert All Contacts
+              </button>
+              <select id="voice-group-select" class="form-control" style="padding: 4px 8px; font-size: 0.75rem; height: auto; width: 150px;">
+                <option value="" disabled selected>📁 Load Group...</option>
               </select>
             </div>
           </div>
-
-          <div class="form-group mt-2">
-            <label for="voice-recipients">Recipients (Comma separated phone numbers)</label>
-            <textarea id="voice-recipients" class="form-control" placeholder="+2348012345678, +2348098765432" required style="min-height: 80px;"></textarea>
-          </div>
-
-          <!-- TTS Input Container -->
-          <div class="form-group mt-2" id="voice-tts-container">
-            <label for="voice-tts-text">TTS Script</label>
-            <textarea id="voice-tts-text" class="form-control" placeholder="Enter the message script to be read aloud during the call..." style="min-height: 80px;"></textarea>
-          </div>
-
-          <!-- Audio Input Container -->
-          <div class="form-group mt-2 hidden" id="voice-audio-container">
-            <label for="voice-audio-url">Audio File URL</label>
-            <input type="url" id="voice-audio-url" class="form-control" placeholder="https://example.com/audio/message.mp3">
-          </div>
-
-          <div class="cost-summary-box mt-4" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); padding: 16px; border-radius: var(--border-radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-            <div>
-              <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Cost (2 Credits / call)</div>
-              <div style="font-size: 1.5rem; font-weight: 800; color: var(--accent-color);" id="voice-estimated-cost">0 Credits</div>
-            </div>
-            <button type="submit" class="btn btn-primary" id="voice-submit-btn" style="padding: 12px 24px; background: var(--accent-color); border-color: var(--accent-color);">
-              Dispatch Voice Campaign
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Right side: Recent Voice Broadcasts -->
-      <div class="panel glass">
-        <div class="panel-header">
-          <h3 class="panel-title">Recent Voice Broadcasts</h3>
+          <textarea id="voice-recipients" class="form-control" placeholder="Enter phone numbers separated by commas (e.g. +2348012345678, +2348098765432)" required style="min-height: 95px; padding: 10px 14px;"></textarea>
+          <small id="voice-recipient-count" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">0 recipients detected.</small>
         </div>
-        <div class="table-container" style="max-height: 480px; overflow-y: auto;">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Source Type</th>
-                <th>Duration</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="voice-logs-tbody">
-              <tr>
-                <td colspan="4" class="text-center" style="color: var(--text-muted); padding: 20px;">Loading voice logs...</td>
-              </tr>
-            </tbody>
-          </table>
+
+        <!-- TTS Input Container -->
+        <div class="form-group" id="voice-tts-container" style="margin-bottom: 16px;">
+          <label for="voice-tts-text" style="font-weight: 600;">Text-to-Speech Script</label>
+          <textarea id="voice-tts-text" class="form-control" placeholder="Type the message script to be read aloud during the call..." style="min-height: 100px; padding: 10px 14px;"></textarea>
         </div>
-      </div>
+
+        <!-- Audio Input Container -->
+        <div class="form-group hidden" id="voice-audio-container" style="margin-bottom: 16px;">
+          <label for="voice-audio-url" style="font-weight: 600;">Audio File URL (.mp3)</label>
+          <input type="url" id="voice-audio-url" class="form-control" placeholder="https://example.com/audio/message.mp3" style="padding: 10px 14px;">
+        </div>
+
+        <div class="cost-summary-box mt-4" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); padding: 18px; border-radius: var(--border-radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Estimated Cost (2 Credits / Call)</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-color);" id="voice-estimated-cost">0 Credits</div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="voice-submit-btn" style="padding: 12px 28px; background: var(--accent-color); border-color: var(--accent-color); font-weight: 700;">
+            Dispatch Voice Campaign
+          </button>
+        </div>
+      </form>
     </div>
   `;
 
   initVoiceView();
 }
 
-async function initVoiceView() {
+function initVoiceView() {
   setupVoiceForm();
-  await loadVoiceLogs();
+  setupVoiceContactsLoaders();
+}
+
+function setupVoiceContactsLoaders() {
+  const recipientsArea = document.getElementById('voice-recipients');
+  const countDisplay = document.getElementById('voice-recipient-count');
+  const costDisplay = document.getElementById('voice-estimated-cost');
+
+  const updateVoiceCounters = () => {
+    const list = recipientsArea?.value.split(/[\n,]+/).map(r => r.trim()).filter(Boolean) || [];
+    if (countDisplay) countDisplay.innerText = `${list.length} recipients detected.`;
+    if (costDisplay) costDisplay.innerText = `${(list.length * 2).toLocaleString()} Credits`;
+  };
+
+  recipientsArea?.addEventListener('input', updateVoiceCounters);
+
+  let cachedContacts = [];
+  apiFetch('/api/contacts').then(async res => {
+    if (res.ok) {
+      const data = await res.json();
+      cachedContacts = data.contacts || [];
+
+      const groups = new Set();
+      cachedContacts.forEach(c => {
+        if (c.group_name) groups.add(c.group_name.trim());
+      });
+      groups.add('Default');
+
+      const groupSelect = document.getElementById('voice-group-select');
+      if (groupSelect) {
+        groupSelect.innerHTML = `<option value="" disabled selected>📁 Load Group...</option>` +
+          Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('');
+
+        groupSelect.addEventListener('change', (e) => {
+          const selectedGroup = e.target.value;
+          const groupNumbers = cachedContacts
+            .filter(c => (c.group_name || 'Default').trim() === selectedGroup.trim())
+            .map(c => c.phone);
+          
+          if (groupNumbers.length === 0) {
+            showToast(`No contacts found in group "${selectedGroup}"`, 'warning');
+            return;
+          }
+
+          const existing = recipientsArea.value.trim();
+          recipientsArea.value = existing ? `${existing}, ${groupNumbers.join(', ')}` : groupNumbers.join(', ');
+          showToast(`Added ${groupNumbers.length} contact(s) from "${selectedGroup}"`, 'success');
+          updateVoiceCounters();
+        });
+      }
+    }
+  }).catch(() => {});
+
+  document.getElementById('btn-voice-load-all')?.addEventListener('click', () => {
+    if (cachedContacts.length === 0) {
+      showToast('No contacts found in directory', 'warning');
+      return;
+    }
+    const allNumbers = cachedContacts.map(c => c.phone);
+    recipientsArea.value = allNumbers.join(', ');
+    showToast(`Added all ${allNumbers.length} contact(s) to composer`, 'success');
+    updateVoiceCounters();
+  });
 }
 
 function setupVoiceForm() {
@@ -101,7 +145,8 @@ function setupVoiceForm() {
   const ttsContainer = document.getElementById('voice-tts-container');
   const audioContainer = document.getElementById('voice-audio-container');
   const recipientsInput = document.getElementById('voice-recipients');
-  const costDisplay = document.getElementById('voice-estimated-cost');
+  const form = document.getElementById('voice-broadcast-form');
+  const btn = document.getElementById('voice-submit-btn');
 
   typeSelect.addEventListener('change', (e) => {
     if (e.target.value === 'tts') {
@@ -112,15 +157,6 @@ function setupVoiceForm() {
       ttsContainer.classList.add('hidden');
     }
   });
-
-  recipientsInput.addEventListener('input', () => {
-    const list = recipientsInput.value.split(',').map(r => r.trim()).filter(Boolean);
-    const count = list.length;
-    costDisplay.innerText = `${count * 2} Credits`;
-  });
-
-  const form = document.getElementById('voice-broadcast-form');
-  const btn = document.getElementById('voice-submit-btn');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -147,12 +183,9 @@ function setupVoiceForm() {
       const data = await res.json();
       if (res.ok) {
         showToast(data.message || 'Voice broadcast enqueued successfully!', 'success');
-        recipientsInput.value = '';
-        document.getElementById('voice-tts-text').value = '';
-        document.getElementById('voice-audio-url').value = '';
-        costDisplay.innerText = '0 Credits';
+        form.reset();
         await fetchUserProfile();
-        await loadVoiceLogs();
+        navigateTo('voice-history');
       } else {
         showToast(data.error || 'Failed to dispatch voice broadcast', 'error');
       }
@@ -163,54 +196,4 @@ function setupVoiceForm() {
       btn.innerText = 'Dispatch Voice Campaign';
     }
   });
-}
-
-async function loadVoiceLogs() {
-  const tbody = document.getElementById('voice-logs-tbody');
-  if (!tbody) return;
-
-  try {
-    const res = await apiFetch('/api/voice/history');
-    if (!res.ok) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color: var(--error-color);">Failed to load logs.</td></tr>`;
-      return;
-    }
-
-    const data = await res.json();
-    const logs = data.history || [];
-
-    if (logs.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color: var(--text-muted); padding: 20px;">No voice broadcasts dispatched yet.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = logs.map(l => {
-      let badgeClass = 'badge-pending';
-      if (l.status.toLowerCase() === 'completed') {
-        badgeClass = 'badge-sent';
-      } else if (l.status.toLowerCase() === 'failed') {
-        badgeClass = 'badge-failed';
-      }
-
-      const typeLabel = l.audio_url ? 'Audio Play' : 'Text-To-Speech';
-      const detail = l.audio_url || l.tts_text;
-
-      return `
-        <tr>
-          <td>
-            <strong>${l.recipient}</strong>
-            <div style="font-size: 0.72rem; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${detail}">
-              ${detail}
-            </div>
-          </td>
-          <td><span style="font-size: 0.85rem; color: var(--text-secondary);">${typeLabel}</span></td>
-          <td><span style="font-family: monospace; font-size: 0.82rem;">${l.duration}s</span></td>
-          <td><span class="badge ${badgeClass}">${l.status}</span></td>
-        </tr>
-      `;
-    }).join('');
-
-  } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color: var(--error-color);">Connection error.</td></tr>`;
-  }
 }

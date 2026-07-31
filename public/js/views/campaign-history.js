@@ -426,7 +426,135 @@ function setupFilters() {
   statusFilter?.addEventListener('change', applyFilters);
 }
 
-// Dedicated Entry Functions for Sidebar Routing
+// Dedicated Voice Call Logs View
+let voiceLogsCache = [];
+
 export function renderVoiceHistoryView(root, state) {
-  navigateTo('voice');
+  root.innerHTML = `
+    <div class="panel glass" style="animation: slideUp 0.3s ease-out;">
+      <div class="panel-header" style="flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--glass-border); padding-bottom: 16px;">
+        <div>
+          <h3 class="panel-title" style="margin: 0; font-size: 1.25rem;">Voice Call Dispatch Logs</h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Audit history and status ledger of automated voice broadcasts.</p>
+        </div>
+        
+        <!-- Search & Filter Controls -->
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-left: auto;">
+          <input type="text" id="voice-log-search" class="form-control" placeholder="Search recipient, caller ID, or script..." style="max-width: 260px; padding: 8px 12px; font-size: 0.85rem;">
+          
+          <select id="voice-log-status" class="form-control" style="max-width: 160px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;">
+            <option value="all">All Statuses</option>
+            <option value="completed">Completed / Answered</option>
+            <option value="failed">Failed / Unanswered</option>
+            <option value="pending">Pending / Enqueued</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-container" style="max-height: 520px; overflow-y: auto;">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Recipient</th>
+              <th>Caller ID</th>
+              <th>Source Type</th>
+              <th>Content / Script</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Dispatched Time</th>
+            </tr>
+          </thead>
+          <tbody id="voice-history-tbody">
+            <tr>
+              <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">Loading voice call logs...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  initVoiceHistoryView();
+}
+
+async function initVoiceHistoryView() {
+  const tbody = document.getElementById('voice-history-tbody');
+  const searchInput = document.getElementById('voice-log-search');
+  const statusSelect = document.getElementById('voice-log-status');
+
+  try {
+    const res = await apiFetch('/api/voice/history');
+    if (!res.ok) {
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--danger-color); padding: 40px;">Failed to load voice call logs.</td></tr>`;
+      return;
+    }
+
+    const data = await res.json();
+    voiceLogsCache = data.history || [];
+    renderVoiceLogsTable(voiceLogsCache);
+  } catch (err) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--danger-color); padding: 40px;">Error connecting to voice logs.</td></tr>`;
+  }
+
+  const applyVoiceFilters = () => {
+    const query = searchInput?.value.toLowerCase().trim() || '';
+    const status = statusSelect?.value || 'all';
+
+    let filtered = voiceLogsCache;
+    if (status !== 'all') {
+      filtered = filtered.filter(l => (l.status || '').toLowerCase() === status);
+    }
+    if (query) {
+      filtered = filtered.filter(l => {
+        const matchesRec = (l.recipient || '').toLowerCase().includes(query);
+        const matchesSender = (l.sender_id || '').toLowerCase().includes(query);
+        const matchesScript = (l.tts_text || l.audio_url || '').toLowerCase().includes(query);
+        return matchesRec || matchesSender || matchesScript;
+      });
+    }
+    renderVoiceLogsTable(filtered);
+  };
+
+  searchInput?.addEventListener('input', applyVoiceFilters);
+  statusSelect?.addEventListener('change', applyVoiceFilters);
+}
+
+function renderVoiceLogsTable(logs) {
+  const tbody = document.getElementById('voice-history-tbody');
+  if (!tbody) return;
+
+  if (logs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">No voice call records found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = logs.map(l => {
+    let badgeClass = 'badge-pending';
+    const statusLower = (l.status || '').toLowerCase();
+    if (statusLower === 'completed' || statusLower === 'answered' || statusLower === 'delivered') {
+      badgeClass = 'badge-sent';
+    } else if (statusLower === 'failed') {
+      badgeClass = 'badge-failed';
+    }
+
+    const typeLabel = l.audio_url ? 'Audio File' : 'Text-To-Speech';
+    const detail = l.audio_url || l.tts_text || 'Voice Broadcast';
+    const timeFormatted = l.created_at ? new Date(l.created_at).toLocaleString() : 'Just now';
+
+    return `
+      <tr>
+        <td><code>${l.recipient}</code></td>
+        <td><strong style="color: var(--accent-color);">${l.sender_id || 'BZTEL_VOICE'}</strong></td>
+        <td><span style="font-size: 0.82rem; font-weight: 600;">${typeLabel}</span></td>
+        <td>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${detail}">
+            ${detail}
+          </div>
+        </td>
+        <td><span style="font-family: monospace; font-size: 0.85rem;">${l.duration || 0}s</span></td>
+        <td><span class="badge ${badgeClass}">${l.status}</span></td>
+        <td><span style="font-size: 0.78rem; color: var(--text-muted);">${timeFormatted}</span></td>
+      </tr>
+    `;
+  }).join('');
 }
