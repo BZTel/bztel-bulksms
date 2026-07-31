@@ -686,8 +686,9 @@ export function loginSuccess(token, user) {
 }
 
 // Logout handler
-export function logout() {
+export function logout(showMsg = true) {
   console.log('[logout] Logging out user...');
+  const wasLoggedIn = !!state.token;
   state.token = null;
   state.user = null;
   localStorage.removeItem('token');
@@ -699,12 +700,21 @@ export function logout() {
   disconnectTelemetry();
 
   showAuthContainer();
-  showToast('Logged out successfully', 'info');
+  if (showMsg && wasLoggedIn) {
+    showToast('Logged out successfully', 'info');
+  }
 }
 
 // Toast Notifications System
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
+  if (!container || !message) return;
+
+  // Prevent duplicate toast spamming on screen
+  const existingToasts = Array.from(container.children);
+  const isDuplicate = existingToasts.some(t => t.textContent && t.textContent.trim().includes(message.trim()));
+  if (isDuplicate) return;
+
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   
@@ -766,9 +776,12 @@ export async function apiFetch(url, options = {}) {
 
     // If token expired, log out automatically
     if (res.status === 401) {
-      console.log('[apiFetch] 401 Unauthorized received, triggering logout...');
-      logout();
-      showToast('Session expired. Please log in again.', 'warning');
+      console.log('[apiFetch] 401 Unauthorized received, handling logout quietly...');
+      const wasLoggedIn = !!state.token;
+      logout(false);
+      if (wasLoggedIn) {
+        showToast('Session expired. Please log in again.', 'warning');
+      }
       throw new Error('Unauthorized');
     }
 
