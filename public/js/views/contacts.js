@@ -402,9 +402,12 @@ function renderGroupsGrid() {
           </div>
           <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; font-family: 'Outfit', sans-serif;">${g}</h4>
         </div>
-        <div style="display: flex; gap: 8px; margin-top: 12px;">
-          <button class="btn btn-secondary btn-sm view-group-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem;">
+        <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm view-group-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem; white-space: nowrap;">
             View Contacts &rarr;
+          </button>
+          <button class="btn btn-primary btn-sm send-group-sms-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem; background: var(--accent-color); border-color: var(--accent-color); white-space: nowrap;">
+            ✉️ Send SMS
           </button>
         </div>
       </div>
@@ -416,6 +419,24 @@ function renderGroupsGrid() {
       const gName = e.currentTarget.getAttribute('data-group');
       selectedGroupFilter = gName;
       navigateTo('contacts');
+    });
+  });
+
+  document.querySelectorAll('.send-group-sms-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const gName = e.currentTarget.getAttribute('data-group');
+      const groupNumbers = cachedContacts
+        .filter(c => (c.group_name || 'Default').trim() === gName.trim())
+        .map(c => c.phone);
+
+      if (groupNumbers.length === 0) {
+        showToast(`No contacts found in group "${gName}"`, 'warning');
+        return;
+      }
+
+      window.preloadedSMSRecipients = groupNumbers.join(', ');
+      showToast(`Pre-loaded ${groupNumbers.length} contact(s) from group "${gName}"`, 'success');
+      navigateTo('sms');
     });
   });
 }

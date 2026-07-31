@@ -255,7 +255,17 @@ function loadComposerInline() {
       </div>
 
       <div class="form-group mt-3">
-        <label for="inline-sms-recipients" style="font-weight: 600;">Recipients (Phone Numbers)</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+          <label for="inline-sms-recipients" style="font-weight: 600; margin-bottom: 0;">Recipients (Phone Numbers)</label>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button type="button" id="btn-load-all-contacts" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
+              👥 Insert All Contacts
+            </button>
+            <select id="composer-group-select" class="form-control" style="padding: 4px 8px; font-size: 0.75rem; height: auto; width: 150px;">
+              <option value="" disabled selected>📁 Load Group...</option>
+            </select>
+          </div>
+        </div>
         <textarea id="inline-sms-recipients" class="form-control" placeholder="Enter phone numbers separated by commas (e.g. +2348012345678, +2348098765432)" required style="min-height: 95px; padding: 10px 14px;"></textarea>
         <small id="inline-recipient-count" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">0 recipients detected.</small>
       </div>
@@ -306,6 +316,61 @@ function setupInlineComposerListeners() {
   const insertNameBtn = document.getElementById('inline-btn-insert-name');
   const scheduleToggle = document.getElementById('inline-schedule-toggle');
   const scheduleContainer = document.getElementById('inline-schedule-container');
+
+  // Check for preloaded recipients from Group Card click
+  if (window.preloadedSMSRecipients && recipientsArea) {
+    recipientsArea.value = window.preloadedSMSRecipients;
+    delete window.preloadedSMSRecipients;
+    updateInlineCounters();
+  }
+
+  // Populate Group selector dropdown & All Contacts button
+  let composerContacts = [];
+  apiFetch('/api/contacts').then(async res => {
+    if (res.ok) {
+      const data = await res.json();
+      composerContacts = data.contacts || [];
+      const groups = new Set();
+      composerContacts.forEach(c => {
+        if (c.group_name) groups.add(c.group_name.trim());
+      });
+      groups.add('Default');
+
+      const groupSelect = document.getElementById('composer-group-select');
+      if (groupSelect) {
+        groupSelect.innerHTML = `<option value="" disabled selected>📁 Load Group...</option>` +
+          Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('');
+
+        groupSelect.addEventListener('change', (e) => {
+          const selectedGroup = e.target.value;
+          const groupNumbers = composerContacts
+            .filter(c => (c.group_name || 'Default').trim() === selectedGroup.trim())
+            .map(c => c.phone);
+          
+          if (groupNumbers.length === 0) {
+            showToast(`No contacts found in group "${selectedGroup}"`, 'warning');
+            return;
+          }
+
+          const existing = recipientsArea.value.trim();
+          recipientsArea.value = existing ? `${existing}, ${groupNumbers.join(', ')}` : groupNumbers.join(', ');
+          showToast(`Added ${groupNumbers.length} contact(s) from "${selectedGroup}"`, 'success');
+          updateInlineCounters();
+        });
+      }
+    }
+  }).catch(() => {});
+
+  document.getElementById('btn-load-all-contacts')?.addEventListener('click', () => {
+    if (composerContacts.length === 0) {
+      showToast('No contacts found in directory', 'warning');
+      return;
+    }
+    const allNumbers = composerContacts.map(c => c.phone);
+    recipientsArea.value = allNumbers.join(', ');
+    showToast(`Added all ${allNumbers.length} contact(s) to composer`, 'success');
+    updateInlineCounters();
+  });
 
   if (insertNameBtn && messageArea) {
     insertNameBtn.addEventListener('click', () => {
