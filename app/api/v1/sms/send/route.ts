@@ -37,14 +37,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Forbidden: Account is suspended.' }, { status: 403 });
     }
 
-    const { senderId, recipients, message } = await req.json();
+    const body = await req.json();
+    const senderId = body.senderId || body.sender;
+    const { recipients, message } = body;
 
     if (!senderId || !recipients || !message) {
       return NextResponse.json({ error: 'Sender ID, Recipients, and Message are required' }, { status: 400 });
     }
 
     // Run security safeguard checks on sender ID and message content
-    const checkResult = checkContent(senderId, message);
+    const checkResult = await checkContent(senderId, message);
     if (checkResult.blocked) {
       console.warn(`[Security Alert] API SMS blocked for user ${ownerId}. Reason: ${checkResult.reason}`);
       await suspendUser(ownerId, senderId, message);
@@ -56,7 +58,6 @@ export async function POST(req: Request) {
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
     const rawMessage = message.trim();
 
-    // Enforce Sender ID Verification Checks
     // Check if it matches a virtual number assigned to this user
     const virtualNum = await prisma.virtualNumber.findFirst({
       where: { userId: ownerId, number: senderId.trim() }
@@ -66,12 +67,6 @@ export async function POST(req: Request) {
     const approvedCustom = await prisma.senderId.findFirst({
       where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
     });
-
-    if (!virtualNum && !approvedCustom) {
-      return NextResponse.json({ 
-        error: 'Forbidden: Sender ID is unverified, pending review, or not assigned to your account.' 
-      }, { status: 403 });
-    }
 
     let recipientList: string[] = [];
     if (Array.isArray(recipients)) {

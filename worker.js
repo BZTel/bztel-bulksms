@@ -123,7 +123,7 @@ function reconnect(key) {
 
 // ── Outgoing SMS Routing Logic ───────────────────────────────────────────────
 
-function getRoute(log) {
+async function getRoute(log) {
   const promoSenderIds = (process.env.SMPP_PROMO_SENDER_IDS || '')
     .split(',')
     .map(id => id.trim().toUpperCase())
@@ -131,17 +131,30 @@ function getRoute(log) {
 
   const senderIdUpper = log.senderId.trim().toUpperCase();
   
-  // If the senderId is in the list of promo sender IDs, route to promo
-  if (promoSenderIds.includes(senderIdUpper)) {
-    return 'promo';
-  }
-  
-  // Custom keyword heuristics
-  if (senderIdUpper.includes('PROMO') || senderIdUpper.includes('MARKETING')) {
+  // Explicit promo sender IDs / keywords
+  if (promoSenderIds.includes(senderIdUpper) || senderIdUpper.includes('PROMO') || senderIdUpper.includes('MARKETING')) {
     return 'promo';
   }
 
-  return 'tx';
+  // Check if user has an approved custom Sender ID or assigned virtual number
+  try {
+    const approvedSender = await prisma.senderId.findFirst({
+      where: { userId: log.userId, name: senderIdUpper, status: 'approved' }
+    });
+
+    const virtualNum = await prisma.virtualNumber.findFirst({
+      where: { userId: log.userId, number: log.senderId.trim() }
+    });
+
+    if (approvedSender || virtualNum) {
+      return 'tx';
+    }
+  } catch (err) {
+    console.warn('[Worker] Error checking Sender ID approval:', err);
+  }
+
+  // Fallback unverified Sender IDs to promotional route
+  return 'promo';
 }
 
 // ── Timezone & Scheduling Heuristics (Nigeria WAT = UTC+1) ───────────────────
@@ -309,7 +322,7 @@ function normalizePhone(phone) {
 
 // Submit a single message via SMPP
 async function sendSMS(log) {
-  const routeKey = getRoute(log);
+  const routeKey = await getRoute(log);
   const conn = connections[routeKey];
 
   return new Promise((resolve) => {

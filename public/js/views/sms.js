@@ -409,7 +409,7 @@ function setupInlineComposerListeners() {
 
     try {
       const endpoint = isScheduled ? '/api/sms/schedule' : '/api/sms/send';
-      const payload = { sender, recipients, message };
+      const payload = { senderId: sender, recipients, message };
       if (isScheduled) payload.scheduledAt = scheduledAt;
 
       const res = await apiFetch(endpoint, {

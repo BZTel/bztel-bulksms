@@ -145,7 +145,17 @@ export interface VerificationResult {
 /**
  * Checks senderId and message body for unauthorized / blocklisted words.
  */
-export function checkContent(senderId: string, message: string): VerificationResult {
+export async function checkContent(senderId: string, message: string): Promise<VerificationResult> {
+  let dbWords: string[] = [];
+  try {
+    const dbScamRecords = await prisma.scamWord.findMany({ select: { word: true } });
+    dbWords = dbScamRecords.map(r => r.word.toLowerCase().trim()).filter(Boolean);
+  } catch (e) {
+    console.warn('Failed to load DB scam words:', e);
+  }
+
+  const allWords = Array.from(new Set([...words, ...dbWords]));
+
   const rawSender = senderId.toLowerCase().trim();
   const cleanSender = rawSender.replace(/[^a-z0-9]/g, '');
 
@@ -160,7 +170,7 @@ export function checkContent(senderId: string, message: string): VerificationRes
   const unspacedMsg = cleanMsg.replace(/\s+/g, '');
 
   // 1. Check Sender ID
-  for (const kw of words) {
+  for (const kw of allWords) {
     const cleanKw = kw.replace(/[^a-z0-9]/g, '');
     if (!cleanKw) continue;
 
@@ -196,9 +206,9 @@ export function checkContent(senderId: string, message: string): VerificationRes
   }
 
   // Substring checks (ignoring spaces/punctuation)
-  for (const kw of substringKeywords) {
+  for (const kw of [...substringKeywords, ...dbWords]) {
     const cleanKw = kw.replace(/[^a-z0-9]/g, '');
-    if (unspacedMsg.includes(cleanKw)) {
+    if (cleanKw && unspacedMsg.includes(cleanKw)) {
       return { blocked: true, reason: `Message contains blocked word "${kw}"` };
     }
   }
