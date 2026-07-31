@@ -10,7 +10,7 @@ let viewState = {
   selectedCategory: 'all'
 };
 
-export function renderSMSView(root, state, initialTab = 'templates') {
+export function renderSMSView(root, state, initialTab = 'composer') {
   viewState.appState = state;
   viewState.activeTab = initialTab;
   
@@ -192,6 +192,10 @@ function switchTab(tabName) {
   const subEl = document.getElementById('sms-page-subtitle');
 
   const metaMap = {
+    composer: {
+      title: 'Bulk SMS Broadcast Composer',
+      subtitle: 'Compose and dispatch instant bulk SMS broadcasts to your audience.'
+    },
     templates: {
       title: 'SMS Message Templates',
       subtitle: 'Manage and reuse pre-crafted message templates for your campaigns.'
@@ -214,7 +218,7 @@ function switchTab(tabName) {
     }
   };
 
-  const meta = metaMap[tabName] || metaMap.templates;
+  const meta = metaMap[tabName] || metaMap.composer;
   if (titleEl) titleEl.textContent = meta.title;
   if (subEl) subEl.textContent = meta.subtitle;
 
@@ -223,7 +227,9 @@ function switchTab(tabName) {
 }
 
 function loadTabContent() {
-  if (viewState.activeTab === 'templates') {
+  if (viewState.activeTab === 'composer') {
+    loadComposerInline();
+  } else if (viewState.activeTab === 'templates') {
     loadTemplates(viewState.searchQuery);
   } else if (viewState.activeTab === 'personalized') {
     loadPersonalized(viewState.searchQuery);
@@ -234,6 +240,150 @@ function loadTabContent() {
   } else if (viewState.activeTab === 'international') {
     loadInternational(viewState.searchQuery);
   }
+function loadComposerInline() {
+  const container = document.getElementById('sms-tab-content');
+  if (!container) return;
+
+  container.innerHTML = `
+    <form id="inline-broadcast-form" style="max-width: 720px; margin: 0 auto; padding: 12px 0;">
+      <div class="form-group">
+        <label for="inline-sms-sender" style="font-weight: 600;">Sender ID</label>
+        <input type="text" id="inline-sms-sender" class="form-control" placeholder="e.g. BZTEL" required maxlength="11" value="BZTEL" style="padding: 10px 14px;">
+        <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
+      </div>
+
+      <div class="form-group mt-3">
+        <label for="inline-sms-recipients" style="font-weight: 600;">Recipients (Phone Numbers)</label>
+        <textarea id="inline-sms-recipients" class="form-control" placeholder="Enter phone numbers separated by commas (e.g. +2348012345678, +2348098765432)" required style="min-height: 95px; padding: 10px 14px;"></textarea>
+        <small id="inline-recipient-count" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">0 recipients detected.</small>
+      </div>
+
+      <div class="form-group mt-3">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+          <label for="inline-sms-message" style="margin-bottom: 0; font-weight: 600;">Message Content</label>
+        </div>
+        <textarea id="inline-sms-message" class="form-control" placeholder="Type your broadcast message here..." required style="min-height: 130px; padding: 10px 14px;"></textarea>
+        <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <button type="button" id="inline-btn-insert-name" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+            + Insert [Name]
+          </button>
+          <span class="char-counter" id="inline-sms-char-counter" style="margin-top:0;">0 characters (1 page) | 1 credit per SMS</span>
+        </div>
+      </div>
+
+      <div class="form-group mt-3" style="background: rgba(255, 255, 255, 0.01); border: 1px solid var(--glass-border); padding: 14px; border-radius: var(--border-radius-sm);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <input type="checkbox" id="inline-schedule-toggle" style="width: 16px; height: 16px; cursor: pointer;">
+          <label for="inline-schedule-toggle" style="margin-bottom: 0; font-weight: 600; cursor: pointer; user-select: none;">Schedule this broadcast for later</label>
+        </div>
+        <div id="inline-schedule-container" class="hidden mt-2">
+          <label for="inline-schedule-time" style="font-weight: 600;">Select Schedule Date & Time</label>
+          <input type="datetime-local" id="inline-schedule-time" class="form-control" style="background: var(--bg-tertiary);">
+        </div>
+      </div>
+
+      <div class="cost-summary-box mt-4" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); padding: 18px; border-radius: var(--border-radius-sm); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Estimated Cost</div>
+          <div style="font-size: 1.6rem; font-weight: 800; color: var(--accent-color);" id="inline-estimated-cost">0 Credits</div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="inline-submit-btn" style="padding: 12px 28px; background: var(--accent-color); border-color: var(--accent-color); font-weight: 700;">
+          Dispatch Broadcast
+        </button>
+      </div>
+    </form>
+  `;
+
+  setupInlineComposerListeners();
+}
+
+function setupInlineComposerListeners() {
+  const form = document.getElementById('inline-broadcast-form');
+  const recipientsArea = document.getElementById('inline-sms-recipients');
+  const messageArea = document.getElementById('inline-sms-message');
+  const insertNameBtn = document.getElementById('inline-btn-insert-name');
+  const scheduleToggle = document.getElementById('inline-schedule-toggle');
+  const scheduleContainer = document.getElementById('inline-schedule-container');
+
+  if (insertNameBtn && messageArea) {
+    insertNameBtn.addEventListener('click', () => {
+      messageArea.value += ' [Name] ';
+      updateInlineCounters();
+    });
+  }
+
+  if (scheduleToggle && scheduleContainer) {
+    scheduleToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        scheduleContainer.classList.remove('hidden');
+      } else {
+        scheduleContainer.classList.add('hidden');
+      }
+    });
+  }
+
+  recipientsArea?.addEventListener('input', updateInlineCounters);
+  messageArea?.addEventListener('input', updateInlineCounters);
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const sender = document.getElementById('inline-sms-sender').value.trim();
+    const recipientsRaw = recipientsArea.value;
+    const message = messageArea.value.trim();
+    const isScheduled = scheduleToggle?.checked || false;
+    const scheduledAt = document.getElementById('inline-schedule-time')?.value;
+
+    const recipients = recipientsRaw.split(/[\n,]+/).map(r => r.trim()).filter(Boolean);
+    if (recipients.length === 0) return showToast('Please enter at least one phone number', 'error');
+
+    const submitBtn = document.getElementById('inline-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Dispatching...';
+
+    try {
+      const endpoint = isScheduled ? '/api/sms/schedule' : '/api/sms/send';
+      const payload = { sender, recipients, message };
+      if (isScheduled) payload.scheduledAt = scheduledAt;
+
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        showToast(isScheduled ? 'Broadcast scheduled successfully' : 'SMS Broadcast dispatched!', 'success');
+        form.reset();
+        updateInlineCounters();
+        navigateTo('campaign-history');
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to dispatch SMS', 'error');
+      }
+    } catch (err) {
+      showToast('Error dispatching SMS campaign', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Dispatch Broadcast';
+    }
+  });
+}
+
+function updateInlineCounters() {
+  const recipientsRaw = document.getElementById('inline-sms-recipients')?.value || '';
+  const messageText = document.getElementById('inline-sms-message')?.value || '';
+  const countDisplay = document.getElementById('inline-recipient-count');
+  const charDisplay = document.getElementById('inline-sms-char-counter');
+  const costDisplay = document.getElementById('inline-estimated-cost');
+
+  const recipients = recipientsRaw.split(/[\n,]+/).map(r => r.trim()).filter(Boolean);
+  if (countDisplay) countDisplay.innerText = `${recipients.length} recipients detected.`;
+
+  const charLen = messageText.length;
+  const pages = Math.ceil(charLen / 160) || 1;
+  if (charDisplay) charDisplay.innerText = `${charLen} characters (${pages} page${pages > 1 ? 's' : ''}) | 1 credit per SMS`;
+
+  const totalCost = recipients.length * pages;
+  if (costDisplay) costDisplay.innerText = `${totalCost.toLocaleString()} Credits`;
 }
 
 // ── Main View Handlers ───────────────────────────────────────────────
