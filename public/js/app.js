@@ -42,57 +42,92 @@ if (document.readyState === 'loading') {
 }
 
 async function initApp() {
-  console.log('[initApp] Starting initialization. state.token:', state.token);
-  setupGlobalEvents();
-  setupModalEvents();
+  try {
+    console.log('[initApp] Starting initialization. state.token:', state.token);
+    setupGlobalEvents();
+    setupModalEvents();
 
-  // Check URL parameters for OAuth token or error redirect
-  const urlParams = new URLSearchParams(window.location.search);
-  const tokenFromUrl = urlParams.get('token');
-  const errorFromUrl = urlParams.get('error');
+    // Check URL parameters for OAuth token or error redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const errorFromUrl = urlParams.get('error');
 
-  const paymentStatus = urlParams.get('status');
-  const paymentCredits = urlParams.get('credits');
-  const paymentMessage = urlParams.get('message');
+    const paymentStatus = urlParams.get('status');
+    const paymentCredits = urlParams.get('credits');
+    const paymentMessage = urlParams.get('message');
 
-  if (paymentStatus === 'success') {
-    const creds = paymentCredits ? Number(paymentCredits).toLocaleString() : 'requested';
-    showToast(`Payment successful! Credited ${creds} SMS credits to your wallet.`, 'success');
-    state.currentView = 'wallet';
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (paymentStatus === 'error') {
-    showToast(paymentMessage || 'Online checkout payment failed', 'error');
-    state.currentView = 'wallet';
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  if (errorFromUrl) {
-    showToast(decodeURIComponent(errorFromUrl), 'error');
-    // Clean query parameters from URL
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  if (tokenFromUrl) {
-    console.log('[initApp] Found token in URL, storing and authenticating...');
-    state.token = tokenFromUrl;
-    localStorage.setItem('token', tokenFromUrl);
-    // Clean query parameters from URL for security
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  if (state.token) {
-    console.log('[initApp] Token present, fetching user profile...');
-    const success = await fetchUserProfile();
-    console.log('[initApp] fetchUserProfile success:', success);
-    if (success) {
-      showAppContainer();
-      navigateTo(state.currentView);
-    } else {
-      logout();
+    if (paymentStatus === 'success') {
+      const creds = paymentCredits ? Number(paymentCredits).toLocaleString() : 'requested';
+      showToast(`Payment successful! Credited ${creds} SMS credits to your wallet.`, 'success');
+      state.currentView = 'wallet';
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (paymentStatus === 'error') {
+      showToast(paymentMessage || 'Online checkout payment failed', 'error');
+      state.currentView = 'wallet';
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  } else {
-    console.log('[initApp] No token present, showing auth container...');
+
+    if (errorFromUrl) {
+      showToast(decodeURIComponent(errorFromUrl), 'error');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (tokenFromUrl) {
+      console.log('[initApp] Found token in URL, storing and authenticating...');
+      state.token = tokenFromUrl;
+      localStorage.setItem('token', tokenFromUrl);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (state.token) {
+      console.log('[initApp] Token present, fetching user profile...');
+      const success = await fetchUserProfile();
+      console.log('[initApp] fetchUserProfile success:', success);
+      if (success) {
+        showAppContainer();
+        navigateTo(state.currentView);
+      } else {
+        logout();
+      }
+    } else {
+      console.log('[initApp] No token present, showing auth container...');
+      showAuthContainer();
+    }
+  } catch (err) {
+    console.error('[initApp] Startup error caught:', err);
     showAuthContainer();
+  }
+}
+
+export async function fetchUserProfile() {
+  try {
+    const res = await apiFetch('/api/auth/me');
+    if (res && res.ok) {
+      const data = await res.json();
+      state.user = data.user;
+      updateUIHeader(state.user?.balance);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error('[fetchUserProfile] Error fetching user profile:', err);
+    return false;
+  }
+}
+
+export function updateUIHeader(balance) {
+  const user = state.user;
+  if (!user) return;
+  const bal = balance !== undefined ? balance : user.balance;
+  const balEl = document.getElementById('balance-count');
+  if (balEl) balEl.innerText = (bal || 0).toLocaleString();
+
+  const emailEl = document.getElementById('sidebar-user-email');
+  if (emailEl) emailEl.innerText = user.email || '';
+
+  const initialsEl = document.getElementById('user-initials');
+  if (initialsEl && user.email) {
+    initialsEl.innerText = user.email.charAt(0).toUpperCase();
   }
 }
 
