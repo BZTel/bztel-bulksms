@@ -333,7 +333,7 @@ function setupModalEvents() {
   topupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     paySubmitBtn.disabled = true;
-    paySubmitBtn.innerText = 'Initializing Flutterwave checkout...';
+    paySubmitBtn.innerText = 'Processing secure payment...';
 
     const credits = parseInt(selectedCreditsInput.value);
     const redeemPoints = document.getElementById('flw-use-loyalty-points')?.checked || false;
@@ -350,7 +350,7 @@ function setupModalEvents() {
 
       const data = await response.json();
       if (response.ok && data.link) {
-        showToast('Redirecting to secure Flutterwave checkout...', 'success');
+        showToast('Redirecting to payment gateway...', 'success');
         window.location.href = data.link; // Redirect user
       } else {
         showToast(data.error || 'Failed to initialize payment', 'error');

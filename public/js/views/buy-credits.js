@@ -222,26 +222,20 @@ export function renderBuyCreditsView(root, state) {
           </div>
         </div>
 
-        <!-- Pane 1: Flutterwave Online Payment -->
+        <!-- Pane 1: Online Payment -->
         <div id="buy-pane-flw">
           <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:20px;line-height:1.5;">
-            Instant wallet funding via Debit Cards, USSD, Apple Pay, or Internet Banking through Flutterwave.
+            Instant wallet funding via Debit Card, Bank Transfer, USSD, or Internet Banking.
           </p>
 
-          <div style="background:rgba(99,102,241,0.04);border:1px solid rgba(99,102,241,0.15);padding:16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-            <svg style="width:24px;height:24px;color:var(--accent-color);flex-shrink:0;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
+          <div style="background:rgba(99,102,241,0.04);border:1px solid rgba(99,102,241,0.15);padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
             <span style="font-size:0.8rem;color:var(--text-secondary);">
-              Secure 256-bit encrypted checkout. Credits are added automatically upon payment completion.
+              🔒 Secure 256-bit encrypted checkout. Credits are added automatically upon payment completion.
             </span>
           </div>
 
           <button id="buy-flw-submit-btn" class="btn btn-primary btn-block" style="padding:14px;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">
             <span>Pay ₦32,500.00 & Add Credits</span>
-            <svg style="width:18px;height:18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
           </button>
         </div>
 
@@ -395,7 +389,7 @@ function initBuyCreditsLogic(state) {
       flwBtn.disabled = true;
       flwBtn.innerHTML = `
         <span class="spinner-small" style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></span>
-        <span>Initializing Flutterwave Checkout...</span>
+        <span>Processing secure payment...</span>
       `;
 
       try {
@@ -408,7 +402,7 @@ function initBuyCreditsLogic(state) {
         });
 
         if (res && res.link) {
-          showToast('Redirecting to Flutterwave checkout...', 'success');
+          showToast('Redirecting to payment gateway...', 'success');
           window.location.href = res.link;
         } else {
           showToast(res?.error || 'Failed to initialize online payment', 'error');

@@ -31,15 +31,9 @@ export function renderSMSView(root, state, initialTab = 'composer') {
             <input type="text" id="sms-search-input" class="form-control" placeholder="Search...">
           </div>
           <button id="btn-create-template" class="btn btn-secondary btn-sm" style="display: flex; align-items: center; gap: 6px; padding: 10px 18px;">
-            <svg class="btn-icon" style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-            </svg>
             Create Template
           </button>
           <button id="btn-compose-sms" class="btn btn-primary btn-sm" style="display: flex; align-items: center; gap: 6px; padding: 10px 18px; background: var(--accent-color); border-color: var(--accent-color);">
-            <svg class="btn-icon" style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
             Compose
           </button>
         </div>
