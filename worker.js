@@ -403,27 +403,41 @@ async function handleIncomingDeliverSM(pdu) {
     if (pdu.esm_class & 0x04) {
       console.log('[Worker] Incoming message is a Delivery Receipt (DLR). Parsing status...');
       
-      const msgText = pdu.short_message 
+      let msgText = pdu.short_message 
         ? (pdu.short_message.message || pdu.short_message).toString() 
         : '';
         
       console.log(`[Worker DLR] DLR Text: "${msgText}"`);
       
+      let dlrMsgId = '';
+      let statusStr = '';
+      
       const idMatch = msgText.match(/id:([^\s]+)/i);
       const statMatch = msgText.match(/stat:([A-Z]+)/i);
-      
-      if (!idMatch || !statMatch) {
-        console.warn('[Worker DLR] Could not parse Message ID or Status from DLR text');
+
+      if (idMatch) dlrMsgId = idMatch[1];
+      if (statMatch) statusStr = statMatch[1].toUpperCase();
+
+      // Monty Mobile & SMPP 3.4 TLV Fallback if short_message text is empty or missing params
+      if (!dlrMsgId && pdu.receipted_message_id) {
+        dlrMsgId = pdu.receipted_message_id.toString().trim();
+      }
+
+      if (!statusStr && pdu.message_state !== undefined) {
+        // SMPP Message States: 2 = DELIVERED, 1 = ENROUTE, 6 = ACCEPTED, 3 = EXPIRED, 5 = UNDELIVERABLE, 8 = REJECTED
+        const stateMap = { 2: 'DELIVRD', 1: 'ACCEPTD', 6: 'ACCEPTD', 3: 'EXPIRED', 5: 'UNDELIV', 8: 'REJECTD' };
+        statusStr = stateMap[pdu.message_state] || 'FAILED';
+      }
+
+      if (!dlrMsgId) {
+        console.warn('[Worker DLR] Could not extract Message ID from DLR text or TLVs:', pdu);
         return;
       }
       
-      const dlrMsgId = idMatch[1];
-      const statusStr = statMatch[1];
-      
       let status = 'failed';
-      if (statusStr === 'DELIVRD') {
+      if (statusStr === 'DELIVRD' || statusStr === 'DELIVERED') {
         status = 'delivered';
-      } else if (statusStr === 'ACCEPTD') {
+      } else if (statusStr === 'ACCEPTD' || statusStr === 'ENROUTE' || statusStr === 'BUFFERD') {
         status = 'submitted';
       } else {
         status = 'failed';
