@@ -143,74 +143,47 @@ export function renderContactGroupsView(root, state) {
   initContactsView('groups');
 }
 
-// ── 3. DEDICATED IMPORT CONTACTS VIEW ───────────────────────────────────
+// ── 3. DEDICATED SIMPLE CSV IMPORT VIEW ─────────────────────────────────
 export function renderImportContactsView(root, state) {
   root.innerHTML = `
-    <div class="composer-layout" style="animation: slideUp 0.3s ease-out; max-width: 900px; margin: 0 auto;">
-      <div class="panel glass" style="padding: 32px;">
-        <div class="panel-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; margin-bottom: 24px;">
-          <h3 class="panel-title" style="font-size: 1.3rem; margin: 0;">📥 Bulk CSV Import Studio</h3>
-          <p style="margin: 4px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Upload `.csv` or `.xlsx` files to import contacts directly into your audience directory.</p>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
-          <!-- Left: Dropzone Form -->
-          <div>
-            <div class="form-group" style="margin-bottom: 16px;">
-              <label for="csv-group" style="font-weight: 600;">Target Group</label>
-              <select id="csv-group" class="form-control" style="padding: 10px 14px;">
-                <option value="Default">Default</option>
-                <option value="__NEW__">+ Create New Group...</option>
-              </select>
-            </div>
-            <div class="form-group" id="csv-group-new-wrapper" style="display: none; margin-bottom: 16px;">
-              <label for="csv-group-new" style="font-weight: 600;">New Group Name</label>
-              <input type="text" id="csv-group-new" class="form-control" placeholder="e.g. Event Attendees">
-            </div>
-
-            <div class="csv-dropzone" id="csv-dropzone" style="padding: 40px 20px; border: 2px dashed var(--accent-color); border-radius: 12px; text-align: center; cursor: pointer; background: rgba(99,102,241,0.03); transition: all 0.2s;">
-              <svg class="csv-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 44px; height: 44px; color: var(--accent-color); margin-bottom: 12px;">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-              </svg>
-              <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; color: var(--text-primary);">Drop your CSV file here</div>
-              <div style="color: var(--text-muted); font-size: 0.82rem;">or click to browse your computer</div>
-              <input type="file" id="csv-file-input" accept=".csv" class="hidden">
-            </div>
-          </div>
-
-          <!-- Right: Instructions & Template Format Guide -->
-          <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--glass-border); padding: 20px; border-radius: 12px;">
-            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-top: 0;">CSV Formatting Instructions</h4>
-            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
-              Ensure your CSV file contains one valid phone number per line formatted with international country codes (e.g. <code>+2348012345678</code> or <code>08012345678</code>).
-            </p>
-            <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 0.78rem; color: var(--accent-color); margin: 12px 0;">
-              Phone Number<br>
-              +2348012345678<br>
-              +2348098765432<br>
-              +2348033344455
-            </div>
-            <button id="download-sample-csv-btn" style="background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%;">
-              📄 Download Sample CSV Template
-            </button>
-          </div>
-        </div>
+    <div class="panel glass" style="animation: slideUp 0.3s ease-out; max-width: 580px; margin: 30px auto; padding: 32px; border-radius: var(--border-radius-md);">
+      <div class="panel-header" style="border-bottom: 1px solid var(--glass-border); padding-bottom: 16px; margin-bottom: 24px; text-align: center;">
+        <h3 class="panel-title" style="font-size: 1.3rem; margin: 0; font-family: 'Outfit', sans-serif;">📥 Import Contacts via CSV</h3>
+        <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: var(--text-muted);">Select a target group and choose a CSV file to upload phone numbers.</p>
       </div>
+
+      <form id="standalone-csv-form">
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label for="csv-group" style="font-weight: 600;">Assign to Group</label>
+          <select id="csv-group" class="form-control" style="padding: 10px 14px;">
+            <option value="Default">Default</option>
+            <option value="__NEW__">+ Create New Group...</option>
+          </select>
+        </div>
+        <div class="form-group" id="csv-group-new-wrapper" style="display: none; margin-bottom: 16px;">
+          <label for="csv-group-new" style="font-weight: 600;">New Group Name</label>
+          <input type="text" id="csv-group-new" class="form-control" placeholder="e.g. Event Attendees">
+        </div>
+
+        <div class="csv-dropzone" id="csv-dropzone" style="padding: 36px 20px; border: 2px dashed var(--accent-color); border-radius: 12px; text-align: center; cursor: pointer; background: rgba(99,102,241,0.03); margin-bottom: 20px; transition: all 0.2s;">
+          <svg class="csv-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 40px; height: 40px; color: var(--accent-color); margin-bottom: 10px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          </svg>
+          <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; color: var(--text-primary);" id="csv-filename-display">Select CSV File</div>
+          <div style="color: var(--text-muted); font-size: 0.8rem;">Click to browse your device (Format: 1 phone number per line)</div>
+          <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+        </div>
+
+        <button type="submit" id="csv-upload-submit-btn" class="btn btn-primary btn-block" style="padding: 12px 20px; font-weight: 600; background: var(--accent-color); border-color: var(--accent-color);">
+          Upload & Process CSV Contacts
+        </button>
+      </form>
     </div>
   `;
 
-  document.getElementById('download-sample-csv-btn')?.addEventListener('click', () => {
-    const csvContent = "data:text/csv;charset=utf-8,Phone Number\n+2348012345678\n+2348098765432\n+2348033344455";
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "bztel_sample_contacts.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  });
-
-  initContactsView('import');
+  setupGroupNewInputToggles();
+  setupCSVImporter();
+  loadContactsData('import');
 }
 
 // ── Shared Initializer ──────────────────────────────────────────────────
@@ -263,9 +236,12 @@ function setupGroupNewInputToggles() {
 async function loadContactsData(targetMode = 'contacts') {
   try {
     const res = await apiFetch('/api/contacts');
+    if (!isCurrentView('contacts') && !isCurrentView('contact-groups') && !isCurrentView('import-contacts')) return;
     if (!res.ok) return;
 
     const data = await res.json();
+    if (!isCurrentView('contacts') && !isCurrentView('contact-groups') && !isCurrentView('import-contacts')) return;
+
     cachedContacts = data.contacts || [];
 
     populateGroupSelectors();
@@ -276,7 +252,7 @@ async function loadContactsData(targetMode = 'contacts') {
       renderGroupsGrid();
     }
   } catch (error) {
-    if (error.name === 'AbortError') return;
+    if (error.name === 'AbortError' || (!isCurrentView('contacts') && !isCurrentView('contact-groups') && !isCurrentView('import-contacts'))) return;
     showToast('Failed to load contacts', 'error');
   }
 }
