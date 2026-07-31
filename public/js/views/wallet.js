@@ -1,12 +1,14 @@
-import { apiFetch, showToast, updateUIHeader } from '../app.js';
+import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView } from '../app.js';
 
 let allTransactions = [];
 let activeFilter = 'all';
 
+// ── Wallet Overview Dashboard View ──────────────────────────────────────
 export function renderWalletView(root, state) {
   root.innerHTML = `
+    <!-- Hero Credit Card -->
     <div style="
-      background: var(--accent-color);
+      background: var(--accent-gradient);
       border-radius: 20px;
       padding: 36px 40px;
       display: flex;
@@ -17,33 +19,30 @@ export function renderWalletView(root, state) {
       overflow: hidden;
       box-shadow: 0 20px 60px rgba(99, 102, 241, 0.35);
     ">
-      <!-- Decorative circles -->
       <div style="position:absolute;top:-50px;right:-50px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.06);pointer-events:none;"></div>
       <div style="position:absolute;bottom:-80px;right:80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,0.03);pointer-events:none;"></div>
 
-      <!-- Left: Balance Info -->
       <div style="position:relative;z-index:1;">
-        <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;">
-          SMS Credit Balance
+        <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:10px;">
+          Account Credit Balance
         </div>
         <div id="hero-balance" style="font-family:'Outfit',sans-serif;font-size:3.2rem;font-weight:800;color:#fff;line-height:1;margin-bottom:6px;">
-          —
+          ${(state.user?.balance || 0).toLocaleString()}
         </div>
-        <div style="font-size:0.85rem;color:rgba(255,255,255,0.55);">Credits Available</div>
+        <div style="font-size:0.85rem;color:rgba(255,255,255,0.7);">Universal Credits Available (SMS & Voice)</div>
       </div>
 
-      <!-- Right: Brand + Action -->
       <div style="position:relative;z-index:1;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:20px;">
         <div>
           <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;">
             Bztel <span style="opacity:0.5;">.</span>
           </div>
-          <div style="font-size:0.65rem;color:rgba(255,255,255,0.4);letter-spacing:0.15em;margin-top:2px;">SMS PLATFORM</div>
+          <div style="font-size:0.65rem;color:rgba(255,255,255,0.5);letter-spacing:0.15em;margin-top:2px;">PLATFORM WALLET</div>
         </div>
         <button id="wallet-topup-btn" style="
-          background:rgba(255,255,255,0.15);
+          background:rgba(255,255,255,0.2);
           color:#fff;
-          border:1px solid rgba(255,255,255,0.3);
+          border:1px solid rgba(255,255,255,0.4);
           padding:11px 24px;
           border-radius:10px;
           font-size:0.88rem;
@@ -52,14 +51,13 @@ export function renderWalletView(root, state) {
           backdrop-filter:blur(10px);
           transition:all 0.2s;
           font-family:inherit;
-        " onmouseover="this.style.background='rgba(255,255,255,0.25)'"
-           onmouseout="this.style.background='rgba(255,255,255,0.15)'">
-          + Add Credits
+        ">
+          + Buy Credits
         </button>
       </div>
     </div>
 
-    <!-- Summary Stats -->
+    <!-- KPI Summary Grid -->
     <div class="wallet-stats-row" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
       <div class="panel glass" style="padding:22px;text-align:center;">
         <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Total Purchased</div>
@@ -69,7 +67,7 @@ export function renderWalletView(root, state) {
       <div class="panel glass" style="padding:22px;text-align:center;">
         <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Total Spent</div>
         <div id="stat-debited" style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;color:#ef4444;">—</div>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Credits used on SMS</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">Credits used on SMS & Voice</div>
       </div>
       <div class="panel glass" style="padding:22px;text-align:center;">
         <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Transactions</div>
@@ -78,35 +76,8 @@ export function renderWalletView(root, state) {
       </div>
     </div>
 
-    <!-- Split Layout: Transactions + Loyalty -->
-    <div class="wallet-split-layout" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
-      <!-- Transaction History Table -->
-      <div class="panel glass" style="margin-bottom: 0;">
-        <div class="panel-header">
-          <h3 class="panel-title">Transaction History</h3>
-          <div class="group-filters-bar" id="tx-filter-bar" style="margin:0;">
-            <span class="filter-chip active" data-filter="all">All</span>
-            <span class="filter-chip" data-filter="credit">Credits</span>
-            <span class="filter-chip" data-filter="debit">Debits</span>
-          </div>
-        </div>
-
-        <div class="table-container" style="max-height:480px;overflow-y:auto;">
-          <table class="custom-table">
-            <thead>
-              <tr>
-                <th>Date & Time</th>
-                <th>Description</th>
-                <th>Type</th>
-                <th style="text-align:right;">Amount</th>
-                <th style="text-align:right;">Balance After</th>
-              </tr>
-            </thead>
-            <tbody id="tx-tbody">
-              <tr>
-                <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
-    <!-- Loyalty Rewards Panel & Stats Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+    <!-- Bottom Split Grid: Loyalty Rewards & Recent Movements Summary -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
       
       <!-- Loyalty Points Box -->
       <div class="panel glass" style="margin: 0; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05)); border-color: rgba(99, 102, 241, 0.2);">
@@ -139,7 +110,6 @@ export function renderWalletView(root, state) {
           </div>
         </div>
 
-        <!-- Recent Points Log -->
         <div style="background: rgba(0,0,0,0.02); border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); padding: 12px;">
           <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.05em;">Recent Points Activity</div>
           <div id="loyalty-ledgers-container" style="display: flex; flex-direction: column; gap: 6px; max-height: 110px; overflow-y: auto;">
@@ -148,68 +118,63 @@ export function renderWalletView(root, state) {
         </div>
       </div>
 
-      <!-- Quick Billing Stats Grid -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div class="kpi-card glass" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
-          <div class="kpi-header">
-            <span>Total Credited</span>
-            <svg class="kpi-icon" style="color: #10b981;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-          </div>
-          <div id="stat-credited" class="kpi-value" style="color: #10b981;">0</div>
-          <div class="kpi-desc">Lifetime SMS credits added</div>
+      <!-- Recent 5 Movements Summary Box -->
+      <div class="panel glass" style="margin: 0;">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 12px;">
+          <h3 class="panel-title" style="font-size: 1rem; margin: 0;">Recent Movements</h3>
+          <button id="view-full-statement-btn" style="background: transparent; border: none; color: var(--accent-color); font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+            View Full Statement &rarr;
+          </button>
         </div>
-
-        <div class="kpi-card glass" style="margin: 0; display: flex; flex-direction: column; justify-content: center;">
-          <div class="kpi-header">
-            <span>Total Spent</span>
-            <svg class="kpi-icon" style="color: #ef4444;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-            </svg>
-          </div>
-          <div id="stat-debited" class="kpi-value" style="color: #ef4444;">0</div>
-          <div class="kpi-desc">Lifetime SMS credits spent</div>
-        </div>
-
-        <div class="kpi-card glass" style="margin: 0; grid-column: span 2; display: flex; align-items: center; justify-content: space-between; padding: 18px 24px;">
-          <div>
-            <div class="kpi-header" style="margin-bottom: 2px;">
-              <span>Total Billing Transactions</span>
-            </div>
-            <div class="kpi-desc">All top-ups, deductions & broadcasts</div>
-          </div>
-          <div id="stat-count" class="kpi-value" style="font-size: 2rem; margin: 0;">0</div>
+        <div id="recent-movements-list" style="display: flex; flex-direction: column; gap: 8px; min-height: 160px;">
+          <div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.82rem;">Loading activity...</div>
         </div>
       </div>
 
     </div>
+  `;
 
-    <!-- Main Transactions Ledger Table -->
-    <div class="panel glass">
-      <div class="panel-header">
-        <h3 class="panel-title">Billing & Wallet Ledger</h3>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary btn-sm tx-filter-btn active" data-filter="all">All</button>
-          <button class="btn btn-secondary btn-sm tx-filter-btn" data-filter="credit">Credits (+)</button>
-          <button class="btn btn-secondary btn-sm tx-filter-btn" data-filter="debit">Debits (-)</button>
+  document.getElementById('wallet-topup-btn')?.addEventListener('click', () => navigateTo('buy-credits'));
+  document.getElementById('view-full-statement-btn')?.addEventListener('click', () => navigateTo('transactions'));
+
+  loadWalletData();
+}
+
+// ── Full Dedicated Transaction Statement Ledger View ──────────────────
+export function renderTransactionsView(root, state) {
+  root.innerHTML = `
+    <div class="panel glass" style="animation: slideUp 0.3s ease-out;">
+      <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <h3 class="panel-title" style="margin: 0; font-size: 1.25rem;">Transaction Statements & Audit Ledger</h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.82rem; color: var(--text-muted);">Inspect complete credit top-ups, SMS deductions, and account statements.</p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <div class="group-filters-bar" id="tx-filter-bar" style="margin:0;">
+            <span class="filter-chip active" data-filter="all">All Movements</span>
+            <span class="filter-chip" data-filter="credit">Top-Ups (+)</span>
+            <span class="filter-chip" data-filter="debit">Debits (-)</span>
+          </div>
+          <button id="tx-topup-btn" class="btn btn-primary btn-sm" style="padding: 8px 16px;">+ Buy Credits</button>
         </div>
       </div>
 
-      <div class="table-container">
+      <div class="table-container" style="max-height: 600px; overflow-y: auto;">
         <table class="custom-table">
           <thead>
             <tr>
               <th>Date & Time</th>
-              <th>Transaction Type</th>
               <th>Description</th>
-              <th>Amount (Credits)</th>
-              <th>Balance After</th>
+              <th>Type</th>
+              <th style="text-align:right;">Amount</th>
+              <th style="text-align:right;">Balance After</th>
             </tr>
           </thead>
-          <tbody id="wallet-tx-tbody">
+          <tbody id="tx-tbody">
             <tr>
-              <td colspan="5" class="text-center" style="color: var(--text-muted); padding: 30px;">Loading transaction history...</td>
+              <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
+                Loading transactions ledger...
+              </td>
             </tr>
           </tbody>
         </table>
@@ -217,93 +182,72 @@ export function renderWalletView(root, state) {
     </div>
   `;
 
-  initWalletView(state);
+  document.getElementById('tx-topup-btn')?.addEventListener('click', () => navigateTo('buy-credits'));
+  loadWalletData();
 }
 
-function initWalletView(state) {
-  // Bind buy credits button
-  const buyBtn = document.getElementById('buy-credits-btn');
-  if (buyBtn) {
-    buyBtn.addEventListener('click', () => {
-      document.querySelector('.nav-item[data-view="buy-credits"]')?.click();
-    });
-  }
-
-  // Bind filter buttons
-  const filterBtns = document.querySelectorAll('.tx-filter-btn');
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      e.currentTarget.classList.add('active');
-      activeFilter = e.currentTarget.getAttribute('data-filter');
-      renderTable(getFiltered());
-    });
-  });
-
-  loadWalletData(state);
-}
-
-async function loadWalletData(state, silent = false) {
+// ── Shared Data Fetcher ──────────────────────────────────────────────
+async function loadWalletData(silent = false) {
   try {
-    const [balRes, txRes, loyaltyRes] = await Promise.all([
-      apiFetch('/api/auth/me'),
-      apiFetch('/api/billing/transactions'),
-      apiFetch('/api/billing/loyalty')
-    ]);
+    const res = await apiFetch('/api/billing/transactions');
+    if (!res.ok) throw new Error();
 
-    if (!isCurrentView('wallet')) return;
-    if (!balRes.ok || !txRes.ok || !loyaltyRes.ok) return;
+    const data = await res.json();
+    const { balance, credited, debited, count, transactions } = data;
 
-    const { user } = await balRes.json();
-    const { transactions, summary } = await txRes.json();
-    const loyaltyData = await loyaltyRes.json();
+    // Update Topbar
+    updateUIHeader(balance);
 
-    if (!isCurrentView('wallet')) return;
-
-    // Update hero balance
+    // Update Hero Balance
     const heroBal = document.getElementById('hero-balance');
-    if (heroBal) heroBal.textContent = user.balance.toLocaleString();
+    if (heroBal) heroBal.innerText = balance.toLocaleString();
 
-    // Update summary stats
-    const statCredited = document.getElementById('stat-credited');
-    const statDebited = document.getElementById('stat-debited');
-    const statCount = document.getElementById('stat-count');
-    if (statCredited) statCredited.textContent = summary.total_credited.toLocaleString();
-    if (statDebited) statDebited.textContent = summary.total_debited.toLocaleString();
-    if (statCount) statCount.textContent = summary.count.toLocaleString();
+    // Update Stats Grid
+    const statCred = document.getElementById('stat-credited');
+    const statDeb = document.getElementById('stat-debited');
+    const statCnt = document.getElementById('stat-count');
+    if (statCred) statCred.innerText = `+${credited.toLocaleString()}`;
+    if (statDeb)  statDeb.innerText  = `-${debited.toLocaleString()}`;
+    if (statCnt)  statCnt.innerText  = count.toLocaleString();
 
-    // Sync global state balance
-    if (state.user) {
-      state.user.balance = user.balance;
-      state.user.loyalty_points = loyaltyData.loyalty_points;
-    }
-    updateUIHeader();
-
-    // Update loyalty details
-    const ptsDisp = document.getElementById('loyalty-points-display');
-    const cashVal = document.getElementById('loyalty-cash-value');
-    if (ptsDisp) ptsDisp.textContent = loyaltyData.loyalty_points.toLocaleString();
-    if (cashVal) cashVal.textContent = `Worth ₦${(loyaltyData.loyalty_points * 100).toLocaleString()} in Discounts`;
-
-    // Render loyalty statement list
-    const ledgerContainer = document.getElementById('loyalty-ledgers-container');
-    if (ledgerContainer) {
-      const ledgers = loyaltyData.ledgers || [];
-      if (ledgers.length === 0) {
-        ledgerContainer.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.8rem;">No points history yet.</div>`;
+    // Render Recent Movements Box on Wallet Overview
+    const recentBox = document.getElementById('recent-movements-list');
+    if (recentBox) {
+      if (!transactions || transactions.length === 0) {
+        recentBox.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.82rem;">No recent transactions recorded.</div>`;
       } else {
-        ledgerContainer.innerHTML = ledgers.map(l => {
-          const date = new Date(l.created_at);
-          const dateStr = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-          const amountSign = l.amount > 0 ? `+${l.amount}` : `${l.amount}`;
-          const amountColor = l.amount > 0 ? '#10b981' : '#ef4444';
-          
+        recentBox.innerHTML = transactions.slice(0, 5).map(t => {
+          const dateStr = new Date(t.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const isPlus = t.amount > 0;
+          return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm);">
+              <div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${t.description}</div>
+                <div style="font-size: 0.7rem; color: var(--text-muted);">${dateStr}</div>
+              </div>
+              <strong style="color: ${isPlus ? '#10b981' : '#ef4444'}; font-size: 0.88rem; font-family: monospace;">
+                ${isPlus ? '+' : ''}${t.amount.toLocaleString()}
+              </strong>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Render Points Log
+    if (data.loyalty_ledgers && document.getElementById('loyalty-ledgers-container')) {
+      const container = document.getElementById('loyalty-ledgers-container');
+      if (data.loyalty_ledgers.length === 0) {
+        container.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 10px; font-size: 0.8rem;">No loyalty points activity yet.</div>`;
+      } else {
+        container.innerHTML = data.loyalty_ledgers.map(l => {
+          const dateStr = new Date(l.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
+          const amountSign = l.points > 0 ? `+${l.points}` : `${l.points}`;
+          const amountColor = l.points > 0 ? '#10b981' : '#ef4444';
           return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); background: rgba(255,255,255,0.01);">
               <div>
-                <div style="font-size: 0.75rem; font-weight: 500; max-width: 140px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="${l.description}">
-                  ${l.description}
-                </div>
+                <div style="font-size: 0.75rem; font-weight: 500;" title="${l.description}">${l.description}</div>
                 <div style="font-size: 0.65rem; color: var(--text-muted);">${dateStr}</div>
               </div>
               <strong style="color: ${amountColor}; font-size: 0.8rem; font-family: monospace;">${amountSign}</strong>
@@ -314,9 +258,23 @@ async function loadWalletData(state, silent = false) {
     }
 
     allTransactions = transactions;
+
+    // Filter Listeners
+    const filterBar = document.getElementById('tx-filter-bar');
+    if (filterBar) {
+      filterBar.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          filterBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+          activeFilter = e.currentTarget.getAttribute('data-filter');
+          renderTable(getFiltered());
+        });
+      });
+    }
+
     renderTable(getFiltered());
   } catch (err) {
-    if (err.name === 'AbortError' || !isCurrentView('wallet')) return;
+    if (err.name === 'AbortError') return;
     if (!silent) showToast('Failed to load wallet data', 'error');
   }
 }
@@ -335,7 +293,7 @@ function renderTable(transactions) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
-          No transactions yet. Send an SMS or top up your credits to see activity here.
+          No transactions recorded.
         </td>
       </tr>
     `;
@@ -379,13 +337,4 @@ function getTypeBadge(type) {
   };
   const t = types[type] || { label: type, color: '#6b7280', bg: 'rgba(107,114,128,0.12)', border: 'rgba(107,114,128,0.3)' };
   return `<span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:0.7rem;font-weight:600;background:${t.bg};color:${t.color};border:1px solid ${t.border};">${t.label}</span>`;
-}
-
-// Dedicated Entry Functions for Sidebar Routing
-export function renderTransactionsView(root, state) {
-  renderWalletView(root, state);
-  setTimeout(() => {
-    const txTable = document.getElementById('tx-tbody');
-    if (txTable) txTable.scrollIntoView({ behavior: 'smooth' });
-  }, 100);
 }
