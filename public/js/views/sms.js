@@ -240,6 +240,8 @@ function loadTabContent() {
   } else if (viewState.activeTab === 'international') {
     loadInternational(viewState.searchQuery);
   }
+}
+
 function loadComposerInline() {
   const container = document.getElementById('sms-tab-content');
   if (!container) return;

@@ -99,38 +99,6 @@ async function initApp() {
   }
 }
 
-export async function fetchUserProfile() {
-  try {
-    const res = await apiFetch('/api/auth/me');
-    if (res && res.ok) {
-      const data = await res.json();
-      state.user = data.user;
-      updateUIHeader(state.user?.balance);
-      return true;
-    }
-    return false;
-  } catch (err) {
-    console.error('[fetchUserProfile] Error fetching user profile:', err);
-    return false;
-  }
-}
-
-export function updateUIHeader(balance) {
-  const user = state.user;
-  if (!user) return;
-  const bal = balance !== undefined ? balance : user.balance;
-  const balEl = document.getElementById('balance-count');
-  if (balEl) balEl.innerText = (bal || 0).toLocaleString();
-
-  const emailEl = document.getElementById('sidebar-user-email');
-  if (emailEl) emailEl.innerText = user.email || '';
-
-  const initialsEl = document.getElementById('user-initials');
-  if (initialsEl && user.email) {
-    initialsEl.innerText = user.email.charAt(0).toUpperCase();
-  }
-}
-
 // Setup App Layout Event Listeners
 function setupGlobalEvents() {
   // Navigation button handlers
