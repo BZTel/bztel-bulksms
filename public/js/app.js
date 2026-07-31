@@ -648,6 +648,7 @@ export function navigateTo(viewName) {
     case 'help':
       renderHelpView(root, state);
       break;
+    case 'account':
     case 'more':
       renderMoreView(root, state);
       break;
