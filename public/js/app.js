@@ -58,7 +58,7 @@ async function initApp() {
 
     if (paymentStatus === 'success') {
       const creds = paymentCredits ? Number(paymentCredits).toLocaleString() : 'requested';
-      showToast(`Payment successful! Credited ${creds} SMS credits to your wallet.`, 'success');
+      showToast(`Payment successful! Credited ${creds} credits to your wallet.`, 'success');
       state.currentView = 'wallet';
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (paymentStatus === 'error') {
@@ -560,7 +560,7 @@ export function navigateTo(viewName) {
     birthday: 'Birthday Campaign Scheduler',
     teams: 'Team Collaboration Hub',
     wallet: 'Wallet Overview & Billing',
-    'buy-credits': 'Buy SMS Credits',
+    'buy-credits': 'Buy Credits',
     transactions: 'Transaction Statements & Receipts',
     'campaign-history': 'Sent SMS Broadcast Logs',
     'voice-history': 'Voice Broadcast Logs',

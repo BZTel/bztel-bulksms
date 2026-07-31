@@ -39,7 +39,16 @@ export async function GET(req: Request) {
       };
     });
 
+    const user = await prisma.user.findUnique({
+      where: { id: ownerId },
+      select: { balance: true },
+    });
+
     return NextResponse.json({
+      balance: user?.balance || 0,
+      credited: totalCredited,
+      debited: totalDebited,
+      count: legacyTransactions.length,
       transactions: legacyTransactions,
       summary: {
         total_credited: totalCredited,

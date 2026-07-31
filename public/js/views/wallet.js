@@ -193,7 +193,11 @@ async function loadWalletData(silent = false) {
     if (!res.ok) throw new Error();
 
     const data = await res.json();
-    const { balance, credited, debited, count, transactions } = data;
+    const balance = data.balance !== undefined ? data.balance : (state.user?.balance || 0);
+    const credited = data.credited !== undefined ? data.credited : (data.summary?.total_credited || 0);
+    const debited = data.debited !== undefined ? data.debited : (data.summary?.total_debited || 0);
+    const count = data.count !== undefined ? data.count : (data.summary?.count || (data.transactions || []).length);
+    const transactions = data.transactions || [];
 
     // Update Topbar
     updateUIHeader(balance);

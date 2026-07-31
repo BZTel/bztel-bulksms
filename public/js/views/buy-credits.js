@@ -8,45 +8,6 @@ export function renderBuyCreditsView(root, state) {
     : '...';
 
   root.innerHTML = `
-    <!-- Top Hero Banner -->
-    <div style="
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(124, 58, 237, 0.95)), var(--accent-gradient);
-      border-radius: 20px;
-      padding: 32px 36px;
-      margin-bottom: 28px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 16px 40px rgba(99, 102, 241, 0.25);
-      color: #fff;
-    ">
-      <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;"></div>
-      <div style="position:absolute;bottom:-60px;right:90px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,0.04);pointer-events:none;"></div>
-
-      <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
-        <div>
-          <span style="font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(255,255,255,0.18);padding:4px 12px;border-radius:12px;display:inline-block;margin-bottom:10px;">
-            Standard Rate • ₦6.50 / SMS
-          </span>
-          <h2 style="font-family:'Outfit',sans-serif;font-size:2rem;font-weight:800;margin:0 0 6px 0;line-height:1.2;color:#fff;">
-            Purchase SMS Credits
-          </h2>
-          <p style="margin:0;font-size:0.9rem;color:rgba(255,255,255,0.85);max-width:520px;">
-            Select a suggested package below or enter a custom number of credits. Cost is calculated automatically at ₦6.50 per credit.
-          </p>
-        </div>
-
-        <div style="background:rgba(255,255,255,0.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.25);padding:16px 24px;border-radius:16px;text-align:right;">
-          <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">
-            Current Balance
-          </div>
-          <div id="buy-credits-current-balance" style="font-family:'Outfit',sans-serif;font-size:2.2rem;font-weight:800;line-height:1;">
-            ${userBalance}
-          </div>
-          <div style="font-size:0.75rem;color:rgba(255,255,255,0.75);margin-top:2px;">SMS Credits Available</div>
-        </div>
-      </div>
-    </div>
-
     <!-- Suggested Credit Packages Section -->
     <div style="margin-bottom: 32px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -65,7 +26,7 @@ export function renderBuyCreditsView(root, state) {
         <div class="pricing-card" data-credits="500" style="padding:22px 16px;">
           <span class="pricing-badge" style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Starter</span>
           <div class="credits-count" style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;">500</div>
-          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">SMS Credits</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">Credits</span>
           <div class="price" style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent-color);">₦3,250</div>
           <span style="font-size:0.72rem;color:var(--text-muted);display:block;margin-top:4px;">@ ₦6.50 / credit</span>
         </div>
@@ -74,7 +35,7 @@ export function renderBuyCreditsView(root, state) {
         <div class="pricing-card" data-credits="1000" style="padding:22px 16px;">
           <span class="pricing-badge" style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Basic</span>
           <div class="credits-count" style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;">1,000</div>
-          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">SMS Credits</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">Credits</span>
           <div class="price" style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent-color);">₦6,500</div>
           <span style="font-size:0.72rem;color:var(--text-muted);display:block;margin-top:4px;">@ ₦6.50 / credit</span>
         </div>
@@ -83,7 +44,7 @@ export function renderBuyCreditsView(root, state) {
         <div class="pricing-card popular" data-credits="5000" style="padding:22px 16px;">
           <span class="pricing-badge" style="font-size:0.7rem;font-weight:600;color:var(--accent-color);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Growth</span>
           <div class="credits-count" style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;">5,000</div>
-          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">SMS Credits</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">Credits</span>
           <div class="price" style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent-color);">₦32,500</div>
           <span style="font-size:0.72rem;color:var(--text-muted);display:block;margin-top:4px;">@ ₦6.50 / credit</span>
         </div>
@@ -92,7 +53,7 @@ export function renderBuyCreditsView(root, state) {
         <div class="pricing-card" data-credits="10000" style="padding:22px 16px;">
           <span class="pricing-badge" style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Pro</span>
           <div class="credits-count" style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;">10,000</div>
-          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">SMS Credits</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">Credits</span>
           <div class="price" style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent-color);">₦65,000</div>
           <span style="font-size:0.72rem;color:var(--text-muted);display:block;margin-top:4px;">@ ₦6.50 / credit</span>
         </div>
@@ -101,7 +62,7 @@ export function renderBuyCreditsView(root, state) {
         <div class="pricing-card" data-credits="25000" style="padding:22px 16px;">
           <span class="pricing-badge" style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;display:block;margin-bottom:8px;">Enterprise</span>
           <div class="credits-count" style="font-family:'Outfit',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;">25,000</div>
-          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">SMS Credits</span>
+          <span style="font-size:0.78rem;color:var(--text-muted);display:block;margin-bottom:12px;">Credits</span>
           <div class="price" style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;color:var(--accent-color);">₦162,500</div>
           <span style="font-size:0.72rem;color:var(--text-muted);display:block;margin-top:4px;">@ ₦6.50 / credit</span>
         </div>
