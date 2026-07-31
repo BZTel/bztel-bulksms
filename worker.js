@@ -76,7 +76,11 @@ function connectSMPP(key) {
     console.log(`[SMPP - ${conn.name}] Incoming deliver_sm PDU received:`, pdu);
     
     // Always acknowledge the incoming deliver_sm request back to the SMSC
-    conn.session.send(pdu.createResponse());
+    try {
+      conn.session.send(pdu.response());
+    } catch (e) {
+      console.warn('[SMPP] Error sending deliver_sm_resp:', e);
+    }
     
     handleIncomingDeliverSM(pdu);
   });
