@@ -154,7 +154,12 @@ export function renderImportContactsView(root, state) {
 
       <form id="standalone-csv-form">
         <div class="form-group" style="margin-bottom: 16px;">
-          <label for="csv-group" style="font-weight: 600;">Assign to Group</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="csv-group" style="font-weight: 600; margin-bottom: 0;">Assign to Group</label>
+            <button type="button" id="btn-download-sample-csv" class="btn btn-secondary btn-sm" style="padding: 4px 12px; font-size: 0.78rem;">
+              📄 Download Sample CSV
+            </button>
+          </div>
           <select id="csv-group" class="form-control" style="padding: 10px 14px;">
             <option value="Default">Default</option>
             <option value="__NEW__">+ Create New Group...</option>
@@ -170,7 +175,7 @@ export function renderImportContactsView(root, state) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
           </svg>
           <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px; color: var(--text-primary);" id="csv-filename-display">Select CSV File</div>
-          <div style="color: var(--text-muted); font-size: 0.8rem;">Click to browse your device (Format: 1 phone number per line)</div>
+          <div style="color: var(--text-muted); font-size: 0.8rem;">Click to browse your device (Format: Phone Number, Contact Name)</div>
           <input type="file" id="csv-file-input" accept=".csv" class="hidden">
         </div>
 
@@ -183,6 +188,7 @@ export function renderImportContactsView(root, state) {
 
   setupGroupNewInputToggles();
   setupCSVImporter();
+  setupDownloadSampleCSV();
   loadContactsData('import');
 }
 
@@ -489,6 +495,24 @@ function setupAddForm() {
   });
 }
 
+function setupDownloadSampleCSV() {
+  const btn = document.getElementById('btn-download-sample-csv');
+  if (!btn) return;
+
+  btn.addEventListener('click', () => {
+    const csvContent = 'Phone Number, Contact Name\n+2348012345678, John Doe\n+2348098765432, Sarah Smith\n+2348033334444, Michael Johnson\n';
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'bztel_contacts_sample.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Sample CSV downloaded successfully', 'success');
+  });
+}
+
 function setupCSVImporter() {
   const dropzone = document.getElementById('csv-dropzone');
   const fileInput = document.getElementById('csv-file-input');
@@ -511,15 +535,35 @@ function setupCSVImporter() {
     reader.onload = async (event) => {
       const text = event.target.result;
       const lines = text.split(/\r\n|\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) return;
+
+      // Auto-detect header row
+      let startIndex = 0;
+      let phoneCol = 0;
+      let nameCol = 1;
+
+      const firstLineLower = lines[0].toLowerCase();
+      if (firstLineLower.includes('phone') || firstLineLower.includes('number') || firstLineLower.includes('name')) {
+        startIndex = 1;
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        headers.forEach((h, idx) => {
+          if (h.includes('phone') || h.includes('number')) phoneCol = idx;
+          if (h.includes('name')) nameCol = idx;
+        });
+      }
       
       let successCount = 0;
-      for (const line of lines) {
-        const phone = line.split(',')[0].trim().replace(/[^0-9+]/g, '');
+      for (let i = startIndex; i < lines.length; i++) {
+        const parts = lines[i].split(',').map(p => p.trim());
+        const rawPhone = parts[phoneCol] || parts[0] || '';
+        const phone = rawPhone.replace(/[^0-9+]/g, '');
+        const name = parts[nameCol] && parts[nameCol] !== phone ? parts[nameCol] : phone;
+
         if (phone.length >= 7) {
           try {
             const res = await apiFetch('/api/contacts', {
               method: 'POST',
-              body: JSON.stringify({ phone, group_name: groupName })
+              body: JSON.stringify({ phone, name, group_name: groupName })
             });
             if (res.ok) successCount++;
           } catch (err) {}
