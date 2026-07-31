@@ -190,7 +190,7 @@ function groupLogsIntoCampaigns(logs) {
     const campaign = campaignsMap.get(batchId);
     campaign.total++;
     
-    if (log.status === 'sent' || log.status === 'delivered') {
+    if (log.status === 'sent' || log.status === 'delivered' || log.status === 'submitted') {
       campaign.delivered++;
     } else if (log.status === 'failed') {
       campaign.failed++;
@@ -305,7 +305,7 @@ function switchDetailsTab(status) {
     matchingRecipients = currentCampaignDetail.recipients.map(r => r.recipient);
   } else if (status === 'delivered') {
     matchingRecipients = currentCampaignDetail.recipients
-      .filter(r => r.status === 'sent' || r.status === 'delivered')
+      .filter(r => r.status === 'sent' || r.status === 'delivered' || r.status === 'submitted')
       .map(r => r.recipient);
   } else if (status === 'failed') {
     matchingRecipients = currentCampaignDetail.recipients

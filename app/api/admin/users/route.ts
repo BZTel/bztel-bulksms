@@ -41,7 +41,7 @@ export async function GET(req: Request) {
       let creditsUsed = 0;
 
       for (const log of u.smsLogs) {
-        if (log.status === 'sent' || log.status === 'submitted') {
+        if (log.status === 'sent' || log.status === 'submitted' || log.status === 'delivered') {
           sent++;
           creditsUsed += log.credits;
         } else if (log.status === 'failed') {
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
 
     for (const t of groupTotals) {
       const count = t._count._all || 0;
-      if (t.status === 'sent' || t.status === 'submitted') {
+      if (t.status === 'sent' || t.status === 'submitted' || t.status === 'delivered') {
         platformSent += count;
       } else if (t.status === 'pending') {
         platformPending += count;

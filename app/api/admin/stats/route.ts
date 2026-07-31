@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     ] = await Promise.all([
       prisma.user.count(),
       prisma.smsLog.count(),
-      prisma.smsLog.count({ where: { status: 'delivered' } }),
+      prisma.smsLog.count({ where: { status: { in: ['delivered', 'sent', 'submitted'] } } }),
       prisma.smsLog.count({ where: { status: 'failed' } }),
       prisma.smsLog.aggregate({ _sum: { credits: true } }),
       prisma.transaction.aggregate({

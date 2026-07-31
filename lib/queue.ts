@@ -67,7 +67,7 @@ async function dispatchToProvider(log: { id: number; recipient: string; message:
   try {
     await prisma.smsLog.update({
       where: { id: log.id },
-      data: { status: 'submitted' }
+      data: { status: 'sent' }
     });
   } catch (err) {
     console.error(`[Queue Worker] Failed to dispatch log ${log.id} to provider:`, err);

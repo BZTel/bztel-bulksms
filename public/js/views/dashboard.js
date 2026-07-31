@@ -112,7 +112,7 @@ export function renderDashboardView(container, state) {
         <div id="delivery-summary-body">
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
             <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
-              <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Delivered</div>
+              <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Sent / Delivered</div>
               <div id="del-sent" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#10b981;">0</div>
             </div>
             <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
@@ -120,7 +120,7 @@ export function renderDashboardView(container, state) {
               <div id="del-failed" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#ef4444;">0</div>
             </div>
             <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
-              <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Pending</div>
+              <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Queued</div>
               <div id="del-pending" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#f59e0b;">0</div>
             </div>
           </div>

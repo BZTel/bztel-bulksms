@@ -42,13 +42,13 @@ export async function GET(req: Request) {
       const count = group._count._all || 0;
       const credits = group._sum.credits || 0;
 
-      if (group.status === 'sent') {
-        sent = count;
+      if (group.status === 'sent' || group.status === 'delivered' || group.status === 'submitted') {
+        sent += count;
         totalCreditsUsed += credits;
       } else if (group.status === 'failed') {
-        failed = count;
+        failed += count;
       } else if (group.status === 'pending') {
-        pending = count;
+        pending += count;
         totalCreditsUsed += credits;
       }
     }
@@ -90,7 +90,7 @@ export async function GET(req: Request) {
       if (chartMap.has(dateStr)) {
         const entry = chartMap.get(dateStr)!;
         entry.count++;
-        if (log.status === 'sent') {
+        if (log.status === 'sent' || log.status === 'delivered' || log.status === 'submitted') {
           entry.delivered++;
         }
       }

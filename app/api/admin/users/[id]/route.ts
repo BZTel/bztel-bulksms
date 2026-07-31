@@ -49,7 +49,7 @@ export async function GET(
       const count = group._count._all || 0;
       const credits = group._sum.credits || 0;
 
-      if (group.status === 'sent' || group.status === 'submitted') {
+      if (group.status === 'sent' || group.status === 'submitted' || group.status === 'delivered') {
         sent += count;
         totalCreditsUsed += credits;
       } else if (group.status === 'failed') {
