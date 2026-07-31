@@ -67,7 +67,7 @@ export function renderSMSView(root, state, initialTab = 'composer') {
               <!-- Sender ID -->
               <div class="form-group">
                 <label for="sms-sender">Sender ID</label>
-                <input type="text" id="sms-sender" class="form-control" placeholder="e.g. BZTEL" required maxlength="11" value="BZTEL">
+                <input type="text" id="sms-sender" class="form-control" placeholder="e.g. MYBRAND" required maxlength="11" value="">
                 <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
               </div>
 
@@ -250,7 +250,7 @@ function loadComposerInline() {
     <form id="inline-broadcast-form" style="max-width: 720px; margin: 0 auto; padding: 12px 0;">
       <div class="form-group">
         <label for="inline-sms-sender" style="font-weight: 600;">Sender ID</label>
-        <input type="text" id="inline-sms-sender" class="form-control" placeholder="e.g. BZTEL" required maxlength="11" value="BZTEL" style="padding: 10px 14px;">
+        <input type="text" id="inline-sms-sender" class="form-control" placeholder="e.g. MYBRAND" required maxlength="11" value="" style="padding: 10px 14px;">
         <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
       </div>
 
@@ -1029,7 +1029,7 @@ function loadPersonalized(query = '') {
 }
 
 // ── Compose Modal Actions ───────────────────────────────────────────
-export async function openComposeModal(initialText = '', draftId = null, senderId = 'BZTEL', recipients = '') {
+export async function openComposeModal(initialText = '', draftId = null, senderId = '', recipients = '') {
   const modal = document.getElementById('compose-modal');
   modal.classList.remove('hidden');
   
@@ -1038,7 +1038,7 @@ export async function openComposeModal(initialText = '', draftId = null, senderI
   // Set fields
   document.getElementById('sms-recipients').value = recipients;
   document.getElementById('sms-message').value = initialText;
-  document.getElementById('sms-sender').value = senderId || 'BZTEL';
+  document.getElementById('sms-sender').value = senderId || '';
   
   const draftBtnText = document.getElementById('draft-btn-text');
   if (draftBtnText) {

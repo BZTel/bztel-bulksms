@@ -265,14 +265,13 @@ async function loadDashboardData(state, silent = false) {
 
     if (!isCurrentView('dashboard')) return;
 
-    let approvedSenderIds = ['BZTEL'];
+    let approvedSenderIds = [];
     if (senderIdsRes && senderIdsRes.ok) {
       try {
         const { sender_ids } = await senderIdsRes.json();
-        const approvedList = sender_ids
+        approvedSenderIds = sender_ids
           .filter(s => s.status === 'approved')
           .map(s => s.name);
-        approvedSenderIds = ['BZTEL', ...approvedList];
       } catch (err) {
         console.error('Error parsing sender IDs:', err);
       }
@@ -381,7 +380,7 @@ async function loadDashboardData(state, silent = false) {
   }
 }
 
-function setupSenderIdSearch(state, senderIds = ['BZTEL']) {
+function setupSenderIdSearch(state, senderIds = []) {
   const input = document.getElementById('sender-id-search');
   if (!input) return;
 

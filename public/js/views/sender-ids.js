@@ -150,12 +150,7 @@ async function loadSenderIds() {
 
 function renderList(query = '') {
   const container = document.getElementById('sender-ids-list-container');
-  if (!container) return;
-
-  const filtered = cachedSenderIds.filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
-
-  // Always list system BZTEL ID
-  const allList = [{ name: 'BZTEL', status: 'approved', description: 'System Default Alphanumeric Sender ID' }, ...filtered];
+  const allList = cachedSenderIds.filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
 
   if (allList.length === 0) {
     container.innerHTML = `

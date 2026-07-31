@@ -16,7 +16,7 @@ export function renderVoiceView(root, state) {
         <div class="form-row-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div class="form-group">
             <label for="voice-sender" style="font-weight: 600;">Caller ID</label>
-            <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +2348012345678" required value="BZTEL_VOICE" style="padding: 10px 14px;">
+            <input type="text" id="voice-sender" class="form-control" placeholder="e.g. +2348012345678" required value="" style="padding: 10px 14px;">
           </div>
 
           <div class="form-group">

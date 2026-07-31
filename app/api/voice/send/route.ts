@@ -62,8 +62,6 @@ export async function POST(req: Request) {
     const cleanSenderId = senderId.trim().substring(0, 11).toUpperCase();
 
     // Enforce Sender ID Verification Checks
-    const isDefaultSender = cleanSenderId === 'BZTEL';
-    
     const virtualNum = await prisma.virtualNumber.findFirst({
       where: { userId: ownerId, number: senderId.trim() }
     });
@@ -72,7 +70,7 @@ export async function POST(req: Request) {
       where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
     });
 
-    if (!isDefaultSender && !virtualNum && !approvedCustom) {
+    if (!virtualNum && !approvedCustom) {
       return NextResponse.json({ 
         error: 'Forbidden: Sender ID is unverified, pending review, or not assigned to your account.' 
       }, { status: 403 });
