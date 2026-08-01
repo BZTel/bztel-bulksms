@@ -1,5 +1,59 @@
 import { apiFetch, showToast, navigateTo, fetchUserProfile } from '../app.js';
 import { SYSTEM_TEMPLATES } from '../templates-data.js';
+import { SUGGESTED_SENDER_IDS } from '../suggested-sender-ids.js';
+
+function getSuggestedSenderPickerHTML(prefix = 'modal') {
+  return `
+    <div style="margin-top: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border); padding: 8px 10px; border-radius: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+        <span style="font-size: 0.73rem; font-weight: 700; color: var(--accent-color); display: flex; align-items: center; gap: 4px;">
+          💡 Suggested Promotional Sender Names
+        </span>
+        <select id="${prefix}-suggested-sender-category-select" style="font-size: 0.72rem; padding: 2px 6px; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--glass-border); border-radius: 4px; cursor: pointer; outline: none;">
+          <option value="all">⭐ Popular Suggestions</option>
+          ${SUGGESTED_SENDER_IDS.map(c => `<option value="${c.category}">${c.icon} ${c.category}</option>`).join('')}
+        </select>
+      </div>
+      <div id="${prefix}-suggested-sender-pills" style="display: flex; flex-wrap: wrap; gap: 4px; max-height: 75px; overflow-y: auto; padding: 2px 0;">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  `;
+}
+
+function renderSuggestedSenderPills(prefix = 'modal', categoryFilter = 'all', targetInputId = 'sms-sender') {
+  const container = document.getElementById(`${prefix}-suggested-sender-pills`);
+  if (!container) return;
+
+  let items = [];
+  if (categoryFilter === 'all') {
+    SUGGESTED_SENDER_IDS.forEach(cat => {
+      items.push(...cat.items.slice(0, 2));
+    });
+  } else {
+    const found = SUGGESTED_SENDER_IDS.find(cat => cat.category === categoryFilter);
+    if (found) items = found.items;
+  }
+
+  container.innerHTML = items.map(name => `
+    <button type="button" class="${prefix}-suggested-sender-pill-btn" data-name="${name}" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: var(--text-primary); font-family: monospace; font-weight: 700; font-size: 0.73rem; padding: 2px 8px; border-radius: 4px; cursor: pointer; transition: all 0.15s ease;">
+      ${name}
+    </button>
+  `).join('');
+
+  container.querySelectorAll(`.${prefix}-suggested-sender-pill-btn`).forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const chosen = e.currentTarget.getAttribute('data-name');
+      const senderInput = document.getElementById(targetInputId);
+      if (senderInput) {
+        senderInput.value = chosen;
+        senderInput.dispatchEvent(new Event('input'));
+        showToast(`Sender ID set to: ${chosen}`, 'info');
+      }
+    });
+  });
+}
 
 // Module level state for the view
 let viewState = {
@@ -69,6 +123,7 @@ export function renderSMSView(root, state, initialTab = 'composer') {
                 <label for="sms-sender">Sender ID</label>
                 <input type="text" id="sms-sender" class="form-control" placeholder="e.g. MYBRAND" required maxlength="11" value="">
                 <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
+                ${getSuggestedSenderPickerHTML('modal')}
               </div>
 
               <!-- Recipients Input -->
@@ -252,6 +307,7 @@ function loadComposerInline() {
         <label for="inline-sms-sender" style="font-weight: 600;">Sender ID</label>
         <input type="text" id="inline-sms-sender" class="form-control" placeholder="e.g. MYBRAND" required maxlength="11" value="" style="padding: 10px 14px;">
         <small style="color: var(--text-muted); font-size: 0.72rem; display: block; margin-top: 4px;">Alphanumeric identity (max 11 characters).</small>
+        ${getSuggestedSenderPickerHTML('inline')}
       </div>
 
       <div class="form-group mt-3">
@@ -316,6 +372,12 @@ function setupInlineComposerListeners() {
   const insertNameBtn = document.getElementById('inline-btn-insert-name');
   const scheduleToggle = document.getElementById('inline-schedule-toggle');
   const scheduleContainer = document.getElementById('inline-schedule-container');
+
+  // Initialize inline suggested sender pills & category selector
+  renderSuggestedSenderPills('inline', document.getElementById('inline-suggested-sender-category-select')?.value || 'all', 'inline-sms-sender');
+  document.getElementById('inline-suggested-sender-category-select')?.addEventListener('change', (e) => {
+    renderSuggestedSenderPills('inline', e.target.value, 'inline-sms-sender');
+  });
 
   // Check for preloaded recipients from Group Card click
   if (window.preloadedSMSRecipients && recipientsArea) {
@@ -1052,6 +1114,16 @@ export async function openComposeModal(initialText = '', draftId = null, senderI
   document.getElementById('sms-schedule-time').value = '';
 
   recalculateSMSCost();
+
+  // Render suggested sender pills & attach category selector listener
+  renderSuggestedSenderPills('modal', document.getElementById('modal-suggested-sender-category-select')?.value || 'all', 'sms-sender');
+  const modalCategorySelect = document.getElementById('modal-suggested-sender-category-select');
+  if (modalCategorySelect && !modalCategorySelect.dataset.listenerAttached) {
+    modalCategorySelect.dataset.listenerAttached = 'true';
+    modalCategorySelect.addEventListener('change', (e) => {
+      renderSuggestedSenderPills('modal', e.target.value, 'sms-sender');
+    });
+  }
 
   // Load context dependent data inside modal asynchronously
   await loadComposeQuickTemplates();

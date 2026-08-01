@@ -458,7 +458,7 @@ func main() {
 
       {/* Software Development Capabilities Section */}
       <section className="sect-l sect-l-offset" style={{ borderBottom: '1px solid var(--border-color)' }}>
-        <div className="features-split-grid" style={{ gridTemplateColumns: '0.95fr 1.05fr' }}>
+        <div className="features-split-grid">
           
           {/* Left: CSS Mockup Sprint Board / Code Editor */}
           <div className="reveal reveal-left reveal-active">
@@ -515,7 +515,7 @@ func main() {
           </div>
 
           {/* Right: Software Dev Capabilities Description & Bullets */}
-          <div className="reveal reveal-right reveal-active" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div className="reveal reveal-right reveal-active mobile-order-first" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <span className="hero-tag-l" style={{ marginBottom: '12px', display: 'inline-block', alignSelf: 'flex-start' }}>SOFTWARE DEVELOPMENT</span>
             <h2 className="hero-title-l" style={{ fontSize: '2.2rem', color: 'var(--text-dark)', marginBottom: '24px', lineHeight: 1.2 }}>
               Build and scale custom platforms with BZTel

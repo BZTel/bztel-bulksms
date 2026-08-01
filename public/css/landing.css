@@ -2028,8 +2028,12 @@ textarea.form-control {
 @media (max-width: 768px) {
   .features-split-grid,
   .reliability-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
     gap: 32px;
+  }
+
+  .mobile-order-first {
+    order: -1 !important;
   }
 }
 
@@ -2248,7 +2252,11 @@ textarea.form-control {
   
   /* Sections */
   .sect-l {
-    padding: 50px 20px !important;
+    padding: 40px 20px !important;
+  }
+
+  .sect-l-offset + .sect-l-offset {
+    padding-top: 16px !important;
   }
   
   /* Hero section responsiveness */
