@@ -68,7 +68,7 @@ export function renderAdminScamWordsView(root, state) {
         <table class="data-table">
           <thead>
             <tr>
-              <th>ID</th>
+              <th style="width: 90px; padding-right: 16px;"># ID</th>
               <th>Keyword / Term</th>
               <th>Category</th>
               <th>Date Added</th>
@@ -84,7 +84,7 @@ export function renderAdminScamWordsView(root, state) {
           </tbody>
         </table>
       </div>
-    </div>
+    </div>`;
 
     <!-- Add Scam Word Modal -->
     <div id="add-scam-modal" class="modal-overlay hidden">
@@ -335,7 +335,7 @@ function renderTable(list) {
 
   tbody.innerHTML = list.map(item => `
     <tr>
-      <td><code>#${item.id}</code></td>
+      <td style="padding-right: 16px;"><code style="color: var(--text-muted); font-size: 0.85rem;">#${item.id}</code></td>
       <td>
         <strong style="color: var(--text-primary); font-family: monospace; font-size: 0.95rem;">${escapeHtml(item.word)}</strong>
       </td>
