@@ -10,7 +10,7 @@ import { renderAdminContactMessagesView } from './views/admin-contact-messages.j
 import { renderAdminAuditLogsView } from './views/admin-audit-logs.js';
 import { renderAdminScamWordsView } from './views/admin-scam-words.js';
 
-export { adminFetch, showToast, adminLogout };
+
 
 // ─── Boot ────────────────────────────────────────────────────
 if (document.readyState === 'loading') {
@@ -36,7 +36,7 @@ async function initAdmin() {
       // Background token verification
       const ok = await verifyAdminToken();
       if (!ok) {
-        showAdminLogin();
+        showAdminLoginUI();
       }
       return;
     }
@@ -44,7 +44,7 @@ async function initAdmin() {
     console.error('Failed to initialize admin portal:', err);
   }
 
-  showAdminLogin();
+  showAdminLoginUI();
 }
 
 // ─── Token Verification ───────────────────────────────────────
@@ -153,14 +153,6 @@ function setupLoginForm() {
 // ─── Logout ───────────────────────────────────────────────────
 function setupLogout() {
   document.getElementById('admin-logout-btn')?.addEventListener('click', () => adminLogout());
-}
-
-export function adminLogout(showMsg = true) {
-  state.adminToken = null;
-  state.adminUser = null;
-  localStorage.removeItem('adminToken');
-  showAdminLogin();
-  if (showMsg) showToast('Signed out successfully', 'info');
 }
 
 // ─── View Routing ─────────────────────────────────────────────
@@ -286,18 +278,7 @@ function showAdminApp() {
           backdrop.classList.remove('active');
         });
       });
-    }
   }
-}
-
-function showAdminLogin() {
-  document.getElementById('admin-app')?.classList.add('hidden');
-  const loader = document.getElementById('admin-loader');
-  if (loader) {
-    loader.classList.add('hidden');
-    loader.style.display = 'none';
-  }
-  document.getElementById('admin-auth')?.classList.remove('hidden');
 }
 
 // ─── Modal Wiring ─────────────────────────────────────────────
@@ -320,41 +301,4 @@ function setupModals() {
   document.getElementById('delete-cancel-btn')?.addEventListener('click', () => {
     document.getElementById('delete-modal')?.classList.add('hidden');
   });
-}
-
-// ─── Admin Fetch Helper ───────────────────────────────────────
-export async function adminFetch(url, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (state.adminToken) {
-    headers['Authorization'] = `Bearer ${state.adminToken}`;
-  }
-  const res = await fetch(url, { ...options, headers });
-  if (res.status === 401) {
-    adminLogout(false);
-    showToast('Session expired. Please log in again.', 'error');
-    throw new Error('Unauthorized');
-  }
-  return res;
-}
-
-// ─── Toast System ────────────────────────────────────────────
-export function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-
-  const icons = {
-    success: `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-    error:   `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-    info:    `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
-  };
-
-  toast.innerHTML = `${icons[type] || icons.info}<span>${message}</span>`;
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(10px)';
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
 }
