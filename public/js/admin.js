@@ -19,27 +19,16 @@ if (document.readyState === 'loading') {
   initAdmin();
 }
 
-// Emergency safety timeout: Guarantee the loader overlay is hidden within 2 seconds
-setTimeout(() => {
-  const loader = document.getElementById('admin-loader');
-  if (loader && !loader.classList.contains('hidden')) {
-    console.warn('Admin loader safety fallback triggered');
-    if (state.adminToken) {
-      showAdminApp();
-      renderView('dashboard');
-    } else {
-      showAdminLogin();
-    }
-  }
-}, 2000);
-
 async function initAdmin() {
   try {
+    setupNavButtons();
     setupLoginForm();
     setupLogout();
     setupModals();
 
-    if (state.adminToken) {
+    const storedToken = localStorage.getItem('adminToken') || state.adminToken;
+    if (storedToken) {
+      state.adminToken = storedToken;
       const ok = await verifyAdminToken();
       if (ok) {
         showAdminApp();
@@ -235,6 +224,19 @@ function renderView(viewName) {
   }
 }
 
+function setupNavButtons() {
+  document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+    if (!btn.dataset.wired) {
+      btn.dataset.wired = 'true';
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = btn.getAttribute('data-view');
+        renderView(view);
+      });
+    }
+  });
+}
+
 // ─── UI Toggles ───────────────────────────────────────────────
 function showAdminApp() {
   document.getElementById('admin-auth')?.classList.add('hidden');
@@ -248,10 +250,7 @@ function showAdminApp() {
   const initialsEl = document.getElementById('admin-initials');
   if (initialsEl) initialsEl.textContent = email.substring(0, 2).toUpperCase();
 
-  // Wire up nav buttons
-  document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => renderView(btn.getAttribute('data-view')));
-  });
+  setupNavButtons();
 
   // Sidebar responsive mobile toggling
   const sidebar = document.querySelector('.sidebar');
