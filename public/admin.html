@@ -31,14 +31,6 @@
           loader.style.display = 'none';
           loader.classList.add('hidden');
         }
-        var token = localStorage.getItem('adminToken');
-        var app = document.getElementById('admin-app');
-        var auth = document.getElementById('admin-auth');
-        if (token && app && app.classList.contains('hidden')) {
-          app.classList.remove('hidden');
-        } else if (!token && auth && auth.classList.contains('hidden')) {
-          auth.classList.remove('hidden');
-        }
       }, 1000);
     })();
   </script>
@@ -146,7 +138,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 id="admin-view-title" class="view-title">Customer Accounts</h1>
+          <h1 id="admin-view-title" class="view-title">Platform Overview & Gateway Status</h1>
         </div>
         <div class="top-bar-actions">
           <a href="/app" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 16px; text-decoration: none;">
@@ -157,7 +149,9 @@
           </a>
         </div>
       </header>
-      <div id="admin-root" class="content-viewport"></div>
+      <div id="admin-root" class="content-viewport">
+        <div style="text-align: center; padding: 60px; color: var(--text-muted);">Loading view...</div>
+      </div>
     </main>
   </div>
 
