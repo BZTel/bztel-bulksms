@@ -136,7 +136,20 @@ async function initView(state) {
 async function loadData(state) {
   try {
     const res = await adminFetch('/api/admin/stats');
-    if (!res.ok) return;
+    if (!res.ok) {
+      showToast('Could not load dashboard stats', 'error');
+      const tbody = document.getElementById('dash-recent-sms-tbody');
+      if (tbody) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+              No SMS dispatches recorded yet.
+            </td>
+          </tr>
+        `;
+      }
+      return;
+    }
     const data = await res.json();
 
     const stats = data.stats || {};

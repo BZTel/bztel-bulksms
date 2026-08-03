@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 
+const safe = async <T>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+  try {
+    return await fn();
+  } catch (e) {
+    console.error('Stats query fallback error:', e);
+    return fallback;
+  }
+};
+
 export async function GET(req: Request) {
   try {
     const authUser = await getUserFromRequest(req);
@@ -12,7 +21,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    // Run aggregate queries concurrently for optimal performance
+    // Run aggregate queries concurrently with safe fallbacks
     const [
       totalUsers,
       totalSms,
@@ -25,19 +34,16 @@ export async function GET(req: Request) {
       openTickets,
       totalScamWords
     ] = await Promise.all([
-      prisma.user.count(),
-      prisma.smsLog.count(),
-      prisma.smsLog.count({ where: { status: { in: ['delivered', 'sent', 'submitted'] } } }),
-      prisma.smsLog.count({ where: { status: 'failed' } }),
-      prisma.smsLog.aggregate({ _sum: { credits: true } }),
-      prisma.transaction.aggregate({
-        _sum: { amount: true },
-        where: { type: 'topup' }
-      }),
-      prisma.senderId.count({ where: { status: 'pending' } }),
-      prisma.serviceRequest.count({ where: { status: 'pending' } }),
-      prisma.supportTicket.count({ where: { status: 'open' } }),
-      prisma.scamWord.count()
+      safe(() => prisma.user.count(), 0),
+      safe(() => prisma.smsLog.count(), 0),
+      safe(() => prisma.smsLog.count({ where: { status: { in: ['delivered', 'sent', 'submitted'] } } }), 0),
+      safe(() => prisma.smsLog.count({ where: { status: 'failed' } }), 0),
+      safe(() => prisma.smsLog.aggregate({ _sum: { credits: true } }), { _sum: { credits: null } }),
+      safe(() => prisma.transaction.aggregate({ _sum: { amount: true }, where: { type: 'topup' } }), { _sum: { amount: null } }),
+      safe(() => prisma.senderId.count({ where: { status: 'pending' } }), 0),
+      safe(() => prisma.serviceRequest.count({ where: { status: 'pending' } }), 0),
+      safe(() => prisma.supportTicket.count({ where: { status: { in: ['open', 'Open'] } } }), 0),
+      safe(() => prisma.scamWord.count(), 0)
     ]);
 
     const totalCreditsUsed = smsCreditsSum._sum.credits || 0;
@@ -45,13 +51,16 @@ export async function GET(req: Request) {
     const successRate = totalSms > 0 ? Math.round((deliveredSms / totalSms) * 100) : 100;
 
     // Fetch 5 most recent SMS logs for preview
-    const recentSms = await prisma.smsLog.findMany({
-      take: 5,
-      orderBy: { sentAt: 'desc' },
-      include: {
-        user: { select: { email: true } }
-      }
-    });
+    const recentSms = await safe(
+      () => prisma.smsLog.findMany({
+        take: 5,
+        orderBy: { sentAt: 'desc' },
+        include: {
+          user: { select: { email: true } }
+        }
+      }),
+      []
+    );
 
     return NextResponse.json({
       stats: {
@@ -75,7 +84,7 @@ export async function GET(req: Request) {
         message: s.message,
         credits: s.credits,
         status: s.status,
-        sent_at: s.sentAt.toISOString()
+        sent_at: s.sentAt ? s.sentAt.toISOString() : new Date().toISOString()
       }))
     });
   } catch (error) {
