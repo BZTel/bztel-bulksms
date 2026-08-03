@@ -91,7 +91,8 @@ async function initApp() {
       }
     } else {
       console.log('[initApp] No token present, showing auth container...');
-      showAuthContainer();
+      const forceSignup = window.location.hash === '#signup';
+      showAuthContainer(forceSignup);
     }
   } catch (err) {
     console.error('[initApp] Startup error caught:', err);
@@ -666,12 +667,13 @@ export function showAppContainer() {
   connectTelemetry();
 }
 
-export function showAuthContainer() {
+// Switch to Auth Screen
+export function showAuthContainer(forceSignup = false) {
   console.log('[showAuthContainer] Hiding loader and showing auth...');
   document.getElementById('app-container').classList.add('hidden');
   document.getElementById('app-loader').classList.add('hidden');
   document.getElementById('auth-container').classList.remove('hidden');
-  renderAuthView(document.getElementById('auth-container'), state);
+  renderAuthView(document.getElementById('auth-container'), state, forceSignup);
 }
 
 // Login success handler

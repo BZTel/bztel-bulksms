@@ -75,7 +75,7 @@ export default function Header({ activePage }: HeaderProps) {
 
         <div className="nav-actions-l">
           <a href="/app" className="nav-login-btn">Log in</a>
-          <a href="/app" className="btn-l btn-l-primary" style={{ borderRadius: 'var(--border-radius-sm)', padding: '8px 18px' }}>Sign Up</a>
+          <a href="/app#signup" className="btn-l btn-l-primary" style={{ borderRadius: 'var(--border-radius-sm)', padding: '8px 18px' }}>Sign Up</a>
         </div>
       </header>
     </>

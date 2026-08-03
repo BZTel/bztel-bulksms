@@ -1,7 +1,7 @@
 import { loginSuccess, showToast } from '../app.js';
 
-export function renderAuthView(container, state) {
-  let isLogin = true; // Toggle between Login and Signup modes
+export function renderAuthView(container, state, forceSignup = false) {
+  let isLogin = !forceSignup; // Toggle between Login and Signup modes
 
   const render = () => {
     container.innerHTML = `

@@ -153,7 +153,7 @@ func main() {
           <p className="hero-subtitle-l">BZTel provides powerful communication APIs and custom software development services to help businesses connect, automate and scale globally.</p>
           
           <div className="hero-btns-l">
-            <a href="/app" className="btn-l btn-l-primary" style={{ padding: '12px 28px' }}>Get Started Free</a>
+            <a href="/app#signup" className="btn-l btn-l-primary" style={{ padding: '12px 28px' }}>Get Started Free</a>
           </div>
 
           <div className="hero-benefits-l">
