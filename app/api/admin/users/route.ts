@@ -18,6 +18,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         email: true,
+        name: true,
         status: true,
         balance: true,
         createdAt: true,
@@ -55,6 +56,7 @@ export async function GET(req: Request) {
       return {
         id: u.id,
         email: u.email,
+        name: u.name,
         status: u.status,
         balance: u.balance,
         created_at: u.createdAt,

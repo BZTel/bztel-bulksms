@@ -137,7 +137,8 @@ function renderTable(customers) {
   }
 
   tbody.innerHTML = customers.map(c => {
-    const initials = c.email.substring(0, 2).toUpperCase();
+    const displayName = c.name ? c.name : 'Unknown';
+    const initials = displayName !== 'Unknown' ? displayName.substring(0, 2).toUpperCase() : c.email.substring(0, 2).toUpperCase();
     const joinedDate = new Date(c.created_at).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
     const statusBadge = c.status === 'suspended'
       ? `<span class="status-badge status-suspended">Suspended</span>`
@@ -153,8 +154,8 @@ function renderTable(customers) {
           <div class="user-avatar-cell">
             <div class="user-avatar-sm">${initials}</div>
             <div>
-              <div style="font-weight: 600; font-size: 0.85rem;">${c.email}</div>
-              <div style="font-size: 0.72rem; color: var(--text-muted);">ID #${c.id}</div>
+              <div style="font-weight: 600; font-size: 0.85rem;">${displayName}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">${c.email} (ID #${c.id})</div>
             </div>
           </div>
         </td>

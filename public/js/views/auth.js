@@ -26,6 +26,17 @@ export function renderAuthView(container, state) {
             <p class="auth-form-subtitle">${isLogin ? "Login to your BZTel account" : "Create your BZTel account"}</p>
 
             <form id="auth-form" class="auth-form-element">
+              ${!isLogin ? `
+              <div class="form-group-with-icon">
+                <label for="auth-name">Full Name</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input type="text" id="auth-name" class="form-control-input" placeholder="Enter your full name" required>
+                </div>
+              </div>
+              ` : ''}
               <div class="form-group-with-icon">
                 <label for="auth-email">Email Address</label>
                 <div class="input-wrapper">
@@ -62,8 +73,8 @@ export function renderAuthView(container, state) {
 
               <div class="form-options-row">
                 <label class="remember-checkbox-label">
-                  <input type="checkbox" id="remember-me" class="custom-checkbox" checked>
-                  <span class="chk-text">${isLogin ? "Remember me" : "I accept the Terms & Conditions"}</span>
+                  <input type="checkbox" id="remember-me" class="custom-checkbox" ${isLogin ? 'checked' : ''}>
+                  <span class="chk-text">${isLogin ? "Remember me" : 'I accept the <a href="/terms" target="_blank" style="color:var(--accent-color); text-decoration:none;">Terms & Conditions</a>'}</span>
                 </label>
               </div>
 
@@ -140,6 +151,18 @@ export function renderAuthView(container, state) {
 
       const email = document.getElementById('auth-email').value;
       const password = document.getElementById('auth-password').value;
+      const rememberCheckbox = document.getElementById('remember-me');
+
+      let name, acceptedTerms;
+      if (!isLogin) {
+        name = document.getElementById('auth-name').value;
+        acceptedTerms = rememberCheckbox.checked;
+
+        if (!acceptedTerms) {
+          showToast('You must accept the terms and conditions to create an account', 'error');
+          return;
+        }
+      }
       const submitBtn = document.getElementById('auth-submit-btn');
 
       submitBtn.disabled = true;
@@ -153,7 +176,7 @@ export function renderAuthView(container, state) {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify(isLogin ? { email, password } : { email, password, name, acceptedTerms })
         });
 
         const data = await response.json();

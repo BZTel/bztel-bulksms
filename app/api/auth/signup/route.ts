@@ -9,10 +9,14 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, name, acceptedTerms } = await req.json();
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    if (!email || !password || !name) {
+      return NextResponse.json({ error: 'Name, email and password are required' }, { status: 400 });
+    }
+
+    if (!acceptedTerms) {
+      return NextResponse.json({ error: 'You must accept the terms and conditions' }, { status: 400 });
     }
 
     if (!emailRegex.test(email)) {
@@ -46,6 +50,8 @@ export async function POST(req: Request) {
       const newUser = await tx.user.create({
         data: {
           email,
+          name,
+          termsAcceptedAt: new Date(),
           passwordHash,
           balance: 2,
           role: 'Owner',
