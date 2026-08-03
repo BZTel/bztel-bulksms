@@ -54,6 +54,14 @@ export function renderAdminDashboardView(root, state) {
 
       <div class="panel glass" style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
         <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Blocked Scam Keywords</div>
+          <div style="font-size: 1.4rem; font-weight: 800; color: #8b5cf6;" id="dash-scam-words">0</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="dash-btn-scam-words" style="font-size: 0.75rem;">Manage</button>
+      </div>
+
+      <div class="panel glass" style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
           <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">Monty Gateway Status</div>
           <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
             <span class="status-badge status-active" style="padding: 3px 8px; font-size: 0.7rem;">Active (SMPP)</span>
@@ -118,6 +126,9 @@ async function initView(state) {
   document.getElementById('dash-btn-tickets')?.addEventListener('click', () => {
     document.querySelector('.nav-item[data-view="tickets"]')?.click();
   });
+  document.getElementById('dash-btn-scam-words')?.addEventListener('click', () => {
+    document.querySelector('.nav-item[data-view="scam-words"]')?.click();
+  });
 
   await loadData(state);
 }
@@ -142,6 +153,9 @@ async function loadData(state) {
     document.getElementById('dash-pending-sender-ids').textContent = (stats.pendingSenderIds || 0).toLocaleString();
     document.getElementById('dash-pending-services').textContent = (stats.pendingServices || 0).toLocaleString();
     document.getElementById('dash-open-tickets').textContent = (stats.openTickets || 0).toLocaleString();
+    if (document.getElementById('dash-scam-words')) {
+      document.getElementById('dash-scam-words').textContent = (stats.totalScamWords || 0).toLocaleString();
+    }
 
     // Render Table
     const tbody = document.getElementById('dash-recent-sms-tbody');

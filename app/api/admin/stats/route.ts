@@ -22,7 +22,8 @@ export async function GET(req: Request) {
       topupsSum,
       pendingSenderIds,
       pendingServices,
-      openTickets
+      openTickets,
+      totalScamWords
     ] = await Promise.all([
       prisma.user.count(),
       prisma.smsLog.count(),
@@ -35,7 +36,8 @@ export async function GET(req: Request) {
       }),
       prisma.senderId.count({ where: { status: 'pending' } }),
       prisma.serviceRequest.count({ where: { status: 'pending' } }),
-      prisma.supportTicket.count({ where: { status: 'open' } })
+      prisma.supportTicket.count({ where: { status: 'open' } }),
+      prisma.scamWord.count()
     ]);
 
     const totalCreditsUsed = smsCreditsSum._sum.credits || 0;
@@ -62,7 +64,8 @@ export async function GET(req: Request) {
         successRate,
         pendingSenderIds,
         pendingServices,
-        openTickets
+        openTickets,
+        totalScamWords
       },
       recentSms: recentSms.map((s) => ({
         id: s.id,

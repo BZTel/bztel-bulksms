@@ -112,6 +112,36 @@ const words = [
   "ziahcach","ziva","znth bnk","zorex"
 ];
 
+export const defaultScamWords = words;
+
+export function categorizeScamWord(word: string): string {
+  const w = word.toLowerCase();
+  if (
+    w.includes('bank') || w.includes('acct') || w.includes('gtb') || w.includes('access') ||
+    w.includes('zenith') || w.includes('uba') || w.includes('kuda') || w.includes('opay') ||
+    w.includes('palmpay') || w.includes('fcmb') || w.includes('fidelity') || w.includes('monie') ||
+    w.includes('ecobank') || w.includes('stanbic') || w.includes('union') || w.includes('wema') ||
+    w.includes('jaiz') || w.includes('providus') || w.includes('rubies') || w.includes('chipper') ||
+    w.includes('paystack') || w.includes('credit') || w.includes('card') || w.includes('atm')
+  ) {
+    return 'bank';
+  }
+  if (
+    w.includes('bvn') || w.includes('nin') || w.includes('otp') || w.includes('pin') ||
+    w.includes('icloud') || w.includes('apple') || w.includes('google') || w.includes('facebook') ||
+    w.includes('instagram') || w.includes('hacker') || w.includes('identity')
+  ) {
+    return 'identity';
+  }
+  if (
+    w.includes('win') || w.includes('prize') || w.includes('congrat') || w.includes('bonus') ||
+    w.includes('1xbet') || w.includes('bet9ja') || w.includes('lottery') || w.includes('promo')
+  ) {
+    return 'lottery';
+  }
+  return 'general';
+}
+
 // Short/generic keywords that can cause false positives if matched as substrings
 const genericOrShortWords = new Set([
   "cr", "dr", "op", "gt", "gb", "ba", "fb", "uba", "glo", "cba", "boa", "ltd",
@@ -136,6 +166,30 @@ const wholeWordKeywords = words.filter(
 const substringKeywords = words.filter(
   (w) => !genericOrShortWords.has(w) && w.length > 3
 );
+
+/**
+ * Seeds default scam words into the database if missing or when requested.
+ */
+export async function seedDefaultScamWords(customPrisma?: any): Promise<number> {
+  const db = customPrisma || prisma;
+  const uniqueWords = Array.from(new Set(defaultScamWords.map(w => w.trim().toLowerCase()))).filter(Boolean);
+
+  let insertedCount = 0;
+  for (const w of uniqueWords) {
+    try {
+      const category = categorizeScamWord(w);
+      await db.scamWord.upsert({
+        where: { word: w },
+        update: {},
+        create: { word: w, category }
+      });
+      insertedCount++;
+    } catch (e) {
+      // Ignore duplicate key errors if any race condition occurs
+    }
+  }
+  return insertedCount;
+}
 
 export interface VerificationResult {
   blocked: boolean;

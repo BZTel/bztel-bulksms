@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { seedDefaultScamWords, categorizeScamWord } from '@/lib/safeguard';
 
-// GET all scam words (DB + built-in stats)
+// GET all scam words (DB + auto-seed if empty)
 export async function GET(req: Request) {
   try {
     const authUser = await getUserFromRequest(req);
@@ -12,10 +13,21 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search')?.trim().toLowerCase() || '';
+    const category = searchParams.get('category')?.trim().toLowerCase() || '';
+    const seed = searchParams.get('seed') === 'true';
+
+    // Auto-seed defaults if table is empty or if seed=true is requested
+    const count = await prisma.scamWord.count();
+    if (count === 0 || seed) {
+      await seedDefaultScamWords(prisma);
+    }
 
     const where: any = {};
     if (search) {
       where.word = { contains: search, mode: 'insensitive' };
+    }
+    if (category && category !== 'all') {
+      where.category = category;
     }
 
     const dbWords = await prisma.scamWord.findMany({
@@ -40,7 +52,7 @@ export async function GET(req: Request) {
   }
 }
 
-// POST new scam word(s)
+// POST new scam word(s) or restore defaults
 export async function POST(req: Request) {
   try {
     const authUser = await getUserFromRequest(req);
@@ -49,7 +61,15 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { word, words, category = 'general' } = body;
+    const { word, words, category, action } = body;
+
+    if (action === 'restore_defaults' || action === 'seed') {
+      const seeded = await seedDefaultScamWords(prisma);
+      return NextResponse.json({
+        message: `Successfully seeded/restored default scam keywords (${seeded} total)`,
+        count: seeded
+      });
+    }
 
     const rawInput = words || word;
     if (!rawInput || typeof rawInput !== 'string') {
@@ -69,10 +89,11 @@ export async function POST(req: Request) {
     const createdRecords = [];
     for (const w of wordList) {
       try {
+        const assignedCategory = category || categorizeScamWord(w);
         const record = await prisma.scamWord.upsert({
           where: { word: w },
-          update: { category },
-          create: { word: w, category }
+          update: { category: assignedCategory },
+          create: { word: w, category: assignedCategory }
         });
         createdRecords.push(record);
       } catch (e) {
@@ -89,3 +110,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create scam word' }, { status: 500 });
   }
 }
+

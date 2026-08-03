@@ -50,6 +50,34 @@ async function main() {
       console.log(`Default virtual number +1234567890 assigned to existing Admin.`);
     }
   }
+
+  // Seed default scam words if missing
+  const scamWords = [
+    "0803","0pay","131","180","1stbank","1xbet","272","777","abuad","access","access bank",
+    "accessbank","acct","airtel","alert","amazon","apple","army","atm","bank","bet9ja","bitcoin",
+    "bvn","bvnalert","cashpay","cbn","chippercash","credit","creditalert","crypto","customs","dhl",
+    "diamond","diamondbank","easemoni","ecobank","efcc","express","facebook","fairmoneybank","fbn",
+    "fcmb","fedex","fidelity","fidelitybank","first bank","firstbank","firstmonie","fraud","gb",
+    "glo","gtb","gtbank","gtco","heritage","heritagebank","hsbc","icloud","instagram","interswitch",
+    "jaizbank","jamb","jumia","keystonebank","konga","kuda","kudabank","lotusbank","mcafee","moniepoint",
+    "mtn","nin","opay","opaybank","otp","palmpay","paxful","paypal","paystack","piggyvest","polarisbank",
+    "police","providusbank","quickteller","rubiesbank","samsung","stanbic","stanbicibtc","sterlingbank",
+    "suntrustbank","tiktok","uba","ubaplc","unionbank","unitybank","vfd mfb","waec","wemabank","whatsapp",
+    "worldbank","yahoo","zenith","zenithbank"
+  ];
+
+  let addedWordsCount = 0;
+  for (const w of scamWords) {
+    try {
+      await prisma.scamWord.upsert({
+        where: { word: w },
+        update: {},
+        create: { word: w, category: w.includes('bank') || w.includes('acct') || w.includes('gtb') || w.includes('access') || w.includes('uba') || w.includes('zenith') ? 'bank' : 'general' }
+      });
+      addedWordsCount++;
+    } catch (e) {}
+  }
+  console.log(`Seeded ${addedWordsCount} default scam words.`);
 }
 
 main()

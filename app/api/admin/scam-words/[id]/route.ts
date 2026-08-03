@@ -3,14 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 
 // PUT update a scam word
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getUserFromRequest(req);
     if (!authUser || !authUser.is_admin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const scamWordId = Number(params.id);
+    const { id } = await params;
+    const scamWordId = Number(id);
     if (isNaN(scamWordId)) {
       return NextResponse.json({ error: 'Invalid scam word ID' }, { status: 400 });
     }
@@ -36,14 +37,15 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 }
 
 // DELETE a scam word
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authUser = await getUserFromRequest(req);
     if (!authUser || !authUser.is_admin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const scamWordId = Number(params.id);
+    const { id } = await params;
+    const scamWordId = Number(id);
     if (isNaN(scamWordId)) {
       return NextResponse.json({ error: 'Invalid scam word ID' }, { status: 400 });
     }
@@ -58,3 +60,4 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     return NextResponse.json({ error: 'Failed to delete scam word' }, { status: 500 });
   }
 }
+

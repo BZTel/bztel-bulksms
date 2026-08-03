@@ -9,7 +9,13 @@ export function renderAdminScamWordsView(root, state) {
         <h1 class="view-title">Scam Words & Content Filters</h1>
         <p class="view-subtitle">Manage blocked anti-phishing keywords, illegal content terms, and bank impersonation safeguards.</p>
       </div>
-      <div>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="restore-defaults-btn" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px;">
+          <svg style="width: 16px; height: 16px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Restore Defaults
+        </button>
         <button id="add-scam-word-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
           <svg style="width: 18px; height: 18px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -22,30 +28,39 @@ export function renderAdminScamWordsView(root, state) {
     <!-- Stats Row -->
     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
       <div class="stat-card">
-        <div class="stat-label">Custom DB Keywords</div>
+        <div class="stat-label">Active Blocked Keywords</div>
         <div class="stat-value" id="stat-scam-count" style="color: var(--accent-color);">0</div>
-        <div class="stat-desc">Active custom blocked entries</div>
+        <div class="stat-desc">Live dynamic safeguards in database</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Built-in Safeguard Engine</div>
+        <div class="stat-label">Safeguard Engine</div>
         <div class="stat-value" style="color: #10b981;">Active</div>
-        <div class="stat-desc">Hardcoded bank & scam protection enabled</div>
+        <div class="stat-desc">Sender ID & message body filter online</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Violation Protection</div>
-        <div class="stat-value" style="color: #3b82f6;">Auto-Suspend</div>
-        <div class="stat-desc">Matches trigger account suspension</div>
+        <div class="stat-value" style="color: #ef4444;">Auto-Suspend</div>
+        <div class="stat-desc">Policy violations trigger account suspension</div>
       </div>
     </div>
 
     <!-- Main Card -->
     <div class="card">
       <div class="admin-toolbar" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
-        <div style="position: relative; flex: 1; min-width: 250px;">
-          <input type="text" id="scam-word-search" class="form-control" placeholder="Search scam keywords..." style="padding-left: 36px;">
+        <div style="position: relative; flex: 1; min-width: 240px;">
+          <input type="text" id="scam-word-search" class="form-control" placeholder="Search keywords..." style="padding-left: 36px;">
           <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
+        </div>
+        <div style="min-width: 200px;">
+          <select id="scam-category-filter" class="form-control">
+            <option value="all">All Categories</option>
+            <option value="bank">Bank / Financial</option>
+            <option value="identity">Identity & Credentials</option>
+            <option value="lottery">Lottery & Promo Fraud</option>
+            <option value="general">General Scam / Phishing</option>
+          </select>
         </div>
       </div>
 
@@ -151,17 +166,47 @@ function setupEventListeners() {
     addModal?.classList.remove('hidden');
   });
 
+  document.getElementById('restore-defaults-btn')?.addEventListener('click', async () => {
+    if (!confirm('Re-seed/Restore built-in default scam words into the database? Existing entries will not be lost.')) return;
+    try {
+      const res = await adminFetch('/api/admin/scam-words', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restore_defaults' })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || 'Restored default scam words successfully!', 'success');
+        loadScamWords();
+      } else {
+        showToast(data.error || 'Failed to restore defaults', 'error');
+      }
+    } catch (e) {
+      showToast('Error restoring default scam words', 'error');
+    }
+  });
+
   document.getElementById('close-add-modal')?.addEventListener('click', () => addModal?.classList.add('hidden'));
   document.getElementById('cancel-add-modal')?.addEventListener('click', () => addModal?.classList.add('hidden'));
 
   document.getElementById('close-edit-modal')?.addEventListener('click', () => editModal?.classList.add('hidden'));
   document.getElementById('cancel-edit-modal')?.addEventListener('click', () => editModal?.classList.add('hidden'));
 
-  // Search input
-  document.getElementById('scam-word-search')?.addEventListener('input', (e) => {
-    const val = e.target.value.toLowerCase().trim();
-    renderTable(scamWordsState.filter(w => w.word.toLowerCase().includes(val) || w.category.toLowerCase().includes(val)));
-  });
+  // Search & Category Filter
+  const applyFilters = () => {
+    const searchVal = document.getElementById('scam-word-search')?.value.toLowerCase().trim() || '';
+    const catVal = document.getElementById('scam-category-filter')?.value || 'all';
+
+    const filtered = scamWordsState.filter(w => {
+      const matchesSearch = !searchVal || w.word.toLowerCase().includes(searchVal) || w.category.toLowerCase().includes(searchVal);
+      const matchesCat = catVal === 'all' || w.category.toLowerCase() === catVal;
+      return matchesSearch && matchesCat;
+    });
+    renderTable(filtered);
+  };
+
+  document.getElementById('scam-word-search')?.addEventListener('input', applyFilters);
+  document.getElementById('scam-category-filter')?.addEventListener('change', applyFilters);
 
   // Add Form submit
   document.getElementById('add-scam-form')?.addEventListener('submit', async (e) => {
@@ -240,13 +285,37 @@ async function loadScamWords() {
       const data = await res.json();
       scamWordsState = data.scam_words || [];
       document.getElementById('stat-scam-count').textContent = scamWordsState.length.toLocaleString();
-      renderTable(scamWordsState);
+      
+      const searchVal = document.getElementById('scam-word-search')?.value.toLowerCase().trim() || '';
+      const catVal = document.getElementById('scam-category-filter')?.value || 'all';
+
+      const filtered = scamWordsState.filter(w => {
+        const matchesSearch = !searchVal || w.word.toLowerCase().includes(searchVal) || w.category.toLowerCase().includes(searchVal);
+        const matchesCat = catVal === 'all' || w.category.toLowerCase() === catVal;
+        return matchesSearch && matchesCat;
+      });
+
+      renderTable(filtered);
     } else {
       showToast('Failed to load scam words list', 'error');
     }
   } catch (err) {
     showToast('Error loading scam words', 'error');
   }
+}
+
+function getCategoryBadge(category) {
+  const cat = (category || 'general').toLowerCase();
+  if (cat === 'bank') {
+    return `<span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.25); font-weight: 600;">Bank / Financial</span>`;
+  }
+  if (cat === 'identity') {
+    return `<span class="badge" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); font-weight: 600;">Identity Theft</span>`;
+  }
+  if (cat === 'lottery') {
+    return `<span class="badge" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.25); font-weight: 600;">Lottery / Promo</span>`;
+  }
+  return `<span class="badge" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.25); font-weight: 600;">General Scam</span>`;
 }
 
 function renderTable(list) {
@@ -257,7 +326,7 @@ function renderTable(list) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" class="text-center" style="padding: 40px; color: var(--text-muted);">
-          No custom scam words found. Add keywords above to enforce dynamic safeguards.
+          No blocked keywords found matching your filter. Click <strong>Add Scam Word</strong> above to add new entries.
         </td>
       </tr>
     `;
@@ -271,9 +340,7 @@ function renderTable(list) {
         <strong style="color: var(--text-primary); font-family: monospace; font-size: 0.95rem;">${escapeHtml(item.word)}</strong>
       </td>
       <td>
-        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--accent-color); border: 1px solid rgba(99, 102, 241, 0.2); font-weight: 600;">
-          ${escapeHtml(item.category)}
-        </span>
+        ${getCategoryBadge(item.category)}
       </td>
       <td style="color: var(--text-muted); font-size: 0.85rem;">
         ${new Date(item.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -333,3 +400,4 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
