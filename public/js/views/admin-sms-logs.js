@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin.js';
+import { adminFetch, showToast } from '../admin-utils.js';
 
 let currentPage = 1;
 let currentLimit = 50;

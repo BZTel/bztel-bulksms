@@ -1,3 +1,4 @@
+import { state, adminFetch, showToast, adminLogout, showAdminLoginUI, showAdminAppUI } from './admin-utils.js';
 import { renderAdminDashboardView } from './views/admin-dashboard.js';
 import { renderAdminUsersView } from './views/admin-users.js';
 import { renderAdminSmsLogsView } from './views/admin-sms-logs.js';
@@ -9,11 +10,7 @@ import { renderAdminContactMessagesView } from './views/admin-contact-messages.j
 import { renderAdminAuditLogsView } from './views/admin-audit-logs.js';
 import { renderAdminScamWordsView } from './views/admin-scam-words.js';
 
-// ─── Admin State ─────────────────────────────────────────────
-const state = {
-  adminToken: localStorage.getItem('adminToken') || null,
-  adminUser: null
-};
+export { adminFetch, showToast, adminLogout };
 
 // ─── Boot ────────────────────────────────────────────────────
 if (document.readyState === 'loading') {

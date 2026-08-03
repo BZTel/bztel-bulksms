@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin.js';
+import { adminFetch, showToast } from '../admin-utils.js';
 
 export function renderAdminDashboardView(root, state) {
   root.innerHTML = `

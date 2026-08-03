@@ -23,6 +23,22 @@
       <div class="spinner-text">Initializing Admin Portal...</div>
     </div>
   </div>
+  <script>
+    setTimeout(function() {
+      var loader = document.getElementById('admin-loader');
+      if (loader && !loader.classList.contains('hidden')) {
+        loader.classList.add('hidden');
+        var token = localStorage.getItem('adminToken');
+        if (token) {
+          var app = document.getElementById('admin-app');
+          if (app) app.classList.remove('hidden');
+        } else {
+          var auth = document.getElementById('admin-auth');
+          if (auth) auth.classList.remove('hidden');
+        }
+      }
+    }, 1500);
+  </script>
 
   <!-- Admin App Container -->
   <div id="admin-app" class="app-layout hidden">

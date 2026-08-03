@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin.js';
+import { adminFetch, showToast } from '../admin-utils.js';
 
 let allMessages = [];
 
