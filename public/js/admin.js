@@ -20,6 +20,23 @@ if (document.readyState === 'loading') {
 }
 
 async function initAdmin() {
+  let initResolved = false;
+
+  // Fail-safe timer: Guarantee the loader overlay is dismissed within 1.5 seconds
+  const failsafeTimer = setTimeout(() => {
+    if (!initResolved) {
+      console.warn('Admin init fail-safe triggered');
+      initResolved = true;
+      const storedToken = localStorage.getItem('adminToken') || state.adminToken;
+      if (storedToken) {
+        showAdminApp();
+        renderView('dashboard');
+      } else {
+        showAdminLogin();
+      }
+    }
+  }, 1500);
+
   try {
     setupNavButtons();
     setupLoginForm();
@@ -30,16 +47,25 @@ async function initAdmin() {
     if (storedToken) {
       state.adminToken = storedToken;
       const ok = await verifyAdminToken();
-      if (ok) {
-        showAdminApp();
-        renderView('dashboard');
-        return;
+      if (!initResolved) {
+        initResolved = true;
+        clearTimeout(failsafeTimer);
+        if (ok) {
+          showAdminApp();
+          renderView('dashboard');
+          return;
+        }
       }
     }
   } catch (err) {
     console.error('Failed to initialize admin portal:', err);
   }
-  showAdminLogin();
+
+  if (!initResolved) {
+    initResolved = true;
+    clearTimeout(failsafeTimer);
+    showAdminLogin();
+  }
 }
 
 // ─── Token Verification ───────────────────────────────────────

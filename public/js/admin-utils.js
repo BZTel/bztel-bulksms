@@ -11,13 +11,24 @@ export async function adminFetch(url, options = {}) {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  const res = await fetch(url, { ...options, headers });
-  if (res.status === 401 || res.status === 403) {
-    adminLogout(false);
-    showToast('Session expired or unauthorized. Please log in again.', 'error');
-    throw new Error('Unauthorized');
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+  try {
+    const res = await fetch(url, { ...options, headers, signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.status === 401 || res.status === 403) {
+      adminLogout(false);
+      showToast('Session expired or unauthorized. Please log in again.', 'error');
+      throw new Error('Unauthorized');
+    }
+    return res;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-  return res;
 }
 
 // ─── Toast System ────────────────────────────────────────────

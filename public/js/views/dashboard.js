@@ -55,8 +55,8 @@ export function renderDashboardView(container, state) {
       </div>
     </div>
 
-    <!-- Middle Row: Billing Summary + Sender IDs -->
-    <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+    <!-- Middle Row: Billing Summary -->
+    <div class="dashboard-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
       <!-- Billing Summary -->
       <div class="panel glass">
         <div class="panel-header">
@@ -76,26 +76,6 @@ export function renderDashboardView(container, state) {
           </div>
           <div id="billing-recent-tx">
             <p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:20px 0;">No data available</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sender IDs -->
-      <div class="panel glass">
-        <div class="panel-header">
-          <h3 class="panel-title">Sender IDs</h3>
-        </div>
-        <div style="margin-bottom:12px;position:relative;">
-          <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-muted);" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input id="sender-id-search" type="text" class="form-control" placeholder="Search sender IDs…" style="padding-left:34px;height:36px;font-size:0.85rem;">
-        </div>
-        <div id="sender-id-list">
-          <div style="text-align:center;padding:30px 0;color:var(--text-muted);">
-            <svg style="width:36px;height:36px;margin:0 auto 10px;opacity:0.4;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"/></svg>
-            <p style="font-size:0.85rem;margin-bottom:14px;">No Sender IDs Available</p>
-            <button id="add-sender-id-btn" class="btn btn-primary btn-sm" style="padding:7px 18px;font-size:0.82rem;">
-              + Add Sender ID
-            </button>
           </div>
         </div>
       </div>
@@ -256,26 +236,11 @@ async function initDashboard(state) {
 async function loadDashboardData(state, silent = false) {
   try {
     // Run all fetches in parallel
-    const [statsRes, contactsRes, txRes, senderIdsRes] = await Promise.all([
+    const [statsRes, contactsRes, txRes] = await Promise.all([
       apiFetch('/api/sms/stats'),
       apiFetch('/api/contacts'),
-      apiFetch('/api/billing/transactions'),
-      apiFetch('/api/sender-ids')
+      apiFetch('/api/billing/transactions')
     ]);
-
-    if (!isCurrentView('dashboard')) return;
-
-    let approvedSenderIds = [];
-    if (senderIdsRes && senderIdsRes.ok) {
-      try {
-        const { sender_ids } = await senderIdsRes.json();
-        approvedSenderIds = sender_ids
-          .filter(s => s.status === 'approved')
-          .map(s => s.name);
-      } catch (err) {
-        console.error('Error parsing sender IDs:', err);
-      }
-    }
 
     if (!isCurrentView('dashboard')) return;
 
@@ -328,9 +293,6 @@ async function loadDashboardData(state, silent = false) {
       document.getElementById('kpi-contacts').innerText = contacts.length.toLocaleString();
 
       if (contacts.length > 0) markStepDone('step-contacts');
-
-      // Sender ID search filters the pre-filled BZTEL default and approved ones
-      setupSenderIdSearch(state, approvedSenderIds);
     }
 
     // ── Billing / Transactions ─────────────────────────────────────
@@ -378,47 +340,6 @@ async function loadDashboardData(state, silent = false) {
   } catch (error) {
     if (!silent) showToast('Error loading dashboard data', 'error');
   }
-}
-
-function setupSenderIdSearch(state, senderIds = []) {
-  const input = document.getElementById('sender-id-search');
-  if (!input) return;
-
-  function renderSenderIds(filter = '') {
-    const list = document.getElementById('sender-id-list');
-    const filtered = senderIds.filter(s => s.toLowerCase().includes(filter.toLowerCase()));
-
-    if (filtered.length === 0) {
-      list.innerHTML = `
-        <div style="text-align:center;padding:30px 0;color:var(--text-muted);">
-          <p style="font-size:0.85rem;margin-bottom:14px;">No Sender IDs Available</p>
-          <button id="add-sender-id-btn" class="btn btn-primary btn-sm" style="padding:7px 18px;font-size:0.82rem;">+ Add Sender ID</button>
-        </div>
-      `;
-      document.getElementById('add-sender-id-btn')?.addEventListener('click', () => {
-        document.querySelector('.nav-item[data-view=more]')?.click();
-      });
-      return;
-    }
-
-    list.innerHTML = filtered.map(s => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.07);">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:8px;height:8px;border-radius:50%;background:#10b981;"></div>
-          <span style="font-weight:600;font-size:0.88rem;">${s}</span>
-        </div>
-        <span style="font-size:0.72rem;color:#10b981;font-weight:600;">Active</span>
-      </div>
-    `).join('') + `
-      <button id="add-sender-id-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;padding:7px;font-size:0.8rem;">+ Add Another Sender ID</button>
-    `;
-    document.getElementById('add-sender-id-btn')?.addEventListener('click', () => {
-      document.querySelector('.nav-item[data-view=more]')?.click();
-    });
-  }
-
-  renderSenderIds();
-  input.addEventListener('input', (e) => renderSenderIds(e.target.value));
 }
 
 function markStepDone(stepId) {
