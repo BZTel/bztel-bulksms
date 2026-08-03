@@ -31,6 +31,11 @@
           loader.style.display = 'none';
           loader.classList.add('hidden');
         }
+        var app = document.getElementById('admin-app');
+        var auth = document.getElementById('admin-auth');
+        if (app && auth && app.classList.contains('hidden')) {
+          auth.classList.remove('hidden');
+        }
       }, 1000);
     })();
   </script>
@@ -156,7 +161,7 @@
   </div>
 
   <!-- Admin Login Screen -->
-  <div id="admin-auth" class="auth-layout hidden">
+  <div id="admin-auth" class="auth-layout">
     <div class="auth-split-wrapper" style="width: 100%; height: 100%;">
       <!-- Right: Admin Auth Form Pane -->
       <div class="auth-form-pane" style="flex: 1; min-height: 100vh;">
