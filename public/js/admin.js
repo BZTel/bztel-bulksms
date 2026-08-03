@@ -21,17 +21,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initAdmin() {
-  setupLoginForm();
-  setupLogout();
-  setupModals();
+  try {
+    setupLoginForm();
+    setupLogout();
+    setupModals();
 
-  if (state.adminToken) {
-    const ok = await verifyAdminToken();
-    if (ok) {
-      showAdminApp();
-      renderView('dashboard');
-      return;
+    if (state.adminToken) {
+      const ok = await verifyAdminToken();
+      if (ok) {
+        showAdminApp();
+        renderView('dashboard');
+        return;
+      }
     }
+  } catch (err) {
+    console.error('Failed to initialize admin portal:', err);
   }
   showAdminLogin();
 }
@@ -55,6 +59,8 @@ function setupLoginForm() {
   const btn = document.getElementById('admin-login-btn');
   const errBox = document.getElementById('admin-login-error');
 
+  if (!form) return;
+
   // Password visibility toggle
   const visibilityToggle = document.getElementById('admin-password-visibility-toggle');
   const passwordInput = document.getElementById('admin-password');
@@ -68,12 +74,14 @@ function setupLoginForm() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('admin-email').value;
-    const password = document.getElementById('admin-password').value;
+    const email = document.getElementById('admin-email')?.value;
+    const password = document.getElementById('admin-password')?.value;
 
-    btn.disabled = true;
-    btn.textContent = 'Authenticating...';
-    errBox.classList.add('hidden');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+    }
+    if (errBox) errBox.classList.add('hidden');
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -85,14 +93,18 @@ function setupLoginForm() {
       const data = await res.json();
 
       if (!res.ok) {
-        errBox.textContent = data.error || 'Login failed';
-        errBox.classList.remove('hidden');
+        if (errBox) {
+          errBox.textContent = data.error || 'Login failed';
+          errBox.classList.remove('hidden');
+        }
         return;
       }
 
       if (!data.user?.id) {
-        errBox.textContent = 'Unexpected response from server';
-        errBox.classList.remove('hidden');
+        if (errBox) {
+          errBox.textContent = 'Unexpected response from server';
+          errBox.classList.remove('hidden');
+        }
         return;
       }
 
@@ -102,8 +114,10 @@ function setupLoginForm() {
       });
 
       if (!adminCheck.ok) {
-        errBox.textContent = 'Access denied. This account does not have admin privileges.';
-        errBox.classList.remove('hidden');
+        if (errBox) {
+          errBox.textContent = 'Access denied. This account does not have admin privileges.';
+          errBox.classList.remove('hidden');
+        }
         return;
       }
 
@@ -116,18 +130,22 @@ function setupLoginForm() {
       renderView('dashboard');
       showToast(`Welcome, ${data.user.email}!`, 'success');
     } catch (err) {
-      errBox.textContent = 'Connection error. Is the server running?';
-      errBox.classList.remove('hidden');
+      if (errBox) {
+        errBox.textContent = 'Connection error. Is the server running?';
+        errBox.classList.remove('hidden');
+      }
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Access Admin Portal';
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Access Admin Portal';
+      }
     }
   });
 }
 
 // ─── Logout ───────────────────────────────────────────────────
 function setupLogout() {
-  document.getElementById('admin-logout-btn').addEventListener('click', () => adminLogout());
+  document.getElementById('admin-logout-btn')?.addEventListener('click', () => adminLogout());
 }
 
 export function adminLogout(showMsg = true) {
@@ -141,6 +159,7 @@ export function adminLogout(showMsg = true) {
 // ─── View Routing ─────────────────────────────────────────────
 function renderView(viewName) {
   const root = document.getElementById('admin-root');
+  if (!root) return;
 
   // Update nav active state
   document.querySelectorAll('.nav-item').forEach(btn => {
@@ -159,7 +178,8 @@ function renderView(viewName) {
     'audit-logs': 'System Audit & Security Logs',
     'scam-words': 'Scam Words & Content Filters'
   };
-  document.getElementById('admin-view-title').textContent = titles[viewName] || 'Admin Portal';
+  const titleEl = document.getElementById('admin-view-title');
+  if (titleEl) titleEl.textContent = titles[viewName] || 'Admin Portal';
 
   switch (viewName) {
     case 'dashboard':
@@ -199,14 +219,16 @@ function renderView(viewName) {
 
 // ─── UI Toggles ───────────────────────────────────────────────
 function showAdminApp() {
-  document.getElementById('admin-auth').classList.add('hidden');
-  document.getElementById('admin-app').classList.remove('hidden');
-  document.getElementById('admin-loader').classList.add('hidden');
+  document.getElementById('admin-auth')?.classList.add('hidden');
+  document.getElementById('admin-app')?.classList.remove('hidden');
+  document.getElementById('admin-loader')?.classList.add('hidden');
 
   // Populate admin info in sidebar
   const email = state.adminUser?.email || localStorage.getItem('adminEmail') || 'admin@bztel.net';
-  document.getElementById('admin-email-display').textContent = email;
-  document.getElementById('admin-initials').textContent = email.substring(0, 2).toUpperCase();
+  const emailEl = document.getElementById('admin-email-display');
+  if (emailEl) emailEl.textContent = email;
+  const initialsEl = document.getElementById('admin-initials');
+  if (initialsEl) initialsEl.textContent = email.substring(0, 2).toUpperCase();
 
   // Wire up nav buttons
   document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
@@ -243,30 +265,30 @@ function showAdminApp() {
 }
 
 function showAdminLogin() {
-  document.getElementById('admin-app').classList.add('hidden');
-  document.getElementById('admin-loader').classList.add('hidden');
-  document.getElementById('admin-auth').classList.remove('hidden');
+  document.getElementById('admin-app')?.classList.add('hidden');
+  document.getElementById('admin-loader')?.classList.add('hidden');
+  document.getElementById('admin-auth')?.classList.remove('hidden');
 }
 
 // ─── Modal Wiring ─────────────────────────────────────────────
 function setupModals() {
   // Credits modal
-  document.getElementById('close-credits-modal').addEventListener('click', () => {
-    document.getElementById('credits-modal').classList.add('hidden');
+  document.getElementById('close-credits-modal')?.addEventListener('click', () => {
+    document.getElementById('credits-modal')?.classList.add('hidden');
   });
-  document.getElementById('credits-modal').addEventListener('click', (e) => {
+  document.getElementById('credits-modal')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
   });
 
   // Delete modal
-  document.getElementById('close-delete-modal').addEventListener('click', () => {
-    document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('close-delete-modal')?.addEventListener('click', () => {
+    document.getElementById('delete-modal')?.classList.add('hidden');
   });
-  document.getElementById('delete-modal').addEventListener('click', (e) => {
+  document.getElementById('delete-modal')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) e.currentTarget.classList.add('hidden');
   });
-  document.getElementById('delete-cancel-btn').addEventListener('click', () => {
-    document.getElementById('delete-modal').classList.add('hidden');
+  document.getElementById('delete-cancel-btn')?.addEventListener('click', () => {
+    document.getElementById('delete-modal')?.classList.add('hidden');
   });
 }
 
