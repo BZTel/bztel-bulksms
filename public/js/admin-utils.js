@@ -6,14 +6,15 @@ export const state = {
 
 // ─── Admin Fetch Helper ───────────────────────────────────────
 export async function adminFetch(url, options = {}) {
+  const token = state.adminToken || (typeof localStorage !== 'undefined' ? localStorage.getItem('adminToken') : null);
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (state.adminToken) {
-    headers['Authorization'] = `Bearer ${state.adminToken}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
   const res = await fetch(url, { ...options, headers });
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 403) {
     adminLogout(false);
-    showToast('Session expired. Please log in again.', 'error');
+    showToast('Session expired or unauthorized. Please log in again.', 'error');
     throw new Error('Unauthorized');
   }
   return res;

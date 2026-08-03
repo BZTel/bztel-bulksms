@@ -194,39 +194,44 @@ function renderView(viewName) {
   const titleEl = document.getElementById('admin-view-title');
   if (titleEl) titleEl.textContent = titles[viewName] || 'Admin Portal';
 
-  switch (viewName) {
-    case 'dashboard':
-      renderAdminDashboardView(root, state);
-      break;
-    case 'users':
-      renderAdminUsersView(root, state);
-      break;
-    case 'sms-logs':
-      renderAdminSmsLogsView(root, state);
-      break;
-    case 'transactions':
-      renderAdminTransactionsView(root, state);
-      break;
-    case 'sender-ids':
-      renderAdminSenderIdsView(root, state);
-      break;
-    case 'services':
-      renderAdminServicesView(root, state);
-      break;
-    case 'tickets':
-      renderAdminTicketsView(root, state);
-      break;
-    case 'contact-messages':
-      renderAdminContactMessagesView(root, state);
-      break;
-    case 'audit-logs':
-      renderAdminAuditLogsView(root, state);
-      break;
-    case 'scam-words':
-      renderAdminScamWordsView(root, state);
-      break;
-    default:
-      renderAdminDashboardView(root, state);
+  try {
+    switch (viewName) {
+      case 'dashboard':
+        renderAdminDashboardView(root, state);
+        break;
+      case 'users':
+        renderAdminUsersView(root, state);
+        break;
+      case 'sms-logs':
+        renderAdminSmsLogsView(root, state);
+        break;
+      case 'transactions':
+        renderAdminTransactionsView(root, state);
+        break;
+      case 'sender-ids':
+        renderAdminSenderIdsView(root, state);
+        break;
+      case 'services':
+        renderAdminServicesView(root, state);
+        break;
+      case 'tickets':
+        renderAdminTicketsView(root, state);
+        break;
+      case 'contact-messages':
+        renderAdminContactMessagesView(root, state);
+        break;
+      case 'audit-logs':
+        renderAdminAuditLogsView(root, state);
+        break;
+      case 'scam-words':
+        renderAdminScamWordsView(root, state);
+        break;
+      default:
+        renderAdminDashboardView(root, state);
+    }
+  } catch (err) {
+    console.error(`Error rendering view ${viewName}:`, err);
+    showToast(`Error loading view ${viewName}`, 'error');
   }
 }
 
