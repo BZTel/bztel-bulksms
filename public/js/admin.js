@@ -16,9 +16,25 @@ const state = {
 };
 
 // ─── Boot ────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => initAdmin());
+} else {
   initAdmin();
-});
+}
+
+// Emergency safety timeout: Guarantee the loader overlay is hidden within 2 seconds
+setTimeout(() => {
+  const loader = document.getElementById('admin-loader');
+  if (loader && !loader.classList.contains('hidden')) {
+    console.warn('Admin loader safety fallback triggered');
+    if (state.adminToken) {
+      showAdminApp();
+      renderView('dashboard');
+    } else {
+      showAdminLogin();
+    }
+  }
+}, 2000);
 
 async function initAdmin() {
   try {
