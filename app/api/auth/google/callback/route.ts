@@ -77,6 +77,17 @@ export async function GET(req: Request) {
 
     const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
 
+    const stateParam = searchParams.get('state');
+    let acceptedTerms = false;
+    if (stateParam) {
+      try {
+        const parsedState = JSON.parse(stateParam);
+        acceptedTerms = Boolean(parsedState.acceptedTerms);
+      } catch (e) {
+        // Fallback if state is not JSON
+      }
+    }
+
     // Find or create user
     let user = await prisma.user.findUnique({
       where: { email },
@@ -97,6 +108,7 @@ export async function GET(req: Request) {
           data: {
             email,
             passwordHash: null, // Social login users do not need a password
+            termsAcceptedAt: new Date(),
             balance: 2,
             role: 'Owner',
             status: 'active',

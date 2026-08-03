@@ -149,7 +149,14 @@ export function renderAuthView(container, state, forceSignup = false) {
     const googleBtn = document.getElementById('social-google-btn');
     if (googleBtn) {
       googleBtn.addEventListener('click', () => {
-        window.location.href = '/api/auth/google/login';
+        if (!isLogin) {
+          const rememberCheckbox = document.getElementById('remember-me');
+          if (!rememberCheckbox || !rememberCheckbox.checked) {
+            showToast('You must accept the terms and conditions to create an account', 'error');
+            return;
+          }
+        }
+        window.location.href = `/api/auth/google/login${!isLogin ? '?acceptedTerms=true' : ''}`;
       });
     }
 

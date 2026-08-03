@@ -16,6 +16,9 @@ export async function GET(req: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`;
   const redirectUri = `${appUrl}/api/auth/google/callback`;
 
+  const { searchParams } = new URL(req.url);
+  const acceptedTerms = searchParams.get('acceptedTerms') === 'true';
+
   const oauthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   oauthUrl.searchParams.append('client_id', googleClientId);
   oauthUrl.searchParams.append('redirect_uri', redirectUri);
@@ -23,6 +26,7 @@ export async function GET(req: Request) {
   oauthUrl.searchParams.append('scope', 'openid email profile');
   oauthUrl.searchParams.append('access_type', 'offline');
   oauthUrl.searchParams.append('prompt', 'select_account');
+  oauthUrl.searchParams.append('state', JSON.stringify({ acceptedTerms }));
 
   return NextResponse.redirect(oauthUrl.toString());
 }
