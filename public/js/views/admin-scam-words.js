@@ -84,7 +84,7 @@ export function renderAdminScamWordsView(root, state) {
           </tbody>
         </table>
       </div>
-    </div>`;
+    </div>
 
     <!-- Add Scam Word Modal -->
     <div id="add-scam-modal" class="modal-overlay hidden">

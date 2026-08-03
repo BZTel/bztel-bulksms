@@ -278,6 +278,7 @@ function showAdminApp() {
           backdrop.classList.remove('active');
         });
       });
+    }
   }
 }
 
