@@ -17,7 +17,7 @@ export const SUGGESTED_SENDER_IDS = [
   {
     category: 'Finance & Fintech',
     icon: '💳',
-    items: ['PAYNOW', 'PAYFAST', 'WALLET', 'FINANCE', 'LOANS', 'SAVINGS', 'CASHBACK', 'INVEST', 'MONEY', 'CREDIT', 'INSURE']
+    items: ['PAYNOW', 'PAYFAST', 'WALLET', 'WEALTH', 'FUNDS', 'SAVINGS', 'CASHBACK', 'INVEST', 'MONEY', 'WEALTHCARE', 'INSURE']
   },
   {
     category: 'Education',
@@ -37,7 +37,7 @@ export const SUGGESTED_SENDER_IDS = [
   {
     category: 'Logistics',
     icon: '🚚',
-    items: ['COURIER', 'DELIVERY', 'EXPRESS', 'SHIPNOW', 'TRACKING', 'LOGISTICS', 'FREIGHT', 'PARCEL', 'DISPATCH', 'MOVENOW']
+    items: ['COURIER', 'SHIPNOW', 'TRACKING', 'LOGISTICS', 'FREIGHT', 'PARCEL', 'DISPATCH', 'MOVENOW']
   },
   {
     category: 'Technology',
@@ -62,6 +62,6 @@ export const SUGGESTED_SENDER_IDS = [
   {
     category: 'Customer Engagement',
     icon: '💬',
-    items: ['UPDATES', 'NEWS', 'INFO', 'NOTIFY', 'CONNECT', 'SUPPORT', 'CUSTOMER', 'SERVICE', 'HELPDESK', 'CARETEAM']
+    items: ['UPDATES', 'NEWS', 'ALERTS', 'NOTIFY', 'CONNECT', 'SUPPORT', 'CUSTOMER', 'SERVICE', 'HELPDESK', 'CARETEAM']
   }
 ];

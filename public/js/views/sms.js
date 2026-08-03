@@ -128,7 +128,17 @@ export function renderSMSView(root, state, initialTab = 'composer') {
 
               <!-- Recipients Input -->
               <div class="form-group mt-2">
-                <label for="sms-recipients">Recipients (Phone Numbers)</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                  <label for="sms-recipients" style="font-weight: 600; margin-bottom: 0;">Recipients (Phone Numbers)</label>
+                  <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" id="modal-btn-load-all-contacts" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
+                      👥 Insert All Contacts
+                    </button>
+                    <select id="modal-composer-group-select" class="form-control" style="padding: 4px 8px; font-size: 0.75rem; height: auto; width: 150px;">
+                      <option value="" disabled selected>📁 Load Group...</option>
+                    </select>
+                  </div>
+                </div>
                 <textarea id="sms-recipients" class="form-control" placeholder="Enter phone numbers separated by commas (e.g. +1234567890, +9876543210)" required style="min-height: 80px;"></textarea>
                 <div id="sms-recipient-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; max-height: 100px; overflow-y: auto; padding: 2px;"></div>
                 <small id="recipient-count-display" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">0 recipients detected.</small>
@@ -1123,6 +1133,55 @@ export async function openComposeModal(initialText = '', draftId = null, senderI
     modalCategorySelect.addEventListener('change', (e) => {
       renderSuggestedSenderPills('modal', e.target.value, 'sms-sender');
     });
+  }
+
+  // Set up modal contacts picker
+  const modalGroupSelect = document.getElementById('modal-composer-group-select');
+  const modalAllContactsBtn = document.getElementById('modal-btn-load-all-contacts');
+  if (modalGroupSelect && !modalGroupSelect.dataset.listenerAttached) {
+    modalGroupSelect.dataset.listenerAttached = 'true';
+    apiFetch('/api/contacts').then(async res => {
+      if (res.ok) {
+        const data = await res.json();
+        const contacts = data.contacts || [];
+        const groups = new Set();
+        contacts.forEach(c => {
+          if (c.group_name) groups.add(c.group_name.trim());
+        });
+        groups.add('Default');
+        
+        modalGroupSelect.innerHTML = `<option value="" disabled selected>📁 Load Group...</option>` +
+          Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('');
+
+        modalGroupSelect.addEventListener('change', (e) => {
+          const selectedGroup = e.target.value;
+          const groupNumbers = contacts
+            .filter(c => (c.group_name || 'Default').trim() === selectedGroup.trim())
+            .map(c => c.phone);
+          if (groupNumbers.length === 0) {
+            showToast(`No contacts found in group "${selectedGroup}"`, 'warning');
+            return;
+          }
+          const existing = document.getElementById('sms-recipients').value.trim();
+          document.getElementById('sms-recipients').value = existing ? `${existing}, ${groupNumbers.join(', ')}` : groupNumbers.join(', ');
+          showToast(`Added ${groupNumbers.length} contact(s) from "${selectedGroup}"`, 'success');
+          recalculateSMSCost();
+        });
+
+        if (modalAllContactsBtn) {
+          modalAllContactsBtn.addEventListener('click', () => {
+            if (contacts.length === 0) {
+              showToast('No contacts found in directory', 'warning');
+              return;
+            }
+            const allNumbers = contacts.map(c => c.phone);
+            document.getElementById('sms-recipients').value = allNumbers.join(', ');
+            showToast(`Added all ${allNumbers.length} contact(s) to composer`, 'success');
+            recalculateSMSCost();
+          });
+        }
+      }
+    }).catch(() => {});
   }
 
   // Load context dependent data inside modal asynchronously
