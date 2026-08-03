@@ -13,8 +13,9 @@ model User {
   email            String             @unique
   name             String?
   passwordHash     String?            @map("password_hash")
-  termsAcceptedAt  DateTime?          @map("terms_accepted_at")
-  isAdmin          Boolean            @default(false) @map("is_admin")
+  termsAcceptedAt     DateTime?          @map("terms_accepted_at")
+  promotionalConsent  Boolean            @default(false) @map("promotional_consent")
+  isAdmin             Boolean            @default(false) @map("is_admin")
   status           String             @default("active")
   balance          Int                @default(2)
   role             String             @default("Owner")

@@ -9,7 +9,7 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name, acceptedTerms } = await req.json();
+    const { email, password, name, acceptedTerms, promotionalConsent } = await req.json();
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: 'Name, email and password are required' }, { status: 400 });
@@ -52,6 +52,7 @@ export async function POST(req: Request) {
           email,
           name,
           termsAcceptedAt: new Date(),
+          promotionalConsent: Boolean(promotionalConsent),
           passwordHash,
           balance: 2,
           role: 'Owner',

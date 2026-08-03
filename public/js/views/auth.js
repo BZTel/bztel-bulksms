@@ -71,11 +71,19 @@ export function renderAuthView(container, state, forceSignup = false) {
                 ` : ''}
               </div>
 
-              <div class="form-options-row">
+              <div class="form-options-row" style="display:flex; flex-direction:column; gap:10px;">
                 <label class="remember-checkbox-label">
                   <input type="checkbox" id="remember-me" class="custom-checkbox" ${isLogin ? 'checked' : ''}>
                   <span class="chk-text">${isLogin ? "Remember me" : 'I accept the <a href="/terms" target="_blank" style="color:var(--accent-color); text-decoration:none;">Terms & Conditions</a>'}</span>
                 </label>
+                ${!isLogin ? `
+                <label class="remember-checkbox-label" style="align-items:flex-start;">
+                  <input type="checkbox" id="promo-consent" class="custom-checkbox" style="margin-top:2px;" checked>
+                  <span class="chk-text" style="font-size:0.8rem; color:var(--text-muted); line-height:1.35;">
+                    I agree to receive promotional emails, product updates, and special offers from BZTel <span style="font-size:0.72rem; color:#818cf8;">(optional)</span>
+                  </span>
+                </label>
+                ` : ''}
               </div>
 
               <button type="submit" class="auth-submit-btn-primary" id="auth-submit-btn">
@@ -153,10 +161,14 @@ export function renderAuthView(container, state, forceSignup = false) {
       const password = document.getElementById('auth-password').value;
       const rememberCheckbox = document.getElementById('remember-me');
 
-      let name, acceptedTerms;
+      let name, acceptedTerms, promotionalConsent = false;
       if (!isLogin) {
         name = document.getElementById('auth-name').value;
         acceptedTerms = rememberCheckbox.checked;
+        const promoCheckbox = document.getElementById('promo-consent');
+        if (promoCheckbox) {
+          promotionalConsent = promoCheckbox.checked;
+        }
 
         if (!acceptedTerms) {
           showToast('You must accept the terms and conditions to create an account', 'error');
@@ -176,7 +188,7 @@ export function renderAuthView(container, state, forceSignup = false) {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(isLogin ? { email, password } : { email, password, name, acceptedTerms })
+          body: JSON.stringify(isLogin ? { email, password } : { email, password, name, acceptedTerms, promotionalConsent })
         });
 
         const data = await response.json();

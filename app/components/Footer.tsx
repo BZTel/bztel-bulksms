@@ -47,8 +47,8 @@ export default function Footer() {
       <div className="footer-bottom-l">
         <span>&copy; 2026 BZTel. All rights reserved.</span>
         <div className="footer-bottom-links-l">
-          <a href="#">Terms of Service</a>
-          <a href="#">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
+          <a href="/terms">Privacy Policy</a>
         </div>
       </div>
     </footer>
