@@ -23,6 +23,25 @@
       <div class="spinner-text">Initializing Admin Portal...</div>
     </div>
   </div>
+  <script>
+    (function() {
+      setTimeout(function() {
+        var loader = document.getElementById('admin-loader');
+        if (loader) {
+          loader.style.display = 'none';
+          loader.classList.add('hidden');
+        }
+        var token = localStorage.getItem('adminToken');
+        var app = document.getElementById('admin-app');
+        var auth = document.getElementById('admin-auth');
+        if (token && app && app.classList.contains('hidden')) {
+          app.classList.remove('hidden');
+        } else if (!token && auth && auth.classList.contains('hidden')) {
+          auth.classList.remove('hidden');
+        }
+      }, 1000);
+    })();
+  </script>
 
   <!-- Admin App Container -->
   <div id="admin-app" class="app-layout hidden">
@@ -260,6 +279,6 @@
   <!-- Toast Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <script type="module" src="/js/admin.js"></script>
+  <script type="module" src="/js/admin.js?v=1.0.3"></script>
 </body>
 </html>

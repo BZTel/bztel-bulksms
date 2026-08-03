@@ -68,12 +68,20 @@ export function adminLogout(showMsg = true) {
 
 export function showAdminLoginUI() {
   document.getElementById('admin-app')?.classList.add('hidden');
-  document.getElementById('admin-loader')?.classList.add('hidden');
+  const loader = document.getElementById('admin-loader');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
   document.getElementById('admin-auth')?.classList.remove('hidden');
 }
 
 export function showAdminAppUI() {
   document.getElementById('admin-auth')?.classList.add('hidden');
   document.getElementById('admin-app')?.classList.remove('hidden');
-  document.getElementById('admin-loader')?.classList.add('hidden');
+  const loader = document.getElementById('admin-loader');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
 }

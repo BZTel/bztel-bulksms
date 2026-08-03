@@ -267,7 +267,11 @@ function setupNavButtons() {
 function showAdminApp() {
   document.getElementById('admin-auth')?.classList.add('hidden');
   document.getElementById('admin-app')?.classList.remove('hidden');
-  document.getElementById('admin-loader')?.classList.add('hidden');
+  const loader = document.getElementById('admin-loader');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
 
   // Populate admin info in sidebar
   const email = state.adminUser?.email || localStorage.getItem('adminEmail') || 'admin@bztel.net';
@@ -309,7 +313,11 @@ function showAdminApp() {
 
 function showAdminLogin() {
   document.getElementById('admin-app')?.classList.add('hidden');
-  document.getElementById('admin-loader')?.classList.add('hidden');
+  const loader = document.getElementById('admin-loader');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
   document.getElementById('admin-auth')?.classList.remove('hidden');
 }
 
