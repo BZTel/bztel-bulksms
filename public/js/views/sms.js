@@ -1672,73 +1672,198 @@ export function renderSMSDraftsView(root, state) {
   renderSMSView(root, state, 'drafts');
 }
 
-// OpenRouter AI Event Handlers for SMS View
-async function handleAIGenerateAction(action, textareaId) {
+// OpenRouter AI Custom Modal & Selection UI Handler
+function openAIPromptModal(targetId) {
+  let modal = document.getElementById('ai-generation-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'ai-generation-modal';
+    modal.className = 'modal-overlay hidden';
+    modal.innerHTML = `
+      <div class="modal-card glass" style="max-width: 520px; padding: 24px; border-radius: var(--border-radius-md);">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 14px; margin-bottom: 18px;">
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <span style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">✨</span>
+            Draft SMS Campaign with AI
+          </h3>
+          <button type="button" id="close-ai-modal-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="ai-input-step">
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="ai-prompt-input" style="font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; display: block;">
+                What is your SMS campaign about?
+              </label>
+              <input type="text" id="ai-prompt-input" class="form-control" placeholder="e.g. 20% discount on weekend shoes, free shipping..." style="padding: 10px 14px;" />
+              <small style="color: var(--text-muted); font-size: 0.73rem; display: block; margin-top: 4px;">
+                AI will generate 3 concise, high-converting variations (&lt;160 chars each).
+              </small>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="button" id="cancel-ai-prompt-btn" class="btn btn-secondary" style="padding: 8px 16px;">Cancel</button>
+              <button type="button" id="submit-ai-prompt-btn" class="btn btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; padding: 8px 20px; font-weight: 700;">
+                Generate Variations
+              </button>
+            </div>
+          </div>
+
+          <div id="ai-results-step" class="hidden">
+            <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary); margin-bottom: 12px;">
+              Select a Variation to Insert:
+            </div>
+            <div id="ai-variations-container" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 4px;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    document.getElementById('close-ai-modal-btn')?.addEventListener('click', () => modal.classList.add('hidden'));
+    document.getElementById('cancel-ai-prompt-btn')?.addEventListener('click', () => modal.classList.add('hidden'));
+  }
+
+  modal.setAttribute('data-target-id', targetId);
+  document.getElementById('ai-input-step').classList.remove('hidden');
+  document.getElementById('ai-results-step').classList.add('hidden');
+  const input = document.getElementById('ai-prompt-input');
+  if (input) input.value = '';
+  modal.classList.remove('hidden');
+  if (input) setTimeout(() => input.focus(), 100);
+
+  const submitBtn = document.getElementById('submit-ai-prompt-btn');
+  const newSubmitBtn = submitBtn.cloneNode(true);
+  submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+
+  newSubmitBtn.addEventListener('click', async () => {
+    const promptValue = document.getElementById('ai-prompt-input').value.trim();
+    if (!promptValue) {
+      showToast('Please enter a campaign goal.', 'warning');
+      return;
+    }
+
+    newSubmitBtn.disabled = true;
+    newSubmitBtn.textContent = 'Generating...';
+
+    try {
+      const res = await apiFetch('/api/ai/generate', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'GENERATE_SMS',
+          prompt: promptValue
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'AI generation failed');
+      }
+
+      const rawText = data.result || '';
+      const rawSplit = rawText.split(/---+|\n\s*\n/).map(s => s.replace(/^(Option|Variation|SMS)\s*\d+:?\s*/i, '').trim()).filter(Boolean);
+      const variations = rawSplit.length > 0 ? rawSplit : [rawText.trim()];
+
+      document.getElementById('ai-input-step').classList.add('hidden');
+      document.getElementById('ai-results-step').classList.remove('hidden');
+
+      const variationsContainer = document.getElementById('ai-variations-container');
+      variationsContainer.innerHTML = variations.map((varText, idx) => `
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); padding: 12px; border-radius: 8px;">
+          <div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 8px; line-height: 1.4; word-break: break-word;">${escapeHtml(varText)}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">${varText.length} chars (${Math.ceil(varText.length / 160)} SMS)</span>
+            <button type="button" class="select-ai-variation-btn" data-text="${encodeURIComponent(varText)}" style="background: var(--accent-color); color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+              Use Variation ${idx + 1}
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      variationsContainer.querySelectorAll('.select-ai-variation-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const textToInsert = decodeURIComponent(e.currentTarget.getAttribute('data-text'));
+          const targetArea = document.getElementById(modal.getAttribute('data-target-id'));
+          if (targetArea) {
+            targetArea.value = textToInsert;
+            targetArea.dispatchEvent(new Event('input'));
+            showToast('✨ SMS variation inserted!', 'success');
+          }
+          modal.classList.add('hidden');
+        });
+      });
+
+    } catch (err) {
+      showToast(`AI Error: ${err.message}`, 'error');
+    } finally {
+      newSubmitBtn.disabled = false;
+      newSubmitBtn.textContent = 'Generate Variations';
+    }
+  });
+}
+
+async function handleAIShrinkOrFixAction(action, textareaId) {
   const textarea = document.getElementById(textareaId);
   if (!textarea) return;
 
-  let promptText = '';
   const currentText = textarea.value.trim();
-
-  if (action === 'GENERATE_SMS') {
-    const userInput = prompt("What is the goal of your SMS campaign? (e.g. '20% off weekend shoe sale'):");
-    if (!userInput || !userInput.trim()) return;
-    promptText = userInput.trim();
-  } else if ((action === 'OPTIMIZE_LENGTH' || action === 'FIX_SCAM_WORDS') && !currentText) {
+  if (!currentText) {
     showToast('Please enter some message text first.', 'warning');
     return;
   }
 
-  showToast('🤖 AI is processing request...', 'info');
+  showToast('🤖 AI is processing message...', 'info');
 
   try {
     const res = await apiFetch('/api/ai/generate', {
       method: 'POST',
       body: JSON.stringify({
         action,
-        prompt: promptText,
         currentText
       })
     });
 
     const data = await res.json();
     if (!res.ok || !data.success) {
-      throw new Error(data.error || 'AI generation failed');
+      throw new Error(data.error || 'AI request failed');
     }
 
     textarea.value = data.result;
     textarea.dispatchEvent(new Event('input'));
-    showToast(`✨ Generated with ${data.modelUsed || 'OpenRouter AI'}!`, 'success');
+    showToast(`✨ Message updated with ${data.modelUsed || 'AI'}!`, 'success');
   } catch (err) {
     showToast(`AI Error: ${err.message}`, 'error');
   }
 }
 
-if (typeof document !== 'undefined') {
+if (typeof window !== 'undefined' && !window.__bztel_ai_click_listener_attached) {
+  window.__bztel_ai_click_listener_attached = true;
   document.addEventListener('click', (e) => {
     const aiBtn = e.target.closest('.btn-ai-assist-trigger');
     if (aiBtn) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const targetId = aiBtn.getAttribute('data-target');
-      handleAIGenerateAction('GENERATE_SMS', targetId);
+      openAIPromptModal(targetId);
       return;
     }
 
     const shrinkBtn = e.target.closest('.btn-ai-shrink-trigger');
     if (shrinkBtn) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const targetId = shrinkBtn.getAttribute('data-target');
-      handleAIGenerateAction('OPTIMIZE_LENGTH', targetId);
+      handleAIShrinkOrFixAction('OPTIMIZE_LENGTH', targetId);
       return;
     }
 
     const scamFixBtn = e.target.closest('.btn-ai-scam-fix-trigger');
     if (scamFixBtn) {
       e.preventDefault();
+      e.stopImmediatePropagation();
       const targetId = scamFixBtn.getAttribute('data-target');
-      handleAIGenerateAction('FIX_SCAM_WORDS', targetId);
+      handleAIShrinkOrFixAction('FIX_SCAM_WORDS', targetId);
       return;
     }
   });
 }
+
 
