@@ -1160,15 +1160,16 @@ textarea.form-control {
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Modals */
+/* Modals — Clean White Theme Overrides */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(11, 15, 25, 0.85);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 100;
   display: flex;
   justify-content: center;
@@ -1180,7 +1181,10 @@ textarea.form-control {
   max-width: 600px;
   border-radius: var(--border-radius-lg);
   padding: 32px;
-  box-shadow: var(--shadow-lg);
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25), 0 10px 15px -5px rgba(0, 0, 0, 0.1) !important;
   animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1194,12 +1198,23 @@ textarea.form-control {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 14px;
+}
+
+.modal-header h2,
+.modal-header h3,
+.modal-title {
+  color: #0f172a !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  margin: 0;
 }
 
 .close-btn {
   background: transparent;
   border: none;
-  color: var(--text-secondary);
+  color: #64748b !important;
   font-size: 2rem;
   cursor: pointer;
   line-height: 1;
@@ -1207,13 +1222,38 @@ textarea.form-control {
 }
 
 .close-btn:hover {
-  color: var(--text-primary);
+  color: #0f172a !important;
 }
 
 .modal-desc {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: #475569 !important;
   margin-bottom: 24px;
+}
+
+/* Modal Form Controls Overrides */
+.modal-card label {
+  color: #1e293b !important;
+  font-weight: 600;
+}
+
+.modal-card .form-control,
+.modal-card select.form-control,
+.modal-card input.form-control,
+.modal-card textarea.form-control {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.modal-card .form-control::placeholder {
+  color: #94a3b8 !important;
+}
+
+.modal-card .form-control:focus {
+  border-color: #6366f1 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 }
 
 /* Pricing Grid */
@@ -1225,31 +1265,32 @@ textarea.form-control {
 }
 
 .pricing-card {
-  border: 1px solid var(--glass-border);
-  background: var(--bg-tertiary);
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
   border-radius: var(--border-radius-md);
   padding: 20px 12px;
   text-align: center;
   cursor: pointer;
   position: relative;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #0f172a;
 }
 
 .pricing-card:hover {
   transform: translateY(-6px) scale(1.02);
-  border-color: rgba(99, 102, 241, 0.4);
-  background: var(--bg-secondary);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.5);
+  background: #ffffff;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
 }
 
 .pricing-card.popular {
-  border-color: var(--accent-color);
-  background: rgba(99, 102, 241, 0.05);
+  border-color: #6366f1;
+  background: #eef2ff;
 }
 
 .pricing-card.popular:hover {
-  border-color: var(--accent-color);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
+  border-color: #4f46e5;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.25);
 }
 
 .pricing-card.popular::after {
@@ -1268,8 +1309,8 @@ textarea.form-control {
 }
 
 .pricing-card.selected {
-  border-color: var(--accent-color);
-  background: rgba(99, 102, 241, 0.08);
+  border-color: #6366f1;
+  background: #e0e7ff;
   transform: scale(1.03);
   box-shadow: 0 12px 30px rgba(99, 102, 241, 0.25);
 }

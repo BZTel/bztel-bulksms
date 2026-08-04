@@ -51,63 +51,63 @@ export function renderCampaignHistoryView(root, state) {
 
     <!-- Details Modal Overlay -->
     <div id="campaign-details-modal" class="modal-overlay hidden" style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);">
-      <div class="modal-card modal-lg" style="max-width: 650px; width: 95%; background: var(--bg-surface, #1e293b); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 12px; color: var(--text-primary, #f8fafc);">
-        <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 14px;">
-          <h3 id="details-modal-title" style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0; font-size: 1.2rem; color: var(--text-primary, #f8fafc);">Sent Message Details</h3>
-          <button id="close-details-btn" class="close-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-muted, #94a3b8); cursor: pointer;">&times;</button>
+      <div class="modal-card modal-lg" style="max-width: 650px; width: 95%; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border-radius: 14px; color: #0f172a;">
+        <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px;">
+          <h3 id="details-modal-title" style="font-family: 'Outfit', sans-serif; font-weight: 700; margin: 0; font-size: 1.2rem; color: #0f172a;">Sent Message Details</h3>
+          <button id="close-details-btn" class="close-btn" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer;">&times;</button>
         </div>
         <div class="modal-body" style="padding: 20px; max-height: 75vh; overflow-y: auto;">
           
           <!-- Message Preview -->
-          <div style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+          <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-secondary, #cbd5e1); text-transform: uppercase; letter-spacing: 0.08em;">Message Content</span>
-              <span id="details-sender-badge" style="font-size: 0.75rem; font-weight: 700; color: #818cf8; background: rgba(99, 102, 241, 0.2); padding: 2px 10px; border-radius: 4px; border: 1px solid rgba(99, 102, 241, 0.3);">BZTEL</span>
+              <span style="font-size: 0.72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.08em;">Message Content</span>
+              <span id="details-sender-badge" style="font-size: 0.75rem; font-weight: 700; color: #4f46e5; background: #e0e7ff; padding: 2px 10px; border-radius: 4px; border: 1px solid #c7d2fe;">BZTEL</span>
             </div>
-            <p id="details-message-text" style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-primary, #f8fafc); white-space: pre-wrap; font-family: 'Inter', sans-serif;"></p>
+            <p id="details-message-text" style="margin: 0; font-size: 0.9rem; line-height: 1.5; color: #0f172a; white-space: pre-wrap; font-family: 'Inter', sans-serif; font-weight: 500;"></p>
           </div>
 
           <!-- Detail KPI boxes -->
           <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px;">
-            <div id="details-box-all" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
-              <div style="font-size: 0.68rem; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em;">All Numbers</div>
-              <div id="details-count-all" style="font-size: 1.3rem; font-weight: 800; color: #a5b4fc; margin-top: 4px;">0</div>
+            <div id="details-box-all" style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
+              <div style="font-size: 0.68rem; font-weight: 800; color: #4945ff; text-transform: uppercase; letter-spacing: 0.05em;">All Numbers</div>
+              <div id="details-count-all" style="font-size: 1.3rem; font-weight: 800; color: #3730a3; margin-top: 4px;">0</div>
               <div id="details-box-all-active" style="position: absolute; bottom: 0; left: 10%; width: 80%; height: 3px; background: #6366f1; border-radius: 3px 3px 0 0; display: block;"></div>
             </div>
 
-            <div id="details-box-delivered" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
-              <div style="font-size: 0.68rem; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.05em;">Delivered</div>
-              <div id="details-count-delivered" style="font-size: 1.3rem; font-weight: 800; color: #10b981; margin-top: 4px;">0</div>
+            <div id="details-box-delivered" style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
+              <div style="font-size: 0.68rem; font-weight: 800; color: #059669; text-transform: uppercase; letter-spacing: 0.05em;">Delivered</div>
+              <div id="details-count-delivered" style="font-size: 1.3rem; font-weight: 800; color: #047857; margin-top: 4px;">0</div>
               <div id="details-box-delivered-active" style="position: absolute; bottom: 0; left: 10%; width: 80%; height: 3px; background: #10b981; border-radius: 3px 3px 0 0; display: none;"></div>
             </div>
             
-            <div id="details-box-failed" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
-              <div style="font-size: 0.68rem; font-weight: 800; color: #f87171; text-transform: uppercase; letter-spacing: 0.05em;">Failed</div>
-              <div id="details-count-failed" style="font-size: 1.3rem; font-weight: 800; color: #ef4444; margin-top: 4px;">0</div>
+            <div id="details-box-failed" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
+              <div style="font-size: 0.68rem; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.05em;">Failed</div>
+              <div id="details-count-failed" style="font-size: 1.3rem; font-weight: 800; color: #b91c1c; margin-top: 4px;">0</div>
               <div id="details-box-failed-active" style="position: absolute; bottom: 0; left: 10%; width: 80%; height: 3px; background: #ef4444; border-radius: 3px 3px 0 0; display: none;"></div>
             </div>
             
-            <div id="details-box-pending" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
-              <div style="font-size: 0.68rem; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em;">Pending/Submitted</div>
-              <div id="details-count-pending" style="font-size: 1.3rem; font-weight: 800; color: #f59e0b; margin-top: 4px;">0</div>
+            <div id="details-box-pending" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden;">
+              <div style="font-size: 0.68rem; font-weight: 800; color: #d97706; text-transform: uppercase; letter-spacing: 0.05em;">Pending/Submitted</div>
+              <div id="details-count-pending" style="font-size: 1.3rem; font-weight: 800; color: #b45309; margin-top: 4px;">0</div>
               <div id="details-box-pending-active" style="position: absolute; bottom: 0; left: 10%; width: 80%; height: 3px; background: #f59e0b; border-radius: 3px 3px 0 0; display: none;"></div>
             </div>
           </div>
           
           <!-- Recipient detail list header -->
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h4 id="details-list-header" style="font-size: 0.8rem; margin: 0; font-weight: 700; text-transform: uppercase; color: var(--text-secondary, #cbd5e1); letter-spacing: 0.05em;">All Numbers</h4>
-            <span id="details-numbers-count" style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted, #94a3b8);">0 items</span>
+            <h4 id="details-list-header" style="font-size: 0.8rem; margin: 0; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.05em;">All Numbers</h4>
+            <span id="details-numbers-count" style="font-size: 0.75rem; font-weight: 600; color: #64748b;">0 items</span>
           </div>
 
           <!-- Numbers Scrollbox -->
-          <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; padding: 10px;">
-            <textarea id="details-numbers-list" class="form-control" readonly style="width: 100%; height: 140px; font-family: monospace; font-size: 0.88rem; font-weight: 600; background: transparent; border: none; resize: none; color: #f8fafc; padding: 5px; line-height: 1.6;" placeholder="No numbers found."></textarea>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px;">
+            <textarea id="details-numbers-list" class="form-control" readonly style="width: 100%; height: 140px; font-family: monospace; font-size: 0.88rem; font-weight: 600; background: transparent; border: none; resize: none; color: #0f172a; padding: 5px; line-height: 1.6;" placeholder="No numbers found."></textarea>
           </div>
 
           <!-- Modal Action Footer -->
-          <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-            <div style="font-size: 0.75rem; color: var(--text-muted, #94a3b8);">
+          <div style="display: flex; gap: 12px; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
+            <div style="font-size: 0.75rem; color: #64748b;">
               ℹ️ Copy numbers to reuse or click Forward to resend.
             </div>
             <button id="modal-forward-btn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; font-size: 0.82rem; cursor: pointer; border-radius: var(--border-radius-sm);">

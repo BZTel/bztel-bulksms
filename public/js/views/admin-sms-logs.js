@@ -4,6 +4,7 @@ let currentPage = 1;
 let currentLimit = 50;
 let activeStatus = 'all';
 let searchQuery = '';
+let currentLogs = [];
 
 export function renderAdminSmsLogsView(root, state) {
   root.innerHTML = `
@@ -108,10 +109,10 @@ async function loadData(state) {
     if (!res.ok) return;
     const data = await res.json();
 
-    const logs = data.logs || [];
+    currentLogs = data.logs || [];
     const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
-    renderTable(logs);
+    renderTable(currentLogs);
     renderPagination(pagination);
   } catch (err) {
     showToast('Failed to load SMS dispatch logs', 'error');
@@ -160,7 +161,7 @@ function renderTable(logs) {
         <td style="font-weight: 700;">${l.credits}</td>
         <td><span class="status-badge ${statusBadge}">${l.status}</span></td>
         <td>
-          <button class="btn btn-secondary btn-sm view-sms-detail-btn" data-msg="${escapeHtml(l.message)}" data-recipient="${l.recipient}" data-sender="${l.sender_id}" data-email="${l.email}" data-time="${time}" data-provider="${l.provider_id || 'N/A'}" data-batch="${l.batch_id || 'N/A'}" style="padding: 4px 10px; font-size: 0.75rem;">
+          <button class="btn btn-secondary btn-sm view-sms-detail-btn" data-log-id="${l.id}" style="padding: 4px 10px; font-size: 0.75rem;">
             Inspect
           </button>
         </td>
@@ -171,16 +172,11 @@ function renderTable(logs) {
   // Attach modal detail inspect buttons
   document.querySelectorAll('.view-sms-detail-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const b = e.currentTarget;
-      showSmsModal({
-        email: b.getAttribute('data-email'),
-        sender: b.getAttribute('data-sender'),
-        recipient: b.getAttribute('data-recipient'),
-        message: b.getAttribute('data-msg'),
-        time: b.getAttribute('data-time'),
-        provider: b.getAttribute('data-provider'),
-        batch: b.getAttribute('data-batch')
-      });
+      const logId = parseInt(e.currentTarget.getAttribute('data-log-id'), 10);
+      const targetLog = currentLogs.find(x => x.id === logId);
+      if (targetLog) {
+        showSmsModal(targetLog);
+      }
     });
   });
 }
@@ -231,30 +227,39 @@ function showSmsModal(data) {
     document.body.appendChild(modal);
   }
 
+  const timeFormatted = new Date(data.sent_at).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
   modal.innerHTML = `
-    <div class="modal-card glass" style="max-width: 520px; width: 90%;">
-      <div class="modal-header">
-        <h3 class="modal-title">SMS Dispatch Inspection</h3>
-        <button class="modal-close-btn" id="close-sms-modal-btn">&times;</button>
+    <div class="modal-card" style="max-width: 540px; width: 92%; background: #ffffff; color: #0f172a; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.25);">
+      <div class="modal-header" style="border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+        <h3 class="modal-title" style="color: #0f172a; font-weight: 700; font-size: 1.15rem; font-family: 'Outfit', sans-serif;">SMS Dispatch Inspection</h3>
+        <button class="modal-close-btn" id="close-sms-modal-btn" style="color: #64748b; font-size: 1.5rem; border: none; background: none; cursor: pointer;">&times;</button>
       </div>
       <div class="modal-body" style="padding: 20px 0;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem; margin-bottom: 16px;">
-          <div><strong style="color: var(--text-muted);">Customer:</strong> <br>${data.email}</div>
-          <div><strong style="color: var(--text-muted);">Timestamp:</strong> <br>${data.time}</div>
-          <div><strong style="color: var(--text-muted);">Sender ID:</strong> <br><span style="color: var(--accent-color); font-weight: 700;">${data.sender}</span></div>
-          <div><strong style="color: var(--text-muted);">Recipient:</strong> <br><span style="font-family: monospace;">${data.recipient}</span></div>
-          <div><strong style="color: var(--text-muted);">Provider Msg ID:</strong> <br><span style="font-family: monospace; font-size: 0.78rem;">${data.provider}</span></div>
-          <div><strong style="color: var(--text-muted);">Batch Ref:</strong> <br><span style="font-family: monospace; font-size: 0.78rem;">${data.batch}</span></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem; margin-bottom: 18px; background: #f8fafc; padding: 14px; border-radius: 10px; border: 1px solid #e2e8f0;">
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Customer:</strong> <br><span style="color: #0f172a; font-weight: 600;">${escapeHtml(data.email)}</span></div>
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Timestamp:</strong> <br><span style="color: #0f172a; font-weight: 600;">${timeFormatted}</span></div>
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Sender ID:</strong> <br><span style="color: #4f46e5; font-weight: 700; font-family: monospace;">${escapeHtml(data.sender_id)}</span></div>
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Recipient:</strong> <br><span style="font-family: monospace; color: #0f172a; font-weight: 600;">${escapeHtml(data.recipient)}</span></div>
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Provider Msg ID:</strong> <br><span style="font-family: monospace; font-size: 0.78rem; color: #334155;">${escapeHtml(data.provider_id || 'N/A')}</span></div>
+          <div><strong style="color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Batch Ref:</strong> <br><span style="font-family: monospace; font-size: 0.78rem; color: #334155;">${escapeHtml(data.batch_id || 'N/A')}</span></div>
         </div>
         <div>
-          <strong style="color: var(--text-muted); font-size: 0.85rem;">Full Message Body:</strong>
-          <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-size: 0.85rem; color: var(--text-primary); margin-top: 6px; white-space: pre-wrap; word-break: break-word;">
+          <strong style="color: #475569; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em;">Full Message Body:</strong>
+          <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; font-size: 0.88rem; color: #0f172a; margin-top: 6px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; font-weight: 500;">
             ${escapeHtml(data.message)}
           </div>
         </div>
       </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end;">
-        <button class="btn btn-secondary" id="close-sms-modal-footer-btn">Close</button>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 10px;">
+        <button class="btn btn-secondary" id="close-sms-modal-footer-btn" style="padding: 8px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Close</button>
       </div>
     </div>
   `;
