@@ -53,9 +53,14 @@ export function renderSenderIdsView(root, state) {
             </div>
 
             <div class="form-group" style="margin-bottom: 20px;">
-              <label for="sender-purpose-input" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; display: block;">
-                Use Case / Business Description
-              </label>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label for="sender-purpose-input" style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary); margin: 0;">
+                  Use Case / Business Description
+                </label>
+                <button type="button" id="btn-ai-sender-reason" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                  ✨ Auto-Draft Justification
+                </button>
+              </div>
               <textarea id="sender-purpose-input" class="form-control" rows="3" placeholder="Briefly describe how this Sender ID will be used (e.g. Order notifications, OTPs, marketing)..." required style="font-size: 0.85rem; resize: none;"></textarea>
             </div>
 
@@ -77,6 +82,36 @@ function initSenderIdsView(state) {
   const closeBtn = document.getElementById('close-sender-modal-btn');
   const form = document.getElementById('register-sender-form');
   const searchInput = document.getElementById('sender-id-search-input');
+  const aiReasonBtn = document.getElementById('btn-ai-sender-reason');
+
+  if (aiReasonBtn) {
+    aiReasonBtn.addEventListener('click', async () => {
+      const senderName = document.getElementById('sender-name-input').value.trim();
+      if (!senderName) {
+        showToast('Please enter a Sender ID name first.', 'warning');
+        return;
+      }
+      showToast('🤖 Drafting carrier justification with AI...', 'info');
+      try {
+        const res = await apiFetch('/api/ai/generate', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'GENERATE_SENDER_ID_REASON',
+            senderIdName: senderName
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('sender-purpose-input').value = data.result;
+          showToast(`✨ Justification drafted with ${data.modelUsed || 'AI'}!`, 'success');
+        } else {
+          showToast(data.error || 'AI justification drafting failed', 'error');
+        }
+      } catch (err) {
+        showToast('AI error: ' + err.message, 'error');
+      }
+    });
+  }
 
   if (openBtn && modal) {
     openBtn.addEventListener('click', () => modal.classList.remove('hidden'));

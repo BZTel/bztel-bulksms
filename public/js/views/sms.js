@@ -154,9 +154,20 @@ export function renderSMSView(root, state, initialTab = 'composer') {
                 </div>
                 <textarea id="sms-message" class="form-control" placeholder="Type your broadcast message here... Use [Name] to personalize." required style="min-height: 110px;"></textarea>
                 <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
-                  <button type="button" id="btn-insert-name-tag" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
-                    + Insert [Name]
-                  </button>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                    <button type="button" id="btn-insert-name-tag" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
+                      + Insert [Name]
+                    </button>
+                    <button type="button" class="btn-ai-assist-trigger" data-target="sms-message" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
+                      ✨ AI Draft
+                    </button>
+                    <button type="button" class="btn-ai-shrink-trigger" data-target="sms-message" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                      ⚡ Shrink (1 SMS)
+                    </button>
+                    <button type="button" class="btn-ai-scam-fix-trigger" data-target="sms-message" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                      🛡️ Fix Spam Words
+                    </button>
+                  </div>
                   <span class="char-counter" id="sms-char-counter" style="margin-top:0;">0 characters (1 page) | 1 credit per SMS</span>
                 </div>
               </div>
@@ -342,9 +353,20 @@ function loadComposerInline() {
         </div>
         <textarea id="inline-sms-message" class="form-control" placeholder="Type your broadcast message here..." required style="min-height: 130px; padding: 10px 14px;"></textarea>
         <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
-          <button type="button" id="inline-btn-insert-name" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-            + Insert [Name]
-          </button>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+            <button type="button" id="inline-btn-insert-name" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              + Insert [Name]
+            </button>
+            <button type="button" class="btn-ai-assist-trigger" data-target="inline-sms-message" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
+              ✨ AI Draft
+            </button>
+            <button type="button" class="btn-ai-shrink-trigger" data-target="inline-sms-message" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10b981; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              ⚡ Shrink (1 SMS)
+            </button>
+            <button type="button" class="btn-ai-scam-fix-trigger" data-target="inline-sms-message" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); color: #f59e0b; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              🛡️ Fix Spam Words
+            </button>
+          </div>
           <span class="char-counter" id="inline-sms-char-counter" style="margin-top:0;">0 characters (1 page) | 1 credit per SMS</span>
         </div>
       </div>
@@ -1649,3 +1671,74 @@ export function renderScheduledSMSView(root, state) {
 export function renderSMSDraftsView(root, state) {
   renderSMSView(root, state, 'drafts');
 }
+
+// OpenRouter AI Event Handlers for SMS View
+async function handleAIGenerateAction(action, textareaId) {
+  const textarea = document.getElementById(textareaId);
+  if (!textarea) return;
+
+  let promptText = '';
+  const currentText = textarea.value.trim();
+
+  if (action === 'GENERATE_SMS') {
+    const userInput = prompt("What is the goal of your SMS campaign? (e.g. '20% off weekend shoe sale'):");
+    if (!userInput || !userInput.trim()) return;
+    promptText = userInput.trim();
+  } else if ((action === 'OPTIMIZE_LENGTH' || action === 'FIX_SCAM_WORDS') && !currentText) {
+    showToast('Please enter some message text first.', 'warning');
+    return;
+  }
+
+  showToast('🤖 AI is processing request...', 'info');
+
+  try {
+    const res = await apiFetch('/api/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({
+        action,
+        prompt: promptText,
+        currentText
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'AI generation failed');
+    }
+
+    textarea.value = data.result;
+    textarea.dispatchEvent(new Event('input'));
+    showToast(`✨ Generated with ${data.modelUsed || 'OpenRouter AI'}!`, 'success');
+  } catch (err) {
+    showToast(`AI Error: ${err.message}`, 'error');
+  }
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const aiBtn = e.target.closest('.btn-ai-assist-trigger');
+    if (aiBtn) {
+      e.preventDefault();
+      const targetId = aiBtn.getAttribute('data-target');
+      handleAIGenerateAction('GENERATE_SMS', targetId);
+      return;
+    }
+
+    const shrinkBtn = e.target.closest('.btn-ai-shrink-trigger');
+    if (shrinkBtn) {
+      e.preventDefault();
+      const targetId = shrinkBtn.getAttribute('data-target');
+      handleAIGenerateAction('OPTIMIZE_LENGTH', targetId);
+      return;
+    }
+
+    const scamFixBtn = e.target.closest('.btn-ai-scam-fix-trigger');
+    if (scamFixBtn) {
+      e.preventDefault();
+      const targetId = scamFixBtn.getAttribute('data-target');
+      handleAIGenerateAction('FIX_SCAM_WORDS', targetId);
+      return;
+    }
+  });
+}
+

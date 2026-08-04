@@ -47,7 +47,12 @@ export function renderVoiceView(root, state) {
 
         <!-- TTS Input Container -->
         <div class="form-group" id="voice-tts-container" style="margin-bottom: 16px;">
-          <label for="voice-tts-text" style="font-weight: 600;">Text-to-Speech Script</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label for="voice-tts-text" style="font-weight: 600; margin: 0;">Text-to-Speech Script</label>
+            <button type="button" id="btn-ai-voice-format" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+              ✨ Format for Voice TTS
+            </button>
+          </div>
           <textarea id="voice-tts-text" class="form-control" placeholder="Type the message script to be read aloud during the call..." style="min-height: 100px; padding: 10px 14px;"></textarea>
         </div>
 
@@ -76,6 +81,37 @@ export function renderVoiceView(root, state) {
 function initVoiceView() {
   setupVoiceForm();
   setupVoiceContactsLoaders();
+
+  const aiVoiceBtn = document.getElementById('btn-ai-voice-format');
+  if (aiVoiceBtn) {
+    aiVoiceBtn.addEventListener('click', async () => {
+      const ttsArea = document.getElementById('voice-tts-text');
+      const text = ttsArea?.value.trim();
+      if (!text) {
+        showToast('Please enter a voice script first.', 'warning');
+        return;
+      }
+      showToast('🤖 Formatting script for speech synthesis...', 'info');
+      try {
+        const res = await apiFetch('/api/ai/generate', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'FORMAT_VOICE_SCRIPT',
+            currentText: text
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          ttsArea.value = data.result;
+          showToast(`✨ Formatted with ${data.modelUsed || 'AI'}!`, 'success');
+        } else {
+          showToast(data.error || 'AI script formatting failed', 'error');
+        }
+      } catch (err) {
+        showToast('AI error: ' + err.message, 'error');
+      }
+    });
+  }
 }
 
 function setupVoiceContactsLoaders() {
