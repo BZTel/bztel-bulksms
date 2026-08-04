@@ -27,13 +27,24 @@ export function renderAuthView(container, state, forceSignup = false) {
 
             <form id="auth-form" class="auth-form-element">
               ${!isLogin ? `
-              <div class="form-group-with-icon">
-                <label for="auth-name">Full Name</label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <input type="text" id="auth-name" class="form-control-input" placeholder="Enter your full name" required>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group-with-icon">
+                  <label for="auth-first-name">First Name</label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <input type="text" id="auth-first-name" class="form-control-input" placeholder="First name" required>
+                  </div>
+                </div>
+                <div class="form-group-with-icon">
+                  <label for="auth-last-name">Last Name</label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <input type="text" id="auth-last-name" class="form-control-input" placeholder="Last name" required>
+                  </div>
                 </div>
               </div>
               ` : ''}
@@ -168,9 +179,11 @@ export function renderAuthView(container, state, forceSignup = false) {
       const password = document.getElementById('auth-password').value;
       const rememberCheckbox = document.getElementById('remember-me');
 
-      let name, acceptedTerms, promotionalConsent = false;
+      let firstName, lastName, name, acceptedTerms, promotionalConsent = false;
       if (!isLogin) {
-        name = document.getElementById('auth-name').value;
+        firstName = document.getElementById('auth-first-name')?.value?.trim() || '';
+        lastName = document.getElementById('auth-last-name')?.value?.trim() || '';
+        name = `${firstName} ${lastName}`.trim();
         acceptedTerms = rememberCheckbox.checked;
         const promoCheckbox = document.getElementById('promo-consent');
         if (promoCheckbox) {
@@ -195,7 +208,7 @@ export function renderAuthView(container, state, forceSignup = false) {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(isLogin ? { email, password } : { email, password, name, acceptedTerms, promotionalConsent })
+          body: JSON.stringify(isLogin ? { email, password } : { email, password, firstName, lastName, name, acceptedTerms, promotionalConsent })
         });
 
         const data = await response.json();

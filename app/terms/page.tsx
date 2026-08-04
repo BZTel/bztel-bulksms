@@ -1,12 +1,25 @@
 'use client';
 
-import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function TermsPage() {
   return (
     <div style={{ backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
-      <Header />
+      {/* Clean Minimalist Legal Header */}
+      <header style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <img src="/bztel-logo.png" alt="BZTel Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} />
+          <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.3rem', color: '#0f172a', letterSpacing: '-0.02em' }}>BZTel</span>
+        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <a href="/" style={{ textDecoration: 'none', color: '#64748b', fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', transition: 'color 0.2s' }}>
+            &larr; Back to Website
+          </a>
+          <a href="/app" style={{ textDecoration: 'none', background: '#4f46e5', color: '#ffffff', padding: '8px 18px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 700, boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)' }}>
+            Sign In
+          </a>
+        </div>
+      </header>
 
       {/* Main Container */}
       <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '60px 24px 100px 24px' }}>

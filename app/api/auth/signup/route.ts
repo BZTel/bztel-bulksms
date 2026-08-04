@@ -9,10 +9,14 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name, acceptedTerms, promotionalConsent } = await req.json();
+    const body = await req.json();
+    const { email, password, firstName, lastName, acceptedTerms, promotionalConsent } = body;
+    const fullName = (firstName && lastName) 
+      ? `${firstName.trim()} ${lastName.trim()}` 
+      : (body.name?.trim() || '');
 
-    if (!email || !password || !name) {
-      return NextResponse.json({ error: 'Name, email and password are required' }, { status: 400 });
+    if (!email || !password || !fullName) {
+      return NextResponse.json({ error: 'First name, last name, email, and password are required' }, { status: 400 });
     }
 
     if (!acceptedTerms) {
@@ -50,7 +54,7 @@ export async function POST(req: Request) {
       const newUser = await tx.user.create({
         data: {
           email,
-          name,
+          name: fullName,
           termsAcceptedAt: new Date(),
           promotionalConsent: Boolean(promotionalConsent),
           passwordHash,
