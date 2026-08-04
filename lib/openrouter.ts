@@ -1,8 +1,8 @@
 export const FREE_OPENROUTER_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-  'mistralai/mistral-7b-instruct:free',
+  'openrouter/free',
+  'google/gemma-4-31b-it:free',
+  'openai/gpt-oss-20b:free',
+  'inclusionai/ling-3.0-flash:free',
 ];
 
 export interface ChatMessage {
@@ -53,7 +53,7 @@ export async function generateOpenRouterCompletion(
         if (outputText) {
           return {
             text: outputText,
-            modelUsed: model,
+            modelUsed: data.model || model,
           };
         }
       } else {
