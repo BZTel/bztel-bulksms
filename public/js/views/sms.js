@@ -155,9 +155,6 @@ export function renderSMSView(root, state, initialTab = 'composer') {
                 <textarea id="sms-message" class="form-control" placeholder="Type your broadcast message here... Use [Name] to personalize." required style="min-height: 110px;"></textarea>
                 <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
                   <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-                    <button type="button" id="btn-insert-name-tag" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">
-                      + Insert [Name]
-                    </button>
                     <button type="button" class="btn-ai-assist-trigger" data-target="sms-message" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 3px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
                       ✨ AI Draft
                     </button>
@@ -354,9 +351,6 @@ function loadComposerInline() {
         <textarea id="inline-sms-message" class="form-control" placeholder="Type your broadcast message here..." required style="min-height: 130px; padding: 10px 14px;"></textarea>
         <div style="display: flex; justify-content: space-between; margin-top: 6px; align-items: center; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-            <button type="button" id="inline-btn-insert-name" style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-color); padding: 4px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
-              + Insert [Name]
-            </button>
             <button type="button" class="btn-ai-assist-trigger" data-target="inline-sms-message" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);">
               ✨ AI Draft
             </button>
@@ -401,7 +395,6 @@ function setupInlineComposerListeners() {
   const form = document.getElementById('inline-broadcast-form');
   const recipientsArea = document.getElementById('inline-sms-recipients');
   const messageArea = document.getElementById('inline-sms-message');
-  const insertNameBtn = document.getElementById('inline-btn-insert-name');
   const scheduleToggle = document.getElementById('inline-schedule-toggle');
   const scheduleContainer = document.getElementById('inline-schedule-container');
 
@@ -466,12 +459,7 @@ function setupInlineComposerListeners() {
     updateInlineCounters();
   });
 
-  if (insertNameBtn && messageArea) {
-    insertNameBtn.addEventListener('click', () => {
-      messageArea.value += ' [Name] ';
-      updateInlineCounters();
-    });
-  }
+
 
   if (scheduleToggle && scheduleContainer) {
     scheduleToggle.addEventListener('change', (e) => {
