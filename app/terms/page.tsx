@@ -1,7 +1,5 @@
 'use client';
 
-import Footer from '../components/Footer';
-
 export default function TermsPage() {
   return (
     <div style={{ backgroundColor: '#f8fafc', color: '#0f172a', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -139,7 +137,50 @@ export default function TermsPage() {
         </div>
       </main>
 
-      <Footer />
+      {/* Light Legal Footer */}
+      <footer style={{ background: '#ffffff', borderTop: '1px solid #e2e8f0', padding: '40px 24px 30px 24px', fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '32px', marginBottom: '32px' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                <img src="/bztel-logo.png" alt="BZTel Logo" style={{ height: '30px', width: 'auto', objectFit: 'contain' }} />
+                <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: '1.2rem', color: '#0f172a' }}>BZTel</span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: '1.6', maxWidth: '340px' }}>
+                Empowering businesses with reliable communication APIs and custom software solutions that connect the world.
+              </p>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Navigation</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
+                <li><a href="/" style={{ color: '#475569', textDecoration: 'none' }}>Home</a></li>
+                <li><a href="/bulk-sms" style={{ color: '#475569', textDecoration: 'none' }}>Bulk SMS</a></li>
+                <li><a href="/software-development" style={{ color: '#475569', textDecoration: 'none' }}>Software Development</a></li>
+                <li><a href="/pricing" style={{ color: '#475569', textDecoration: 'none' }}>Pricing</a></li>
+                <li><a href="/contact" style={{ color: '#475569', textDecoration: 'none' }}>Contact Us</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>Legal & Support</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
+                <li><a href="/terms" style={{ color: '#4f46e5', fontWeight: 600, textDecoration: 'none' }}>Terms & Conditions</a></li>
+                <li><a href="mailto:clientservice@bztel.net" style={{ color: '#475569', textDecoration: 'none' }}>Email Support</a></li>
+                <li><a href="https://wa.me/2348149346429" target="_blank" rel="noopener noreferrer" style={{ color: '#475569', textDecoration: 'none' }}>WhatsApp Help</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.82rem', color: '#64748b' }}>
+            <span>&copy; 2026 BZTel LTD. All rights reserved.</span>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <a href="/terms" style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</a>
+              <a href="mailto:clientservice@bztel.net" style={{ color: '#64748b', textDecoration: 'none' }}>Support</a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
