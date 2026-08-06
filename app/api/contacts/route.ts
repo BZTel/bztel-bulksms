@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 const ALLOWED_WRITE_ROLES = ['Owner', 'Administrator', 'Marketing Agent'];
 
@@ -62,7 +63,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Phone is required' }, { status: 400 });
     }
 
-    const contactPhone = phone.trim();
+    const parsedPhone = normalizePhoneNumber(phone);
+    if (!parsedPhone.isValid) {
+      return NextResponse.json({ error: parsedPhone.error || 'Invalid Nigerian phone number' }, { status: 400 });
+    }
+
+    const contactPhone = parsedPhone.normalized;
     const contactName = name && name.trim() ? name.trim() : contactPhone;
     const group = group_name ? group_name.trim() : 'Default';
 

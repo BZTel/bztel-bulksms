@@ -1221,7 +1221,7 @@ function recalculateSMSCost() {
     if (recipients.length === 0) {
       chipsContainer.innerHTML = '';
     } else {
-      const phoneRegex = /^(\+?[1-9]\d{7,14}|0[789][01]\d{8}|0[25]\d{8}|0\d{9,10})$/;
+      const phoneRegex = /^\+?(234|0)?[789][01]\d{8}$/;
       chipsContainer.innerHTML = recipients.slice(0, 30).map(phone => {
         const cleanPhone = phone.replace(/[\s()\-]/g, '');
         const isValid = phoneRegex.test(cleanPhone);

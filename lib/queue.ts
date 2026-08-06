@@ -65,6 +65,16 @@ async function dispatchToProvider(log: { id: number; recipient: string; message:
   // Provider API call will be attached here upon integration.
   // Currently setting status to 'sent' or 'submitted' cleanly without mock random failures.
   try {
+    const cleanRecipient = log.recipient.replace(/[^0-9]/g, '');
+    if (!cleanRecipient.startsWith('234') || cleanRecipient.length !== 13) {
+      console.warn(`[Queue Worker] Blocked non-Nigerian recipient: ${cleanRecipient || log.recipient} for log ${log.id}`);
+      await prisma.smsLog.update({
+        where: { id: log.id },
+        data: { status: 'failed' }
+      });
+      return;
+    }
+
     await prisma.smsLog.update({
       where: { id: log.id },
       data: { status: 'sent' }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 const ALLOWED_WRITE_ROLES = ['Owner', 'Administrator', 'Marketing Agent'];
 
@@ -39,14 +40,17 @@ export async function POST(req: Request) {
         const contactPhone = phone ? phone.trim() : '';
         if (!contactPhone) continue; // Skip invalid rows without a phone number
 
-        const contactName = name ? name.trim() : contactPhone;
+        const parsedPhone = normalizePhoneNumber(contactPhone);
+        if (!parsedPhone.isValid) continue; // Skip invalid or non-Nigerian phone numbers
+
+        const contactName = name ? name.trim() : parsedPhone.normalized;
         const group = group_name ? group_name.trim() : 'Default';
 
         const contact = await tx.contact.create({
           data: {
             userId: ownerId,
             name: contactName,
-            phone: contactPhone,
+            phone: parsedPhone.normalized,
             email: email ? email.trim().toLowerCase() : null,
             groupName: group,
             birthdate: birthdate ? birthdate.trim() : null,

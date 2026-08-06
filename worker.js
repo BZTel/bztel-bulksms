@@ -339,6 +339,19 @@ async function sendSMS(log) {
     // Normalize phone number to E.164 format (e.g., 2347017193890) for destination address
     const cleanRecipient = normalizePhone(log.recipient);
 
+    // Validate that it is a Nigerian number (234 followed by 10 digits)
+    if (!cleanRecipient.startsWith('234') || cleanRecipient.length !== 13) {
+      console.warn(`[Worker] Blocked non-Nigerian recipient: ${cleanRecipient || log.recipient} for log ${log.id}`);
+      prisma.smsLog.update({
+        where: { id: log.id },
+        data: { status: 'failed' }
+      }).catch(err => {
+        console.error(`[Worker] Failed to update SMS status in DB for log ${log.id}:`, err);
+      });
+      resolve();
+      return;
+    }
+
     // Check if Sender ID is alphanumeric
     const isAlphanumeric = /[a-zA-Z]/.test(log.senderId);
     

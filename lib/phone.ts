@@ -88,15 +88,18 @@ export function normalizePhoneNumber(rawPhone: string, defaultCountry: 'NG' | 'G
     normalized = '234' + digits;
   }
 
-  // Final Validation Check for length sanity (E.164 numbers are usually 10 to 15 digits)
-  const isValid = normalized.length >= 10 && normalized.length <= 15;
+  // Final Validation Check: Only Nigerian phone numbers (234) are supported at this time
+  const isLengthValid = normalized.length >= 10 && normalized.length <= 15;
+  const isValid = isLengthValid && country === 'NG' && normalized.length === 13;
 
   return {
     normalized,
     original,
     isValid,
     country,
-    error: isValid ? undefined : `Invalid phone number length (${normalized.length} digits)`
+    error: !isLengthValid
+      ? `Invalid phone number length (${normalized.length} digits)`
+      : (country !== 'NG' ? 'Only Nigerian phone numbers (+234) are allowed' : undefined)
   };
 }
 

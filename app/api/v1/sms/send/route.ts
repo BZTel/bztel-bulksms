@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
+import { normalizeRecipientsList } from '@/lib/phone';
 import { randomUUID } from 'crypto';
 
 export async function POST(req: Request) {
@@ -68,15 +69,14 @@ export async function POST(req: Request) {
       where: { userId: ownerId, name: cleanSenderId, status: 'approved' }
     });
 
-    let recipientList: string[] = [];
-    if (Array.isArray(recipients)) {
-      recipientList = recipients;
-    } else if (typeof recipients === 'string') {
-      recipientList = recipients.split(',').map(r => r.trim()).filter(Boolean);
-    }
+    const parsedRecipients = normalizeRecipientsList(recipients);
+    const recipientList = parsedRecipients.valid;
 
     if (recipientList.length === 0) {
-      return NextResponse.json({ error: 'Recipients list is empty' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Recipients list is empty or contains no valid Nigerian phone numbers.',
+        invalid_recipients: parsedRecipients.invalid
+      }, { status: 400 });
     }
 
     const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
@@ -121,7 +121,7 @@ export async function POST(req: Request) {
           data: {
             userId: ownerId,
             senderId: cleanSenderId,
-            recipient: phone.trim(),
+            recipient: phone,
             message: rawMessage,
             credits: creditsPerMessage,
             status: 'pending',

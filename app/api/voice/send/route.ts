@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
+import { normalizeRecipientsList } from '@/lib/phone';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher'];
 
@@ -45,15 +46,14 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    let recipientList: string[] = [];
-    if (Array.isArray(recipients)) {
-      recipientList = recipients;
-    } else if (typeof recipients === 'string') {
-      recipientList = recipients.split(',').map(r => r.trim()).filter(Boolean);
-    }
+    const parsedRecipients = normalizeRecipientsList(recipients);
+    const recipientList = parsedRecipients.valid;
 
     if (recipientList.length === 0) {
-      return NextResponse.json({ error: 'Recipients list is empty' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Recipients list is empty or contains no valid Nigerian phone numbers.',
+        invalid_recipients: parsedRecipients.invalid
+      }, { status: 400 });
     }
 
     const creditsPerCall = 2;
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
           data: {
             userId: ownerId,
             senderId: cleanSenderId,
-            recipient: phone.trim(),
+            recipient: phone,
             ttsText: ttsText || null,
             audioUrl: audioUrl || null,
             duration: 30,
