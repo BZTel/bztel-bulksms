@@ -1,0 +1,839 @@
+// Import View Modules
+import { renderAuthView } from './views/auth.js';
+import { renderDashboardView } from './views/dashboard.js';
+import { 
+  renderSMSView, 
+  renderSMSTemplatesView, 
+  renderPersonalizedSMSView, 
+  renderScheduledSMSView, 
+  renderSMSDraftsView 
+} from './views/sms.js?v=1.0.2';
+import { renderContactsView, renderContactGroupsView, renderImportContactsView } from './views/contacts.js';
+import { renderWalletView, renderTransactionsView } from './views/wallet.js';
+import { renderBirthdayView } from './views/birthday.js';
+import { renderTeamsView } from './views/teams.js';
+import { renderCampaignHistoryView, renderVoiceHistoryView } from './views/campaign-history.js';
+import { renderRequestServiceView } from './views/request-service.js';
+import { renderHelpView } from './views/help.js';
+import { renderMoreView } from './views/more.js';
+import { renderVoiceView } from './views/voice.js';
+import { renderEmailBlastView } from './views/email-blast.js';
+import { renderBuyCreditsView } from './views/buy-credits.js';
+import { renderSenderIdsView } from './views/sender-ids.js';
+import { renderApiKeysView } from './views/api-keys.js';
+
+// Global Application State
+const state = {
+  user: null,
+  token: localStorage.getItem('token') || null,
+  currentView: 'dashboard',
+  statsInterval: null,
+  currentChannel: 'sms',
+  previousBalance: null,
+  viewAbortController: null,
+  viewCache: {}
+};
+
+// Initialize Application
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
+
+async function initApp() {
+  try {
+    console.log('[initApp] Starting initialization. state.token:', state.token);
+    setupGlobalEvents();
+    setupModalEvents();
+
+    // Check URL parameters for OAuth token or error redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    const errorFromUrl = urlParams.get('error');
+
+    const paymentStatus = urlParams.get('status');
+    const paymentCredits = urlParams.get('credits');
+    const paymentMessage = urlParams.get('message');
+
+    if (paymentStatus === 'success') {
+      const creds = paymentCredits ? Number(paymentCredits).toLocaleString() : 'requested';
+      showToast(`Payment successful! Credited ${creds} credits to your wallet.`, 'success');
+      state.currentView = 'wallet';
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (paymentStatus === 'error') {
+      showToast(paymentMessage || 'Online checkout payment failed', 'error');
+      state.currentView = 'wallet';
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (errorFromUrl) {
+      showToast(decodeURIComponent(errorFromUrl), 'error');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (tokenFromUrl) {
+      console.log('[initApp] Found token in URL, storing and authenticating...');
+      state.token = tokenFromUrl;
+      localStorage.setItem('token', tokenFromUrl);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (state.token) {
+      console.log('[initApp] Token present, fetching user profile...');
+      const success = await fetchUserProfile();
+      console.log('[initApp] fetchUserProfile success:', success);
+      if (success) {
+        showAppContainer();
+        navigateTo(state.currentView);
+      } else {
+        logout();
+      }
+    } else {
+      console.log('[initApp] No token present, showing auth container...');
+      const forceSignup = window.location.hash === '#signup';
+      showAuthContainer(forceSignup);
+    }
+  } catch (err) {
+    console.error('[initApp] Startup error caught:', err);
+    showAuthContainer();
+  }
+}
+
+// Setup App Layout Event Listeners
+function setupGlobalEvents() {
+  // Navigation button handlers
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      const view = e.currentTarget.getAttribute('data-view');
+      navigateTo(view);
+    });
+  });
+
+  // Switch channel item handlers
+  const channelItems = document.querySelectorAll('.switch-channel-item');
+  channelItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      channelItems.forEach(c => c.classList.remove('active'));
+      const activeItem = e.currentTarget;
+      activeItem.classList.add('active');
+      
+      // Update dot styles
+      document.querySelectorAll('.channel-dot').forEach(d => {
+        d.className = 'channel-dot grey';
+      });
+      const dot = activeItem.querySelector('.channel-dot');
+      if (dot) {
+        dot.className = 'channel-dot orange';
+      }
+      
+      const channel = activeItem.getAttribute('data-channel');
+      state.currentChannel = channel;
+      
+      const sendNavBtn = document.querySelector('.nav-item[data-view="sms"], .nav-item[data-view="voice"]');
+      if (sendNavBtn) {
+        if (channel === 'voice') {
+          sendNavBtn.setAttribute('data-view', 'voice');
+          sendNavBtn.innerHTML = `
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+            Send Voice
+          `;
+        } else {
+          sendNavBtn.setAttribute('data-view', 'sms');
+          sendNavBtn.innerHTML = `
+            <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+            Send SMS
+          `;
+        }
+      }
+      
+      navigateTo('dashboard');
+    });
+  });
+
+  // Logout button handler
+  document.getElementById('logout-btn').addEventListener('click', logout);
+
+  // Sidebar responsive mobile toggling
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  
+  if (sidebarToggle && sidebar && sidebarBackdrop) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      sidebarBackdrop.classList.add('active');
+    });
+    
+    sidebarBackdrop.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      sidebarBackdrop.classList.remove('active');
+    });
+    
+    // Auto-close sidebar on view navigation on mobile
+    const allNavButtons = document.querySelectorAll('.nav-item, .switch-channel-item');
+    allNavButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarBackdrop.classList.remove('active');
+      });
+    });
+  }
+}
+
+// Setup simulated checkout modal
+function setupModalEvents() {
+  const topupModal = document.getElementById('topup-modal');
+  const topupTrigger = document.getElementById('topup-trigger-btn');
+  const closeTopup = document.getElementById('close-topup-btn');
+  const topupForm = document.getElementById('topup-form');
+  const pricingCards = document.querySelectorAll('.pricing-card');
+  const selectedCreditsInput = document.getElementById('selected-credits');
+  const paySubmitBtn = document.getElementById('pay-submit-btn');
+
+  function updateLoyaltyUI() {
+    const points = state.user?.loyalty_points || 0;
+    
+    // 1. Flutterwave calculations
+    const activeCard = document.querySelector('.pricing-card.selected') || document.querySelector('.pricing-card.popular');
+    let flwPrice = activeCard ? parseInt(activeCard.getAttribute('data-price').replace(/,/g, '')) : 60000;
+    
+    const flwContainer = document.getElementById('flw-loyalty-discount-container');
+    const flwLabel = document.getElementById('flw-loyalty-points-label');
+    const flwCheckbox = document.getElementById('flw-use-loyalty-points');
+
+    if (points > 0 && flwContainer && flwLabel) {
+      flwContainer.classList.remove('hidden');
+      const maxDiscount = flwPrice * 0.5;
+      const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+      const pointsToRedeem = Math.min(points, maxPointsNeeded);
+      const discount = pointsToRedeem * 100;
+      
+      flwLabel.innerHTML = `You have <strong>${points}</strong> points. Redeem <strong>${pointsToRedeem}</strong> points for a <strong>₦${discount.toLocaleString()}</strong> discount.`;
+      
+      if (flwCheckbox && flwCheckbox.checked) {
+        paySubmitBtn.innerText = `Pay ₦${(flwPrice - discount).toLocaleString()} & Add Credits`;
+      } else {
+        paySubmitBtn.innerText = `Pay ₦${flwPrice.toLocaleString()} & Add Credits`;
+      }
+    } else {
+      flwContainer?.classList.add('hidden');
+      if (flwCheckbox) flwCheckbox.checked = false;
+      paySubmitBtn.innerText = `Pay ₦${flwPrice.toLocaleString()} & Add Credits`;
+    }
+
+    // 2. Bank calculations
+    const bankSelect = document.getElementById('bank-package-select');
+    let bankPrice = 60000;
+    if (bankSelect) {
+      if (bankSelect.value === 'custom') {
+        const customCredits = parseInt(document.getElementById('bank-custom-credits').value) || 0;
+        bankPrice = customCredits * 12;
+      } else {
+        const opt = bankSelect.options[bankSelect.selectedIndex];
+        bankPrice = opt ? parseInt(opt.getAttribute('data-price') || '60000') : 60000;
+      }
+    }
+
+    const bankContainer = document.getElementById('bank-loyalty-discount-container');
+    const bankLabel = document.getElementById('bank-loyalty-points-label');
+    const bankCheckbox = document.getElementById('bank-use-loyalty-points');
+
+    if (points > 0 && bankContainer && bankLabel) {
+      bankContainer.classList.remove('hidden');
+      const maxDiscount = bankPrice * 0.5;
+      const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+      const pointsToRedeem = Math.min(points, maxPointsNeeded);
+      const discount = pointsToRedeem * 100;
+
+      bankLabel.innerHTML = `You have <strong>${points}</strong> points. Redeem <strong>${pointsToRedeem}</strong> points for a <strong>₦${discount.toLocaleString()}</strong> discount.`;
+
+      if (bankCheckbox && bankCheckbox.checked) {
+        bankSubmitBtn.innerText = `Notify Admin (₦${(bankPrice - discount).toLocaleString()})`;
+      } else {
+        bankSubmitBtn.innerText = `Notify Admin of Transfer`;
+      }
+    } else {
+      bankContainer?.classList.add('hidden');
+      if (bankCheckbox) bankCheckbox.checked = false;
+      bankSubmitBtn.innerText = `Notify Admin of Transfer`;
+    }
+  }
+
+  // Open Buy Credits view on trigger click
+  topupTrigger.addEventListener('click', () => {
+    navigateTo('buy-credits');
+  });
+
+  // Close modal
+  closeTopup.addEventListener('click', () => {
+    topupModal.classList.add('hidden');
+  });
+
+  // Close on backdrop click
+  topupModal.addEventListener('click', (e) => {
+    if (e.target === topupModal) {
+      topupModal.classList.add('hidden');
+    }
+  });
+
+  // Dual-payment Tab Switches
+  const payTabFlw = document.getElementById('pay-tab-flw');
+  const payTabBank = document.getElementById('pay-tab-bank');
+  const paneFlw = document.getElementById('payment-pane-flw');
+  const paneBank = document.getElementById('payment-pane-bank');
+
+  if (payTabFlw && payTabBank) {
+    payTabFlw.addEventListener('click', () => {
+      payTabFlw.classList.add('active');
+      payTabBank.classList.remove('active');
+      paneFlw.classList.remove('hidden');
+      paneBank.classList.add('hidden');
+      updateLoyaltyUI();
+    });
+
+    payTabBank.addEventListener('click', () => {
+      payTabBank.classList.add('active');
+      payTabFlw.classList.remove('active');
+      paneBank.classList.remove('hidden');
+      paneFlw.classList.add('hidden');
+
+      // Populate unique reference for bank transfer dynamically
+      const bankRef = document.getElementById('bank-transfer-ref');
+      if (bankRef && state.user) {
+        const timestamp = Date.now().toString().slice(-6);
+        bankRef.innerText = `BZ-${state.user.id}-${timestamp}`;
+      }
+      updateLoyaltyUI();
+    });
+  }
+
+  // Pricing selection handler
+  pricingCards.forEach(card => {
+    card.addEventListener('click', () => {
+      pricingCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      
+      const credits = card.getAttribute('data-credits');
+      selectedCreditsInput.value = credits;
+      updateLoyaltyUI();
+    });
+  });
+
+  // Bind checkbox listeners
+  document.getElementById('flw-use-loyalty-points')?.addEventListener('change', updateLoyaltyUI);
+  document.getElementById('bank-use-loyalty-points')?.addEventListener('change', updateLoyaltyUI);
+  document.getElementById('bank-custom-credits')?.addEventListener('input', updateLoyaltyUI);
+
+  // Form Submit: Flutterwave Checkout Link
+  topupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    paySubmitBtn.disabled = true;
+    paySubmitBtn.innerText = 'Processing secure payment...';
+
+    const credits = parseInt(selectedCreditsInput.value);
+    const redeemPoints = document.getElementById('flw-use-loyalty-points')?.checked || false;
+
+    try {
+      const response = await fetch('/api/billing/flutterwave/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token}`
+        },
+        body: JSON.stringify({ credits, redeemPoints })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.link) {
+        showToast('Redirecting to payment gateway...', 'success');
+        window.location.href = data.link; // Redirect user
+      } else {
+        showToast(data.error || 'Failed to initialize payment', 'error');
+        paySubmitBtn.disabled = false;
+      }
+    } catch (error) {
+      showToast('Connection error, try again later', 'error');
+      paySubmitBtn.disabled = false;
+    } finally {
+      updateLoyaltyUI();
+    }
+  });
+
+  // Manual Bank Transfer Elements Wiring
+  const bankPackageSelect = document.getElementById('bank-package-select');
+  const bankCustomWrapper = document.getElementById('bank-custom-credits-wrapper');
+  if (bankPackageSelect && bankCustomWrapper) {
+    bankPackageSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'custom') {
+        bankCustomWrapper.classList.remove('hidden');
+        document.getElementById('bank-custom-credits').required = true;
+      } else {
+        bankCustomWrapper.classList.add('hidden');
+        document.getElementById('bank-custom-credits').required = false;
+      }
+      updateLoyaltyUI();
+    });
+  }
+
+  const bankForm = document.getElementById('bank-transfer-form');
+  const bankSubmitBtn = document.getElementById('bank-submit-btn');
+  if (bankForm && bankSubmitBtn) {
+    bankForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      bankSubmitBtn.disabled = true;
+      bankSubmitBtn.innerText = 'Submitting notification...';
+
+      const selectVal = bankPackageSelect.value;
+      let credits = 0;
+      if (selectVal === 'custom') {
+        credits = parseInt(document.getElementById('bank-custom-credits').value);
+        if (isNaN(credits) || credits <= 0) {
+          showToast('Please specify a valid credits amount', 'warning');
+          bankSubmitBtn.disabled = false;
+          bankSubmitBtn.innerText = 'Notify Admin of Transfer';
+          return;
+        }
+      } else {
+        credits = parseInt(selectVal);
+      }
+
+      const reference = document.getElementById('bank-transfer-input-ref').value;
+      const redeemPoints = document.getElementById('bank-use-loyalty-points')?.checked || false;
+
+      let pointsToRedeem = 0;
+      if (redeemPoints) {
+        let bankPrice = 60000;
+        if (selectVal === 'custom') {
+          bankPrice = credits * 12;
+        } else {
+          const opt = bankPackageSelect.options[bankPackageSelect.selectedIndex];
+          bankPrice = opt ? parseInt(opt.getAttribute('data-price') || '60000') : 60000;
+        }
+        const points = state.user?.loyalty_points || 0;
+        const maxDiscount = bankPrice * 0.5;
+        const maxPointsNeeded = Math.ceil(maxDiscount / 100);
+        pointsToRedeem = Math.min(points, maxPointsNeeded);
+      }
+
+      try {
+        const response = await fetch('/api/billing/bank-transfer/notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${state.token}`
+          },
+          body: JSON.stringify({ credits, reference, pointsToRedeem })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          showToast(data.message, 'success');
+          topupModal.classList.add('hidden');
+          bankForm.reset();
+          bankCustomWrapper.classList.add('hidden');
+        } else {
+          showToast(data.error || 'Failed to submit notification', 'error');
+        }
+      } catch (error) {
+        showToast('Connection error submitting transfer notification', 'error');
+      } finally {
+        bankSubmitBtn.disabled = false;
+        bankSubmitBtn.innerText = 'Notify Admin of Transfer';
+      }
+    });
+  }
+}
+
+// Fetch Profile
+export async function fetchUserProfile() {
+  console.log('[fetchUserProfile] Called. token:', state.token);
+  if (!state.token) return false;
+
+  try {
+    const response = await fetch('/api/auth/me', {
+      headers: {
+        'Authorization': `Bearer ${state.token}`
+      }
+    });
+
+    console.log('[fetchUserProfile] API response status:', response.status);
+
+    if (response.ok) {
+      const data = await response.json();
+      state.user = data.user;
+      console.log('[fetchUserProfile] User loaded:', state.user);
+      updateUIHeader();
+      return true;
+    }
+  } catch (error) {
+    console.error('[fetchUserProfile] Error:', error);
+  }
+  return false;
+}
+
+// Update Top Bar & Sidebar Profile info
+export function updateUIHeader() {
+  if (!state.user) return;
+
+  const balanceCountEl = document.getElementById('balance-count');
+  const targetBalance = state.user.balance;
+
+  if (balanceCountEl) {
+    if (state.previousBalance === null || state.previousBalance === targetBalance) {
+      balanceCountEl.innerText = targetBalance.toLocaleString();
+    } else {
+      // Animate the counter increment
+      animateValue(balanceCountEl, state.previousBalance, targetBalance, 800);
+    }
+  }
+
+  state.previousBalance = targetBalance;
+  document.getElementById('sidebar-user-email').innerText = state.user.email;
+  
+  // Update dashboard or wallet hero balance card if present in DOM
+  const heroBalanceEl = document.getElementById('hero-balance');
+  if (heroBalanceEl) {
+    heroBalanceEl.innerText = targetBalance.toLocaleString();
+  }
+
+  // Set initials icon
+  const initials = state.user.email.substring(0, 2).toUpperCase();
+  document.getElementById('user-initials').innerText = initials;
+}
+
+// Dynamic numeric scroll animation helper
+function animateValue(element, start, end, duration) {
+  let startTimestamp = null;
+  const step = (timestamp) => {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    const currentValue = Math.floor(progress * (end - start) + start);
+    element.innerText = currentValue.toLocaleString();
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+  window.requestAnimationFrame(step);
+}
+
+// Routing Navigation
+export function navigateTo(viewName) {
+  state.currentView = viewName;
+  
+  // Abort any pending network requests from previous view
+  if (state.viewAbortController) {
+    state.viewAbortController.abort();
+  }
+  state.viewAbortController = new AbortController();
+
+  // Hide loader
+  document.getElementById('app-loader').classList.add('hidden');
+
+  // Highlight active sidebar nav item
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+    if (item.getAttribute('data-view') === viewName) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+
+  // Set page title
+  const titleMap = {
+    dashboard: 'Dashboard Overview',
+    sms: 'Bulk SMS Composer',
+    'sms-templates': 'SMS Message Templates',
+    'personalized-sms': 'Personalized SMS Campaigns',
+    'scheduled-sms': 'Scheduled Messages Queue',
+    'sms-drafts': 'Saved Message Drafts',
+    voice: 'Voice Broadcasting Composer',
+    contacts: 'Contacts Directory',
+    'contact-groups': 'Contact Groups & Lists',
+    'import-contacts': 'Import Contacts Console',
+    'email-blast': 'Email Blast Campaign Console',
+    birthday: 'Birthday Campaign Scheduler',
+    teams: 'Team Collaboration Hub',
+    wallet: 'Wallet Overview & Billing',
+    'buy-credits': 'Buy Credits',
+    transactions: 'Transaction Statements & Receipts',
+    'campaign-history': 'Sent SMS Broadcast Logs',
+    'voice-history': 'Voice Broadcast Logs',
+    'sender-ids': 'Sender IDs Directory',
+    'api-keys': 'Developer API Keys & Webhooks',
+    'request-service': 'Request Custom Service',
+    help: 'Support Desk & FAQs',
+    more: 'More Settings & Resources'
+  };
+  document.getElementById('view-title').innerText = titleMap[viewName] || 'Bztel App';
+
+  // Mount corresponding view script
+  const root = document.getElementById('app-root');
+  
+  // Clear any existing stats intervals
+  if (state.statsInterval) {
+    clearInterval(state.statsInterval);
+    state.statsInterval = null;
+  }
+
+  switch (viewName) {
+    case 'dashboard':
+      renderDashboardView(root, state);
+      break;
+    case 'sms':
+      renderSMSView(root, state);
+      break;
+    case 'sms-templates':
+      renderSMSTemplatesView(root, state);
+      break;
+    case 'personalized-sms':
+      renderPersonalizedSMSView(root, state);
+      break;
+    case 'scheduled-sms':
+      renderScheduledSMSView(root, state);
+      break;
+    case 'sms-drafts':
+      renderSMSDraftsView(root, state);
+      break;
+    case 'email-blast':
+      renderEmailBlastView(root, state);
+      break;
+    case 'voice':
+      renderVoiceView(root, state);
+      break;
+    case 'contacts':
+      renderContactsView(root, state);
+      break;
+    case 'contact-groups':
+      renderContactGroupsView(root, state);
+      break;
+    case 'import-contacts':
+      renderImportContactsView(root, state);
+      break;
+    case 'birthday':
+      renderBirthdayView(root, state);
+      break;
+    case 'teams':
+      renderTeamsView(root, state);
+      break;
+    case 'wallet':
+      renderWalletView(root, state);
+      break;
+    case 'buy-credits':
+      renderBuyCreditsView(root, state);
+      break;
+    case 'transactions':
+      renderTransactionsView(root, state);
+      break;
+    case 'campaign-history':
+      renderCampaignHistoryView(root, state);
+      break;
+    case 'voice-history':
+      renderVoiceHistoryView(root, state);
+      break;
+    case 'sender-ids':
+      renderSenderIdsView(root, state);
+      break;
+    case 'api-keys':
+      renderApiKeysView(root, state);
+      break;
+    case 'request-service':
+      renderRequestServiceView(root, state);
+      break;
+    case 'help':
+      renderHelpView(root, state);
+      break;
+    case 'account':
+    case 'more':
+      renderMoreView(root, state);
+      break;
+    default:
+      renderDashboardView(root, state);
+  }
+}
+
+// Navigation flow toggles
+export function showAppContainer() {
+  console.log('[showAppContainer] Hiding loader and showing app...');
+  document.getElementById('auth-container').classList.add('hidden');
+  document.getElementById('app-container').classList.remove('hidden');
+  document.getElementById('app-loader').classList.add('hidden');
+  connectTelemetry();
+}
+
+// Switch to Auth Screen
+export function showAuthContainer(forceSignup = false) {
+  console.log('[showAuthContainer] Hiding loader and showing auth...');
+  document.getElementById('app-container').classList.add('hidden');
+  document.getElementById('app-loader').classList.add('hidden');
+  document.getElementById('auth-container').classList.remove('hidden');
+  renderAuthView(document.getElementById('auth-container'), state, forceSignup);
+}
+
+// Login success handler
+export function loginSuccess(token, user) {
+  state.token = token;
+  state.user = user;
+  localStorage.setItem('token', token);
+  showAppContainer();
+  updateUIHeader();
+  navigateTo('dashboard');
+  showToast(`Welcome back, ${user.email}!`, 'success');
+}
+
+// Logout handler
+export function logout(showMsg = true) {
+  console.log('[logout] Logging out user...');
+  const wasLoggedIn = !!state.token;
+  state.token = null;
+  state.user = null;
+  localStorage.removeItem('token');
+  
+  if (state.statsInterval) {
+    clearInterval(state.statsInterval);
+    state.statsInterval = null;
+  }
+  disconnectTelemetry();
+
+  showAuthContainer();
+  if (showMsg && wasLoggedIn) {
+    showToast('Logged out successfully', 'info');
+  }
+}
+
+// Toast Notifications System
+export function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container || !message) return;
+
+  // Prevent duplicate toast spamming on screen
+  const existingToasts = Array.from(container.children);
+  const isDuplicate = existingToasts.some(t => t.textContent && t.textContent.trim().includes(message.trim()));
+  if (isDuplicate) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  // Choose icon based on type
+  let icon = '';
+  if (type === 'success') {
+    icon = `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  } else if (type === 'error') {
+    icon = `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  } else {
+    icon = `<svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+  }
+
+  toast.innerHTML = `
+    ${icon}
+    <span>${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // Auto-remove after 4 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(10px)';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 4000);
+}
+
+// Helper: Check if a view module is still currently active
+export function isCurrentView(viewName) {
+  return state.currentView === viewName;
+}
+
+// Helper: Make API calls with auth token automatically attached
+export async function apiFetch(url, options = {}) {
+  console.log('[apiFetch] Fetching:', url, 'token:', state.token);
+  const headers = options.headers || {};
+  if (state.token) {
+    headers['Authorization'] = `Bearer ${state.token}`;
+  }
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+  }
+
+  // Attach AbortController signal unless explicitly skipped
+  const signal = options.signal || (options.skipAbort ? undefined : state.viewAbortController?.signal);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      signal
+    });
+
+    console.log('[apiFetch] Response from:', url, 'status:', res.status);
+
+    // If token expired, log out automatically
+    if (res.status === 401) {
+      console.log('[apiFetch] 401 Unauthorized received, handling logout quietly...');
+      const wasLoggedIn = !!state.token;
+      logout(false);
+      if (wasLoggedIn) {
+        showToast('Session expired. Please log in again.', 'warning');
+      }
+      throw new Error('Unauthorized');
+    }
+
+    return res;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.log('[apiFetch] Request aborted due to view navigation:', url);
+    }
+    throw err;
+  }
+}
+
+// Telemetry Server-Sent Events (SSE) connection management
+function connectTelemetry() {
+  if (state.telemetrySource) {
+    return;
+  }
+  console.log('[Telemetry] Connecting to EventSource telemetry channel...');
+  state.telemetrySource = new EventSource('/api/telemetry');
+
+  state.telemetrySource.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('[Telemetry] Received event:', data);
+      
+      if (data.type === 'SMS_UPDATED') {
+        showToast('SMS statuses updated in real-time!', 'success');
+        
+        // Auto-refresh active campaign views
+        if (state.currentView === 'campaign-history') {
+          navigateTo('campaign-history');
+        } else if (state.currentView === 'dashboard') {
+          navigateTo('dashboard');
+        }
+      }
+    } catch (e) {
+      console.error('[Telemetry] Event parsing error:', e);
+    }
+  };
+
+  state.telemetrySource.onerror = () => {
+    console.warn('[Telemetry] Connection lost. EventSource reconnecting...');
+  };
+}
+
+function disconnectTelemetry() {
+  if (state.telemetrySource) {
+    console.log('[Telemetry] Closing EventSource telemetry channel...');
+    state.telemetrySource.close();
+    state.telemetrySource = null;
+  }
+}
+
