@@ -1063,6 +1063,14 @@ a {
     text-align: center;
   }
   
+  .software-l {
+    display: grid !important;
+  }
+  
+  .software-l > * {
+    padding-left: 0 !important;
+  }
+  
   .hero-btns-l, .banner-btns-l {
     justify-content: center;
   }
@@ -2034,6 +2042,10 @@ textarea.form-control {
 
   .mobile-order-first {
     order: -1 !important;
+  }
+
+  .contact-container {
+    padding: 24px !important;
   }
 }
 
