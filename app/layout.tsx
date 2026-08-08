@@ -2,8 +2,25 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BZTel - Communication APIs & Custom Software",
+  metadataBase: new URL("https://bztel.com"),
+  title: {
+    default: "BZTel - Communication APIs & Custom Software",
+    template: "%s | BZTel",
+  },
   description: "BZTel provides powerful communication APIs and custom software development services.",
+  openGraph: {
+    title: "BZTel - Communication APIs & Custom Software",
+    description: "BZTel provides powerful communication APIs and custom software development services.",
+    url: "https://bztel.com",
+    siteName: "BZTel",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BZTel - Communication APIs & Custom Software",
+    description: "BZTel provides powerful communication APIs and custom software development services.",
+  },
 };
 
 export default function RootLayout({
