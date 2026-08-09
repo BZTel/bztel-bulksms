@@ -5,8 +5,10 @@ import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
 import { normalizeRecipientsList, normalizePhoneNumber } from '@/lib/phone';
 import { randomUUID } from 'crypto';
+import { smsSendRateLimiter } from '@/lib/rate-limit';
 
 const ALLOWED_ROLES = ['Owner', 'Administrator', 'Dispatcher', 'Marketing Agent'];
+const MAX_BATCH_SIZE = 10000;
 
 export async function POST(req: Request) {
   try {
@@ -19,6 +21,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ 
         error: `Access denied. Insufficient role permissions. Allowed: ${ALLOWED_ROLES.join(', ')}` 
       }, { status: 403 });
+    }
+
+    // Rate Limit Check (20 send requests per minute per owner)
+    const rateLimit = await smsSendRateLimiter(String(authUser.owner_id));
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded: Too many SMS dispatch calls. Please wait a minute.' },
+        { status: 429 }
+      );
     }
 
     const body = await req.json();

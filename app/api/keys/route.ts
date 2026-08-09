@@ -56,22 +56,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'API key name is required' }, { status: 400 });
     }
 
-    const secureKey = 'bztel_live_' + crypto.randomBytes(20).toString('hex');
+    const rawKey = 'bztel_live_' + crypto.randomBytes(24).toString('hex');
+    const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
 
     const apiKey = await prisma.apiKey.create({
       data: {
         userId: ownerId,
-        key: secureKey,
+        key: keyHash,
         name: name.trim(),
       },
     });
 
     return NextResponse.json({
-      message: 'API Key generated successfully. Make sure to copy it now, it will not be shown again.',
+      message: 'API Key generated successfully. Make sure to copy it now; it cannot be recovered if lost.',
       apiKey: {
         id: apiKey.id,
         name: apiKey.name,
-        key: secureKey,
+        key: rawKey,
         created_at: apiKey.createdAt.toISOString()
       }
     }, { status: 201 });

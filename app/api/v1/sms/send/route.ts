@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { triggerWorker } from '@/lib/queue';
 import { checkContent, suspendUser } from '@/lib/safeguard';
 import { normalizeRecipientsList } from '@/lib/phone';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash } from 'crypto';
+import { apiRateLimiter } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +15,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'API key missing in Authorization header' }, { status: 401 });
     }
 
-    const keyData = await prisma.apiKey.findUnique({
-      where: { key: apiKey },
+    // Rate Limit Check (60 API calls per minute per API key)
+    const rateLimit = await apiRateLimiter(apiKey);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'API rate limit exceeded. Please throttle your requests.' },
+        { status: 429 }
+      );
+    }
+
+    const keyHash = createHash('sha256').update(apiKey).digest('hex');
+
+    // Support both plaintext and SHA-256 hashed API keys for security
+    const keyData = await prisma.apiKey.findFirst({
+      where: {
+        OR: [{ key: apiKey }, { key: keyHash }],
+      },
       select: { userId: true },
     });
 

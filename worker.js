@@ -13,7 +13,7 @@ const connections = {
   tx: {
     name: 'Transactional',
     systemId: process.env.SMPP_TX_SYSTEM_ID || process.env.SMPP_SYSTEM_ID || 'BZTItms',
-    password: process.env.SMPP_TX_PASSWORD || process.env.SMPP_PASSWORD || 'TheBztel@#1',
+    password: process.env.SMPP_TX_PASSWORD || process.env.SMPP_PASSWORD || '',
     session: null,
     isConnecting: false,
     enquireLinkInterval: null
@@ -21,7 +21,7 @@ const connections = {
   promo: {
     name: 'Promotional',
     systemId: process.env.SMPP_PROMO_SYSTEM_ID || 'BZTIPrmo',
-    password: process.env.SMPP_PROMO_PASSWORD || 'TheBztel@#1',
+    password: process.env.SMPP_PROMO_PASSWORD || '',
     session: null,
     isConnecting: false,
     enquireLinkInterval: null
