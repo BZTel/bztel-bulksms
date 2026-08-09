@@ -1,0 +1,23 @@
+{
+  "name": "BZTel - Bulk SMS & Communication APIs",
+  "short_name": "BZTel",
+  "description": "BZTel provides powerful bulk SMS, voice APIs, and custom software development services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0052FF",
+  "icons": [
+    {
+      "src": "/bztel-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/bztel-brand-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
