@@ -198,8 +198,8 @@ async function loadData(state) {
       return `
         <tr>
           <td style="color: var(--text-muted); font-size: 0.78rem; font-family: monospace;">${time}</td>
-          <td style="font-weight: 600; font-size: 0.84rem;">${s.user_email}</td>
-          <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${s.sender_id}</span></td>
+          <td style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(s.user_email)}</td>
+          <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${escapeHtml(s.sender_id)}</span></td>
           <td style="font-family: monospace; font-size: 0.82rem;">${s.recipient}</td>
           <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${escapeHtml(s.message)}

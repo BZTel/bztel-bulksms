@@ -720,6 +720,16 @@ export function logout(showMsg = true) {
 }
 
 // Toast Notifications System
+export function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container || !message) return;

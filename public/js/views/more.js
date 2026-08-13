@@ -1,4 +1,4 @@
-import { apiFetch, showToast, logout, navigateTo } from '../app.js';
+import { apiFetch, showToast, logout, navigateTo, escapeHtml } from '../app.js';
 
 export function renderMoreView(root, state) {
   const user = state.user || {};
@@ -36,7 +36,7 @@ export function renderMoreView(root, state) {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
           <div>
             <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">Account Email</span>
-            <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-top: 4px;">${user.email || 'user@bztel.com'}</div>
+            <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-top: 4px;">${escapeHtml(user.email) || 'user@bztel.com'}</div>
           </div>
 
           <div>

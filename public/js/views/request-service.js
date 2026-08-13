@@ -1,4 +1,4 @@
-import { apiFetch, showToast } from '../app.js';
+import { apiFetch, showToast, escapeHtml } from '../app.js';
 
 export function renderRequestServiceView(root, state) {
   root.innerHTML = `
@@ -94,11 +94,11 @@ async function loadServiceRequests() {
       return `
         <div class="activity-item" style="padding: 12px; flex-direction: column; align-items: flex-start; gap: 6px;">
           <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-            <strong style="font-size: 0.88rem; max-width:180px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${r.service_type}</strong>
-            <span class="badge badge-pending" style="font-size: 0.65rem;">${r.status}</span>
+            <strong style="font-size: 0.88rem; max-width:180px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(r.service_type)}</strong>
+            <span class="badge badge-pending" style="font-size: 0.65rem;">${escapeHtml(r.status)}</span>
           </div>
           <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
-            Representative: ${r.rep_name} (${r.phone})
+            Representative: ${escapeHtml(r.rep_name)} (${escapeHtml(r.phone)})
           </p>
           <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(r.created_at).toLocaleDateString()}</span>
         </div>

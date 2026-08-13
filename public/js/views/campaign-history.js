@@ -1,4 +1,4 @@
-import { apiFetch, showToast, isCurrentView } from '../app.js';
+import { apiFetch, showToast, isCurrentView, escapeHtml } from '../app.js';
 import { openComposeModal } from './sms.js';
 
 let fullHistoryCache = [];
@@ -248,8 +248,8 @@ function renderCampaignsTable(campaigns) {
     return `
       <tr>
         <td style="font-family: monospace; font-size: 0.8rem; color: var(--text-muted);">${displayId}</td>
-        <td><strong>${camp.sender_id}</strong></td>
-        <td title="${camp.message}">${msgPreview}</td>
+        <td><strong>${escapeHtml(camp.sender_id)}</strong></td>
+        <td title="${escapeHtml(camp.message)}">${escapeHtml(msgPreview)}</td>
         <td><strong>${camp.total}</strong></td>
         <td><span class="badge badge-sent">${camp.delivered}</span></td>
         <td><span class="badge badge-failed">${camp.failed}</span></td>
@@ -541,11 +541,11 @@ function renderVoiceLogsTable(logs) {
     return `
       <tr>
         <td><code>${l.recipient}</code></td>
-        <td><strong style="color: var(--accent-color);">${l.sender_id || 'BZTEL_VOICE'}</strong></td>
+        <td><strong style="color: var(--accent-color);">${escapeHtml(l.sender_id || 'BZTEL_VOICE')}</strong></td>
         <td><span style="font-size: 0.82rem; font-weight: 600;">${typeLabel}</span></td>
         <td>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${detail}">
-            ${detail}
+          <div style="font-size: 0.8rem; color: var(--text-secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(detail)}">
+            ${escapeHtml(detail)}
           </div>
         </td>
         <td><span style="font-family: monospace; font-size: 0.85rem;">${l.duration || 0}s</span></td>

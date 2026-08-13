@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let currentPage = 1;
 let currentLimit = 50;
@@ -189,7 +189,7 @@ function renderTable(transactions) {
       <tr>
         <td style="color: var(--text-muted); font-size: 0.78rem; font-family: monospace;">${time}</td>
         <td>
-          <div style="font-weight: 600; font-size: 0.84rem;">${t.email}</div>
+          <div style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(t.email)}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted);">User #${t.user_id}</div>
         </td>
         <td>
@@ -203,7 +203,7 @@ function renderTable(transactions) {
         <td style="font-family: monospace; font-size: 0.82rem; color: var(--text-muted);">${t.balance_before.toLocaleString()}</td>
         <td style="font-family: monospace; font-size: 0.85rem; font-weight: 700;">${t.balance_after.toLocaleString()}</td>
         <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; white-space: normal; line-height: 1.4;">
-          ${t.description}
+          ${escapeHtml(t.description)}
         </td>
       </tr>
     `;

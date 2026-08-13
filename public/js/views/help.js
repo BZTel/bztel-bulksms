@@ -1,4 +1,4 @@
-import { apiFetch, showToast } from '../app.js';
+import { apiFetch, showToast, escapeHtml } from '../app.js';
 
 export function renderHelpView(root, state) {
   root.innerHTML = `
@@ -157,11 +157,11 @@ async function loadSupportTickets() {
       return `
         <div class="activity-item" style="padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 4px;">
           <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-            <strong style="font-size:0.85rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:180px;">${t.subject}</strong>
-            <span class="badge ${badgeClass}" style="font-size:0.65rem;">${t.status}</span>
+            <strong style="font-size:0.85rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:180px;">${escapeHtml(t.subject)}</strong>
+            <span class="badge ${badgeClass}" style="font-size:0.65rem;">${escapeHtml(t.status)}</span>
           </div>
           <div style="display:flex; gap:10px; font-size:0.75rem; color:var(--text-muted);">
-            <span>Priority: <span style="color:${priorityColor}; font-weight:600;">${t.priority.toUpperCase()}</span></span>
+            <span>Priority: <span style="color:${priorityColor}; font-weight:600;">${escapeHtml(t.priority.toUpperCase())}</span></span>
             <span>•</span>
             <span>${new Date(t.created_at).toLocaleDateString()}</span>
           </div>

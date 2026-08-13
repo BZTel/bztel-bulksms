@@ -51,11 +51,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Subject and Description are required' }, { status: 400 });
     }
 
+    const cleanPriority = (priority || 'medium').toLowerCase();
+    if (!['low', 'medium', 'high'].includes(cleanPriority)) {
+      return NextResponse.json({ error: 'Priority must be "low", "medium", or "high"' }, { status: 400 });
+    }
+
     const ticket = await prisma.supportTicket.create({
       data: {
         userId: ownerId,
         subject: subject.trim(),
-        priority: priority || 'medium',
+        priority: cleanPriority,
         description: description.trim(),
         status: 'Open',
       },
@@ -80,12 +85,12 @@ export async function POST(req: Request) {
         await transporter.sendMail({
           from: `"Bztel Support System" <${from}>`,
           to: 'clientservice@bztel.net',
-          subject: `[New Ticket - ${priority.toUpperCase()}] ${subject.trim()}`,
+          subject: `[New Ticket - ${cleanPriority.toUpperCase()}] ${subject.trim()}`,
           html: `
             <h2>New Support Ticket Created</h2>
             <p><strong>From User Email:</strong> ${authUser.email} (User ID: ${ownerId})</p>
             <p><strong>Subject:</strong> ${subject.trim()}</p>
-            <p><strong>Priority Level:</strong> ${priority.toUpperCase()}</p>
+            <p><strong>Priority Level:</strong> ${cleanPriority.toUpperCase()}</p>
             <hr style="border: 0; border-top: 1px solid #eee;" />
             <p><strong>Ticket Description:</strong></p>
             <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: sans-serif; font-size: 0.95rem; line-height: 1.5; color: #334155;">

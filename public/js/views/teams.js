@@ -1,4 +1,4 @@
-import { apiFetch, showToast } from '../app.js';
+import { apiFetch, showToast, escapeHtml } from '../app.js';
 
 export function renderTeamsView(root, state) {
   root.innerHTML = `
@@ -127,12 +127,12 @@ function renderTeamTable(members, state) {
     const isSelfOrOwner = m.email.toLowerCase() === currentUserEmail.toLowerCase() || m.role === 'Owner';
     const actionBtn = isSelfOrOwner 
       ? `<span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">Access Protected</span>`
-      : `<button class="btn btn-danger remove-member-btn" data-id="${m.id}" data-email="${m.email}" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>`;
+      : `<button class="btn btn-danger remove-member-btn" data-id="${m.id}" data-email="${escapeHtml(m.email)}" style="padding: 4px 10px; font-size: 0.75rem;">Remove</button>`;
 
     return `
       <tr>
-        <td><strong>${m.email}</strong></td>
-        <td><span style="color: var(--text-secondary); font-size: 0.85rem;">${m.role}</span></td>
+        <td><strong>${escapeHtml(m.email)}</strong></td>
+        <td><span style="color: var(--text-secondary); font-size: 0.85rem;">${escapeHtml(m.role)}</span></td>
         <td><span class="badge ${badgeClass}">${m.status}</span></td>
         <td>${actionBtn}</td>
       </tr>

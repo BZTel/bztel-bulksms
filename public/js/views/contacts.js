@@ -1,4 +1,4 @@
-import { apiFetch, showToast, isCurrentView, navigateTo } from '../app.js';
+import { apiFetch, showToast, isCurrentView, navigateTo, escapeHtml } from '../app.js';
 
 let cachedContacts = []; // Cache list locally
 let selectedGroupFilter = null;
@@ -273,7 +273,7 @@ function populateGroupSelectors() {
   const manualSelect = document.getElementById('contact-group');
   if (manualSelect) {
     const prevVal = manualSelect.value;
-    manualSelect.innerHTML = Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('') + 
+    manualSelect.innerHTML = Array.from(groups).map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') + 
       `<option value="__NEW__">+ Create New Group...</option>`;
     if (Array.from(groups).includes(prevVal) || prevVal === '__NEW__') {
       manualSelect.value = prevVal;
@@ -285,7 +285,7 @@ function populateGroupSelectors() {
   const csvSelect = document.getElementById('csv-group');
   if (csvSelect) {
     const prevVal = csvSelect.value;
-    csvSelect.innerHTML = Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('') + 
+    csvSelect.innerHTML = Array.from(groups).map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') + 
       `<option value="__NEW__">+ Create New Group...</option>`;
     if (Array.from(groups).includes(prevVal) || prevVal === '__NEW__') {
       csvSelect.value = prevVal;
@@ -297,7 +297,7 @@ function populateGroupSelectors() {
   const bulkSelect = document.getElementById('bulk-group-select');
   if (bulkSelect) {
     bulkSelect.innerHTML = `<option value="" disabled selected>-- Move to Group --</option>` + 
-      Array.from(groups).map(g => `<option value="${g}">${g}</option>`).join('') + 
+      Array.from(groups).map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('') + 
       `<option value="__NEW__">+ Create New Group...</option>`;
   }
 }
@@ -416,13 +416,13 @@ function renderGroupsGrid() {
             <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px;">Group Segment</span>
             <span class="badge" style="background: rgba(99, 102, 241, 0.12); color: var(--accent-color); font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">${count} contacts</span>
           </div>
-          <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; font-family: 'Outfit', sans-serif;">${g}</h4>
+          <h4 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin: 0 0 16px 0; font-family: 'Outfit', sans-serif;">${escapeHtml(g)}</h4>
         </div>
         <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
-          <button class="btn btn-secondary btn-sm view-group-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem; white-space: nowrap;">
+          <button class="btn btn-secondary btn-sm view-group-btn" data-group="${escapeHtml(g)}" style="flex: 1; font-size: 0.78rem; white-space: nowrap;">
             View Contacts &rarr;
           </button>
-          <button class="btn btn-primary btn-sm send-group-sms-btn" data-group="${g}" style="flex: 1; font-size: 0.78rem; background: var(--accent-color); border-color: var(--accent-color); white-space: nowrap;">
+          <button class="btn btn-primary btn-sm send-group-sms-btn" data-group="${escapeHtml(g)}" style="flex: 1; font-size: 0.78rem; background: var(--accent-color); border-color: var(--accent-color); white-space: nowrap;">
             ✉️ Send SMS
           </button>
         </div>

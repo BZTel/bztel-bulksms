@@ -1,4 +1,4 @@
-import { apiFetch, showToast, isCurrentView } from '../app.js';
+import { apiFetch, showToast, isCurrentView, escapeHtml } from '../app.js';
 
 let cachedSenderIds = [];
 
@@ -221,7 +221,7 @@ function renderList(query = '') {
             </span>
           </div>
           <span style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; display: block;">
-            ${s.description || 'No description provided.'}
+            ${s.description ? escapeHtml(s.description) : 'No description provided.'}
           </span>
         </div>
       </div>

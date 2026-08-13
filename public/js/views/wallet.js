@@ -1,4 +1,4 @@
-import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView } from '../app.js';
+import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView, escapeHtml } from '../app.js';
 
 let allTransactions = [];
 let activeFilter = 'all';
@@ -226,7 +226,7 @@ async function loadWalletData(silent = false) {
           return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.01); border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm);">
               <div>
-                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${t.description}</div>
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(t.description)}</div>
                 <div style="font-size: 0.7rem; color: var(--text-muted);">${dateStr}</div>
               </div>
               <strong style="color: ${isPlus ? '#10b981' : '#ef4444'}; font-size: 0.88rem; font-family: monospace;">
@@ -251,7 +251,7 @@ async function loadWalletData(silent = false) {
           return `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border: 1px solid var(--glass-border); border-radius: var(--border-radius-sm); background: rgba(255,255,255,0.01);">
               <div>
-                <div style="font-size: 0.75rem; font-weight: 500;" title="${l.description}">${l.description}</div>
+                <div style="font-size: 0.75rem; font-weight: 500;" title="${escapeHtml(l.description)}">${escapeHtml(l.description)}</div>
                 <div style="font-size: 0.65rem; color: var(--text-muted);">${dateStr}</div>
               </div>
               <strong style="color: ${amountColor}; font-size: 0.8rem; font-family: monospace;">${amountSign}</strong>
@@ -329,7 +329,7 @@ function renderTable(transactions) {
           ${dateStr}<br>
           <span style="font-size:0.72rem;opacity:0.7;">${timeStr}</span>
         </td>
-        <td style="font-size:0.85rem;">${tx.description}</td>
+        <td style="font-size:0.85rem;">${escapeHtml(tx.description)}</td>
         <td>${getTypeBadge(tx.type)}</td>
         <td style="text-align:right;">${amountDisplay}</td>
         <td style="text-align:right;font-size:0.85rem;color:var(--text-secondary);">

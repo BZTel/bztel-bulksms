@@ -1,4 +1,4 @@
-import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView } from '../app.js';
+import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView, escapeHtml } from '../app.js';
 
 export function renderDashboardView(container, state) {
   const dismissedUpdate = localStorage.getItem('dismissed-banner-update') === 'true';
@@ -329,7 +329,7 @@ async function loadDashboardData(state, silent = false) {
               const amt = tx.amount > 0 ? `<span style="color:#10b981;font-weight:700;">+${tx.amount.toLocaleString()}</span>` : `<span style="color:#ef4444;font-weight:700;">${tx.amount.toLocaleString()}</span>`;
               return `
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;">
-                  <span style="color:var(--text-secondary);">${tx.description}</span>
+                  <span style="color:var(--text-secondary);">${escapeHtml(tx.description)}</span>
                   <div style="display:flex;gap:12px;align-items:center;">
                     <span style="color:var(--text-muted);font-size:0.72rem;">${label}</span>
                     ${amt}

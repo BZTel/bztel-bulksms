@@ -153,7 +153,7 @@ function renderTable(logs) {
           <div style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(l.email)}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted);">User #${l.user_id}</div>
         </td>
-        <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${l.sender_id}</span></td>
+        <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${escapeHtml(l.sender_id)}</span></td>
         <td style="font-family: monospace; font-size: 0.82rem;">${l.recipient}</td>
         <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
           ${escapeHtml(l.message)}

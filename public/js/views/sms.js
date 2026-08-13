@@ -1,4 +1,4 @@
-import { apiFetch, showToast, navigateTo, fetchUserProfile, trackBroadcastProgress } from '../app.js';
+import { apiFetch, showToast, navigateTo, fetchUserProfile, trackBroadcastProgress, escapeHtml } from '../app.js';
 import { SYSTEM_TEMPLATES } from '../templates-data.js';
 import { SUGGESTED_SENDER_IDS } from '../suggested-sender-ids.js';
 
@@ -760,7 +760,7 @@ async function loadTemplates(query = '') {
                   ${t.isCustom ? `<button class="btn btn-danger btn-sm delete-template-btn" data-id="${t.originalId}" title="Delete template" style="padding: 4px 10px; font-size: 0.75rem;">Delete</button>` : ''}
                 </div>
                 <h4 style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700;margin:0 0 10px 0;color:var(--text-primary);">
-                  ${t.title}
+                  ${escapeHtml(t.title)}
                 </h4>
                 <div style="
                   background: rgba(0,0,0,0.15);
@@ -775,7 +775,7 @@ async function loadTemplates(query = '') {
                   overflow-y: auto;
                   word-break: break-word;
                 ">
-                  ${t.content}
+                  ${escapeHtml(t.content)}
                 </div>
               </div>
 
@@ -931,11 +931,11 @@ function loadScheduled(query = '') {
             const textSnippet = s.message.length > 50 ? s.message.substring(0, 47) + '...' : s.message;
             return `
               <tr>
-                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${s.recipients.join(', ')}">
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(s.recipients.join(', '))}">
                   <span style="font-weight: 600; color: var(--text-primary);">${s.recipients.length} Contact${s.recipients.length !== 1 ? 's' : ''}</span>
-                  <div style="color: var(--text-muted); font-size: 0.78rem;">${s.recipients.slice(0, 2).join(', ')}${s.recipients.length > 2 ? '...' : ''}</div>
+                  <div style="color: var(--text-muted); font-size: 0.78rem;">${escapeHtml(s.recipients.slice(0, 2).join(', '))}${s.recipients.length > 2 ? '...' : ''}</div>
                 </td>
-                <td style="color: var(--text-secondary); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${s.message}">${textSnippet}</td>
+                <td style="color: var(--text-secondary); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(s.message)}">${escapeHtml(textSnippet)}</td>
                 <td style="color: var(--text-muted); font-size: 0.82rem;">${displayDate}</td>
                 <td><span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color); border: 1px solid rgba(245, 158, 11, 0.2);">Pending Queue</span></td>
                 <td style="text-align: right;">
@@ -1299,7 +1299,7 @@ async function loadComposeQuickTemplates() {
       margin-right:6px;
       margin-bottom:6px;
       transition:all 0.2s;
-    ">${t.name}</span>`;
+    ">${escapeHtml(t.name)}</span>`;
   }).join('');
 
   // Attach pill events
@@ -1582,12 +1582,12 @@ async function loadDrafts(query = '') {
               // Show recipients preview
               const repsList = d.recipients ? d.recipients.split(',').map(r => r.trim()).filter(Boolean) : [];
               const repsPreview = repsList.length > 0
-                ? `<span style="font-weight: 600; color: var(--text-primary);">${repsList.length} Contact${repsList.length !== 1 ? 's' : ''}</span><div style="color: var(--text-muted); font-size: 0.78rem;">${repsList.slice(0, 2).join(', ')}${repsList.length > 2 ? '...' : ''}</div>`
+                ? `<span style="font-weight: 600; color: var(--text-primary);">${repsList.length} Contact${repsList.length !== 1 ? 's' : ''}</span><div style="color: var(--text-muted); font-size: 0.78rem;">${escapeHtml(repsList.slice(0, 2).join(', '))}${repsList.length > 2 ? '...' : ''}</div>`
                 : `<span style="color: var(--text-muted); font-style: italic;">No recipients</span>`;
 
               return `
                 <tr>
-                  <td style="font-weight: 600; color: var(--text-primary);">${d.sender_id}</td>
+                  <td style="font-weight: 600; color: var(--text-primary);">${escapeHtml(d.sender_id)}</td>
                   <td>${repsPreview}</td>
                   <td style="color: var(--text-secondary); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(d.message)}">${escapeHtml(textSnippet)}</td>
                   <td style="color: var(--text-muted); font-size: 0.82rem;">${dateDisplay}</td>
@@ -1645,16 +1645,6 @@ async function handleDeleteDraftClick(e) {
     e.currentTarget.disabled = false;
     e.currentTarget.innerText = 'Delete';
   }
-}
-
-// Simple helper to escape HTML characters
-function escapeHtml(unsafe) {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 // Dedicated Entry Functions for Sidebar Routing

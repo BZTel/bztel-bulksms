@@ -64,11 +64,18 @@ async function processQueue() {
  * with cumulative counts across the whole batch (not just this chunk) — a batch can span
  * many chunks since the worker only processes 100 rows per pass.
  */
-async function broadcastBatchProgress(processedLogs: { batchId: string | null }[]) {
-  const batchIds = [...new Set(processedLogs.map((l) => l.batchId).filter((id): id is string => !!id))];
-  if (batchIds.length === 0) return;
+async function broadcastBatchProgress(processedLogs: { batchId: string | null; userId: number }[]) {
+  // Each batchId belongs to exactly one user (assigned once per send() call), so the first
+  // row seen for a batch tells us who to scope the broadcast to.
+  const batchOwners = new Map<string, number>();
+  for (const log of processedLogs) {
+    if (log.batchId && !batchOwners.has(log.batchId)) {
+      batchOwners.set(log.batchId, log.userId);
+    }
+  }
+  if (batchOwners.size === 0) return;
 
-  for (const batchId of batchIds) {
+  for (const [batchId, ownerId] of batchOwners) {
     const statusCounts = await prisma.smsLog.groupBy({
       by: ['status'],
       where: { batchId },
@@ -88,7 +95,7 @@ async function broadcastBatchProgress(processedLogs: { batchId: string | null }[
       else if (s.status === 'pending') pending += count;
     }
 
-    broadcastMessage({ type: 'BROADCAST_PROGRESS', batchId, sent, failed, pending, total });
+    broadcastMessage({ type: 'BROADCAST_PROGRESS', batchId, sent, failed, pending, total }, ownerId);
   }
 }
 
