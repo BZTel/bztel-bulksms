@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allMessages = [];
 
@@ -102,15 +102,15 @@ function renderTable(messages) {
     return `
       <tr data-message-id="${m.id}">
         <td>
-          <div style="font-weight: 700; color: var(--text-primary);">${m.name}</div>
-          <div style="font-size: 0.76rem; color: var(--text-muted);"><a href="mailto:${m.email}" style="color: var(--text-muted); text-decoration: underline;">${m.email}</a></div>
+          <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(m.name)}</div>
+          <div style="font-size: 0.76rem; color: var(--text-muted);"><a href="mailto:${escapeHtml(m.email)}" style="color: var(--text-muted); text-decoration: underline;">${escapeHtml(m.email)}</a></div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${m.subject}</div>
+          <div style="font-weight: 600; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(m.subject)}</div>
         </td>
         <td>
           <div style="font-size: 0.78rem; max-width: 450px; white-space: normal; word-break: break-word; line-height: 1.4;">
-            ${m.message}
+            ${escapeHtml(m.message)}
           </div>
         </td>
         <td style="color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;">${submittedDate}</td>

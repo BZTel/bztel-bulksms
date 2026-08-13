@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allSenderIds = [];
 let activeFilter = 'all';
@@ -144,8 +144,8 @@ function renderTable(senderIds) {
     const statusBadge = `<span class="status-badge ${statusClass}">${s.status.toUpperCase()}</span>`;
     
     // Document URL Link
-    const docCell = s.document_url 
-      ? `<a href="${s.document_url}" target="_blank" class="admin-back-link" style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+    const docCell = s.document_url
+      ? `<a href="${escapeHtml(s.document_url)}" target="_blank" class="admin-back-link" style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
           <svg style="width: 14px; height: 14px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
@@ -154,41 +154,42 @@ function renderTable(senderIds) {
       : `<span style="color: var(--text-muted); font-size: 0.8rem;">None</span>`;
 
     // Action buttons
+    const safeName = escapeHtml(s.name);
     let actionButtons = '';
     if (s.status === 'pending') {
       actionButtons = `
-        <button class="btn-icon-only btn-reactivate action-approve-btn" data-id="${s.id}" data-name="${s.name}" title="Approve Request">✓ Approve</button>
-        <button class="btn-icon-only btn-delete-sm action-reject-btn" data-id="${s.id}" data-name="${s.name}" title="Reject Request">✕ Reject</button>
+        <button class="btn-icon-only btn-reactivate action-approve-btn" data-id="${s.id}" data-name="${safeName}" title="Approve Request">✓ Approve</button>
+        <button class="btn-icon-only btn-delete-sm action-reject-btn" data-id="${s.id}" data-name="${safeName}" title="Reject Request">✕ Reject</button>
       `;
     } else if (s.status === 'approved') {
       actionButtons = `
-        <button class="btn-icon-only btn-delete-sm action-reject-btn" data-id="${s.id}" data-name="${s.name}" title="Revoke & Reject Request">✕ Reject</button>
+        <button class="btn-icon-only btn-delete-sm action-reject-btn" data-id="${s.id}" data-name="${safeName}" title="Revoke & Reject Request">✕ Reject</button>
       `;
     } else if (s.status === 'rejected') {
       actionButtons = `
-        <button class="btn-icon-only btn-reactivate action-approve-btn" data-id="${s.id}" data-name="${s.name}" title="Approve Request">✓ Approve</button>
+        <button class="btn-icon-only btn-reactivate action-approve-btn" data-id="${s.id}" data-name="${safeName}" title="Approve Request">✓ Approve</button>
       `;
     }
 
     // Render Rejection Reason if exists
     const rejectionReasonText = (s.status === 'rejected' && s.rejection_reason)
-      ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; max-width: 180px; word-break: break-word;">Reason: ${s.rejection_reason}</div>`
+      ? `<div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; max-width: 180px; word-break: break-word;">Reason: ${escapeHtml(s.rejection_reason)}</div>`
       : '';
 
     return `
       <tr data-sender-id="${s.id}">
         <td>
           <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.05em; color: var(--text-primary); text-transform: uppercase;">
-            ${s.name}
+            ${safeName}
           </div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${s.email}</div>
+          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
           <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
         </td>
         <td>
           <div style="font-size: 0.8rem; color: var(--text-primary); max-width: 300px; white-space: normal; word-break: break-word; line-height: 1.4;">
-            ${s.description}
+            ${escapeHtml(s.description)}
           </div>
         </td>
         <td>${docCell}</td>

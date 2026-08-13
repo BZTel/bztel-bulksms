@@ -1,10 +1,20 @@
-import { apiFetch, showToast, logout } from '../app.js';
+import { apiFetch, showToast, logout, navigateTo } from '../app.js';
 
 export function renderMoreView(root, state) {
   const user = state.user || {};
 
+  const forcedChangeNotice = state.mustChangePassword ? `
+    <div class="panel glass" style="padding: 20px; border: 1px solid rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.08);">
+      <h4 style="margin: 0 0 6px 0; font-size: 1rem; font-weight: 700; color: #b45309;">⚠ Password change required</h4>
+      <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">
+        You're using a temporary password. For security, please set a new password below before continuing to the rest of the dashboard.
+      </p>
+    </div>
+  ` : '';
+
   root.innerHTML = `
     <div style="animation: slideUp 0.3s ease-out; max-width: 850px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
+      ${forcedChangeNotice}
       <!-- Page Header -->
       <div class="panel glass" style="padding: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
@@ -85,10 +95,10 @@ export function renderMoreView(root, state) {
     </div>
   `;
 
-  initAccountSettingsListeners();
+  initAccountSettingsListeners(state);
 }
 
-function initAccountSettingsListeners() {
+function initAccountSettingsListeners(state) {
   const form = document.getElementById('change-password-form');
   if (form) {
     form.addEventListener('submit', async (e) => {
@@ -112,8 +122,13 @@ function initAccountSettingsListeners() {
         });
 
         if (res.ok) {
+          const wasForced = state.mustChangePassword;
+          state.mustChangePassword = false;
           showToast('Password updated successfully!', 'success');
           form.reset();
+          if (wasForced) {
+            navigateTo('dashboard');
+          }
         } else {
           const err = await res.json();
           showToast(err.error || 'Failed to update password', 'error');

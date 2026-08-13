@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { broadcastMessage } from '@/lib/telemetry';
 
+// Phase 1 rollout: warn (don't reject) on a missing/incorrect shared secret so DLR delivery
+// updates keep flowing while Monty Mobile's webhook config is updated to include it. Once
+// confirmed (via the warning no longer appearing in logs), flip this to fail-closed (401).
+function checkDlrSecret(providedSecret: string | null) {
+  const expected = process.env.DLR_WEBHOOK_SECRET;
+  if (!expected || providedSecret !== expected) {
+    console.error(
+      `[SECURITY][DLR Webhook] Missing/invalid shared secret on inbound DLR request ` +
+      `(env secret configured: ${!!expected}). Processing anyway during the rollout transition — ` +
+      `this must be locked down (fail-closed) once Monty Mobile confirms sending the secret.`
+    );
+  }
+}
+
 // Helper to map Monty Mobile's StatusId to Bztel's SmsLog status
 function mapMontyStatus(statusId: string | number | null | undefined): string {
   if (statusId === null || statusId === undefined) return 'failed';
@@ -90,6 +104,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const messageId = searchParams.get('MessageId') || searchParams.get('messageId');
     const statusId = searchParams.get('StatusId') || searchParams.get('statusId');
+    checkDlrSecret(searchParams.get('secret'));
 
     const result = await processDlr(messageId, statusId);
     if ('error' in result) {
@@ -110,14 +125,16 @@ export async function POST(req: Request) {
     const contentType = req.headers.get('content-type') || '';
     let messageId: string | null = null;
     let statusId: string | number | null = null;
+    let bodySecret: string | null = null;
 
     if (contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await req.formData();
       messageId = (formData.get('MessageId') as string) || (formData.get('messageId') as string);
       statusId = (formData.get('StatusId') as string) || (formData.get('statusId') as string);
+      bodySecret = (formData.get('secret') as string) || (formData.get('Secret') as string);
     } else {
       const json = await req.json();
-      
+
       // Support nested "CallBackResponse" from Section 2.2 of Monty guide
       if (json.CallBackResponse) {
         messageId = json.CallBackResponse.MessageId || json.CallBackResponse.messageId;
@@ -127,7 +144,13 @@ export async function POST(req: Request) {
         messageId = json.MessageId || json.messageId;
         statusId = json.StatusId || json.statusId;
       }
+      bodySecret = json.secret || json.Secret || null;
     }
+
+    // Carrier webhooks may only support appending a query param on the configured URL rather
+    // than a custom body field — accept either.
+    const { searchParams } = new URL(req.url);
+    checkDlrSecret(searchParams.get('secret') || bodySecret);
 
     const result = await processDlr(messageId, statusId);
     if ('error' in result) {

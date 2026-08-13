@@ -81,6 +81,7 @@ export async function POST(req: Request) {
         balance: user.balance,
         role: user.role,
         isAdmin: user.isAdmin,
+        mustChangePassword: user.mustChangePassword,
       }
     });
 

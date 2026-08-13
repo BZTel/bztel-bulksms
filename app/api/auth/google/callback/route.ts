@@ -79,13 +79,29 @@ export async function GET(req: Request) {
 
     const stateParam = searchParams.get('state');
     let acceptedTerms = false;
+    let returnedNonce: string | null = null;
     if (stateParam) {
       try {
         const parsedState = JSON.parse(stateParam);
         acceptedTerms = Boolean(parsedState.acceptedTerms);
+        returnedNonce = typeof parsedState.nonce === 'string' ? parsedState.nonce : null;
       } catch (e) {
         // Fallback if state is not JSON
       }
+    }
+
+    // CSRF protection: the nonce embedded in `state` must match the one this server set in
+    // the httpOnly `oauth_state` cookie when the flow was initiated. Reject before exchanging
+    // the authorization code if they don't match.
+    const cookieHeader = req.headers.get('cookie') || '';
+    const cookieNonce = cookieHeader
+      .split(';')
+      .map((c) => c.trim().split('='))
+      .find(([key]) => key === 'oauth_state')?.[1];
+
+    if (!cookieNonce || !returnedNonce || cookieNonce !== returnedNonce) {
+      console.error('Google OAuth callback: state/CSRF nonce mismatch or missing oauth_state cookie');
+      return NextResponse.redirect(`${appUrl}/app?error=Invalid+or+expired+OAuth+session`);
     }
 
     // Find or create user
@@ -145,8 +161,19 @@ export async function GET(req: Request) {
     // Create JWT
     const token = generateToken({ id: user.id, email: user.email, is_admin: user.isAdmin });
 
-    // Redirect to app with JWT in query
-    return NextResponse.redirect(`${appUrl}/app?token=${encodeURIComponent(token)}`);
+    // Set the session as an httpOnly cookie (same as password login) instead of exposing the
+    // JWT in the redirect URL, where it would end up in browser history / access logs.
+    const isProd = process.env.NODE_ENV === 'production';
+    const response = NextResponse.redirect(`${appUrl}/app`);
+    response.headers.append(
+      'Set-Cookie',
+      `auth_token=${token}; Path=/; HttpOnly; ${isProd ? 'Secure;' : ''} SameSite=Lax; Max-Age=86400`
+    );
+    response.headers.append(
+      'Set-Cookie',
+      `oauth_state=; Path=/; HttpOnly; ${isProd ? 'Secure;' : ''} SameSite=Lax; Max-Age=0`
+    );
+    return response;
   } catch (error) {
     console.error('Google OAuth callback handler error:', error);
     return NextResponse.redirect(`${appUrl}/app?error=Internal+server+error+during+OAuth+login`);

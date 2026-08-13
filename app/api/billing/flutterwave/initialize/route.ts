@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { computeExpectedNgnAmount } from '@/lib/pricing';
 
 export async function POST(req: Request) {
   try {
@@ -15,8 +16,7 @@ export async function POST(req: Request) {
     }
 
     const creditsNum = Number(credits);
-    // Flat rate pricing: 1 Credit = 6.5 Naira (NGN 6.50)
-    const amountInNgn = Math.round(creditsNum * 6.5 * 100) / 100;
+    const amountInNgn = computeExpectedNgnAmount(creditsNum);
     const pointsToRedeem = 0;
     const discount = 0;
 

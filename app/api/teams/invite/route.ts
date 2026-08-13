@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
@@ -8,7 +9,7 @@ import { logAuditEvent } from '@/lib/audit';
 const ALLOWED_INVITE_ROLES = ['Owner', 'Administrator'];
 const COWORKER_ROLES = ['Administrator', 'Dispatcher', 'Marketing Agent', 'Reporter'];
 
-async function sendInviteEmail(email: string, role: string, tempPassword = 'password123') {
+async function sendInviteEmail(email: string, role: string, tempPassword: string) {
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT || '587');
   const user = process.env.SMTP_USER;
@@ -94,9 +95,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'This email is already registered on Bztel' }, { status: 400 });
     }
 
-    // Hash default password
+    // Generate a random, single-use temporary password — never reused across invites.
+    const tempPassword = crypto.randomBytes(24).toString('hex');
     const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash('password123', salt);
+    const passwordHash = await bcrypt.hash(tempPassword, salt);
 
     const ownerId = authUser.owner_id;
 
@@ -109,11 +111,12 @@ export async function POST(req: Request) {
         parentUserId: ownerId,
         status: 'Pending',
         balance: 0,
+        mustChangePassword: true,
       },
     });
 
     // Send invite email (real or simulated fallback)
-    const emailSent = await sendInviteEmail(email.trim().toLowerCase(), role, 'password123');
+    const emailSent = await sendInviteEmail(email.trim().toLowerCase(), role, tempPassword);
 
     // Audit log
     const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';

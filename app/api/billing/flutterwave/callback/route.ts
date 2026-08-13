@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { computeExpectedNgnAmount } from '@/lib/pricing';
+import { logAuditEvent } from '@/lib/audit';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -43,6 +45,24 @@ export async function GET(req: Request) {
       if (isNaN(userId) || isNaN(credits) || credits <= 0) {
         console.error('[FLW Callback] Invalid metadata values in transaction:', verifiedTx.meta);
         return NextResponse.redirect(`${appUrl}/app.html?view=wallet&status=error&message=Invalid+transaction+metadata`);
+      }
+
+      // Validate the amount actually paid (per Flutterwave's own verified record) covers the
+      // credits being claimed, rather than trusting the client-echoed meta.credits blindly.
+      const expectedAmount = computeExpectedNgnAmount(credits);
+      const currency = verifiedTx.currency;
+      if (currency !== 'NGN' || paidAmount < expectedAmount * 0.98) {
+        console.error(
+          `[FLW Callback] Amount/currency mismatch for tx ${transactionId}: claimed ${credits} credits ` +
+          `(expected NGN ${expectedAmount}) but paid ${paidAmount} ${currency}`
+        );
+        await logAuditEvent(
+          userId,
+          'PAYMENT_AMOUNT_MISMATCH',
+          `Flutterwave tx FLW-${transactionId} claimed ${credits} credits (expected NGN ${expectedAmount}) but verified payment was ${paidAmount} ${currency}. Not credited — requires manual review.`,
+          null
+        );
+        return NextResponse.redirect(`${appUrl}/app.html?view=wallet&status=error&message=Payment+verification+mismatch.+Contact+support.`);
       }
 
       // Check if transaction has already been credited (idempotency check)

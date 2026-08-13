@@ -17,6 +17,7 @@ model User {
   promotionalConsent  Boolean            @default(false) @map("promotional_consent")
   isAdmin             Boolean            @default(false) @map("is_admin")
   status           String             @default("active")
+  mustChangePassword Boolean          @default(false) @map("must_change_password")
   balance          Int                @default(2)
   role             String             @default("Owner")
   parentUserId     Int?               @map("parent_user_id")

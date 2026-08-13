@@ -13,6 +13,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    if (!ALLOWED_ROLES.includes(authUser.role)) {
+      return NextResponse.json({
+        error: `Access denied. Insufficient role permissions. Allowed: ${ALLOWED_ROLES.join(', ')}`
+      }, { status: 403 });
+    }
+
     const ownerId = authUser.owner_id;
 
     const keys = await prisma.apiKey.findMany({

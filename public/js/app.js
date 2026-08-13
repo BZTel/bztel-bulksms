@@ -47,9 +47,9 @@ async function initApp() {
     setupGlobalEvents();
     setupModalEvents();
 
-    // Check URL parameters for OAuth token or error redirect
+    // Check URL parameters for error redirect (OAuth sessions arrive via httpOnly cookie now,
+    // not a URL token — see fetchUserProfile/initApp below).
     const urlParams = new URLSearchParams(window.location.search);
-    const tokenFromUrl = urlParams.get('token');
     const errorFromUrl = urlParams.get('error');
 
     const paymentStatus = urlParams.get('status');
@@ -72,25 +72,20 @@ async function initApp() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    if (tokenFromUrl) {
-      console.log('[initApp] Found token in URL, storing and authenticating...');
-      state.token = tokenFromUrl;
-      localStorage.setItem('token', tokenFromUrl);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    if (state.token) {
-      console.log('[initApp] Token present, fetching user profile...');
-      const success = await fetchUserProfile();
-      console.log('[initApp] fetchUserProfile success:', success);
-      if (success) {
-        showAppContainer();
-        navigateTo(state.currentView);
-      } else {
-        logout();
-      }
+    // Always attempt to load the profile: password-login sessions carry state.token from
+    // localStorage, while OAuth sessions rely solely on the httpOnly auth_token cookie sent
+    // automatically with the request — fetchUserProfile() handles both.
+    console.log('[initApp] Fetching user profile...');
+    const success = await fetchUserProfile();
+    console.log('[initApp] fetchUserProfile success:', success);
+    if (success) {
+      showAppContainer();
+      navigateTo(state.currentView);
     } else {
-      console.log('[initApp] No token present, showing auth container...');
+      console.log('[initApp] No valid session, showing auth container...');
+      // Clear any stale/expired token so a later fetch doesn't keep sending it.
+      state.token = null;
+      localStorage.removeItem('token');
       const forceSignup = window.location.hash === '#signup';
       showAuthContainer(forceSignup);
     }
@@ -453,20 +448,23 @@ function setupModalEvents() {
 // Fetch Profile
 export async function fetchUserProfile() {
   console.log('[fetchUserProfile] Called. token:', state.token);
-  if (!state.token) return false;
 
   try {
-    const response = await fetch('/api/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${state.token}`
-      }
-    });
+    const headers = {};
+    // Password-login sessions attach the Bearer token explicitly; OAuth sessions have no
+    // localStorage token and instead rely on the httpOnly auth_token cookie, which the browser
+    // sends automatically on this same-origin request.
+    if (state.token) {
+      headers['Authorization'] = `Bearer ${state.token}`;
+    }
+    const response = await fetch('/api/auth/me', { headers });
 
     console.log('[fetchUserProfile] API response status:', response.status);
 
     if (response.ok) {
       const data = await response.json();
       state.user = data.user;
+      state.mustChangePassword = Boolean(data.user?.mustChangePassword);
       console.log('[fetchUserProfile] User loaded:', state.user);
       updateUIHeader();
       return true;
@@ -524,8 +522,15 @@ function animateValue(element, start, end, duration) {
 
 // Routing Navigation
 export function navigateTo(viewName) {
+  // Lock navigation to the account settings view until a forced password change is completed
+  // (set on login for invited coworkers still using their emailed temporary password).
+  if (state.mustChangePassword && viewName !== 'more' && viewName !== 'account') {
+    showToast('Please set a new password before continuing.', 'info');
+    viewName = 'more';
+  }
+
   state.currentView = viewName;
-  
+
   // Abort any pending network requests from previous view
   if (state.viewAbortController) {
     state.viewAbortController.abort();
@@ -680,11 +685,17 @@ export function showAuthContainer(forceSignup = false) {
 export function loginSuccess(token, user) {
   state.token = token;
   state.user = user;
+  state.mustChangePassword = Boolean(user.mustChangePassword);
   localStorage.setItem('token', token);
   showAppContainer();
   updateUIHeader();
-  navigateTo('dashboard');
-  showToast(`Welcome back, ${user.email}!`, 'success');
+  if (state.mustChangePassword) {
+    navigateTo('more');
+    showToast('For security, please set a new password before continuing.', 'info');
+  } else {
+    navigateTo('dashboard');
+    showToast(`Welcome back, ${user.email}!`, 'success');
+  }
 }
 
 // Logout handler

@@ -26,18 +26,12 @@ async function initAdmin() {
     setupLogout();
     setupModals();
 
-    const storedToken = localStorage.getItem('adminToken') || state.adminToken;
-    if (storedToken) {
-      state.adminToken = storedToken;
-      // Immediately render Admin App and Overview View
+    // No client-readable token to check — the session (if any) lives in the httpOnly
+    // auth_token cookie, which the browser sends automatically. Ask the server directly.
+    const ok = await verifyAdminToken();
+    if (ok) {
       showAdminApp();
       renderView('dashboard');
-
-      // Background token verification
-      const ok = await verifyAdminToken();
-      if (!ok) {
-        showAdminLoginUI();
-      }
       return;
     }
   } catch (err) {
@@ -128,10 +122,9 @@ function setupLoginForm() {
         return;
       }
 
-      // Login successful
-      state.adminToken = data.token;
+      // Login successful — the session lives in the httpOnly auth_token cookie the
+      // /api/auth/login response already set; nothing to persist client-side.
       state.adminUser = data.user;
-      localStorage.setItem('adminToken', data.token);
 
       showAdminApp();
       renderView('dashboard');

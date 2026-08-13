@@ -19,6 +19,7 @@ export async function GET(req: Request) {
         parentUserId: true,
         virtualNumbers: true,
         loyaltyPoints: true,
+        mustChangePassword: true,
       },
     });
 
@@ -48,6 +49,7 @@ export async function GET(req: Request) {
       role: user.role,
       parent_user_id: user.parentUserId,
       loyalty_points: loyaltyPoints,
+      mustChangePassword: user.mustChangePassword,
       virtualNumbers: user.virtualNumbers.map((vn) => ({
         id: vn.id,
         number: vn.number,

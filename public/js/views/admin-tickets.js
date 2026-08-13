@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allTickets = [];
 let activeFilter = 'all';
@@ -160,16 +160,16 @@ function renderTable(tickets) {
     return `
       <tr data-ticket-id="${t.id}">
         <td>
-          <div style="font-weight: 700; color: var(--text-primary); font-size: 0.88rem;">${t.subject}</div>
+          <div style="font-weight: 700; color: var(--text-primary); font-size: 0.88rem;">${escapeHtml(t.subject)}</div>
           <div style="font-size: 0.72rem; color: var(--text-muted);">Ticket ID #${t.id}</div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${t.email}</div>
+          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(t.email)}</div>
           <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${t.user_id}</div>
         </td>
         <td>
           <div style="font-size: 0.78rem; max-width: 320px; white-space: normal; word-break: break-word; line-height: 1.4;">
-            ${t.description}
+            ${escapeHtml(t.description)}
           </div>
         </td>
         <td>${priorityBadge}</td>

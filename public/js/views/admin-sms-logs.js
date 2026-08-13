@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let currentPage = 1;
 let currentLimit = 50;
@@ -150,7 +150,7 @@ function renderTable(logs) {
       <tr>
         <td style="color: var(--text-muted); font-size: 0.78rem; font-family: monospace;">${time}</td>
         <td>
-          <div style="font-weight: 600; font-size: 0.84rem;">${l.email}</div>
+          <div style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(l.email)}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted);">User #${l.user_id}</div>
         </td>
         <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${l.sender_id}</span></td>
@@ -269,9 +269,4 @@ function showSmsModal(data) {
   const closeFn = () => modal.classList.remove('active');
   modal.querySelector('#close-sms-modal-btn').addEventListener('click', closeFn);
   modal.querySelector('#close-sms-modal-footer-btn').addEventListener('click', closeFn);
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

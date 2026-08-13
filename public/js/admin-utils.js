@@ -1,16 +1,20 @@
 // ─── Admin Shared State & Utilities ───────────────────────────
+
+// ─── HTML Escaping ─────────────────────────────────────────────
+export function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 export const state = {
-  adminToken: typeof localStorage !== 'undefined' ? localStorage.getItem('adminToken') || null : null,
+  // In-memory only — the session itself lives in the httpOnly auth_token cookie set by
+  // /api/auth/login, which the browser sends automatically on same-origin requests.
   adminUser: null
 };
 
 // ─── Admin Fetch Helper ───────────────────────────────────────
 export async function adminFetch(url, options = {}) {
-  const token = state.adminToken || (typeof localStorage !== 'undefined' ? localStorage.getItem('adminToken') : null);
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 3500);
@@ -57,11 +61,10 @@ export function showToast(message, type = 'info') {
 
 // ─── Logout Helper ────────────────────────────────────────────
 export function adminLogout(showMsg = true) {
-  state.adminToken = null;
   state.adminUser = null;
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem('adminToken');
-  }
+  // Revoke the httpOnly session cookie server-side; fire-and-forget since we're navigating to
+  // the login screen regardless of the outcome.
+  fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   showAdminLoginUI();
   if (showMsg) showToast('Signed out successfully', 'info');
 }

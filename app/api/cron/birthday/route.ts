@@ -4,9 +4,11 @@ import { triggerWorker } from '@/lib/queue';
 
 export async function GET(req: Request) {
   try {
-    // Basic Bearer Token Authorization check using Vercel CRON_SECRET if configured
+    // Bearer token authorization against CRON_SECRET — fails closed: if the secret isn't
+    // configured, the endpoint rejects every request rather than running unauthenticated.
     const authHeader = req.headers.get('authorization');
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
