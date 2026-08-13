@@ -77,6 +77,7 @@ export async function POST(req: Request) {
 
     const creditsPerMessage = Math.max(1, Math.ceil(rawMessage.length / 160));
     const totalCreditsNeeded = creditsPerMessage * recipientList.length;
+    const batchId = randomUUID();
 
     await prisma.$transaction(async (tx) => {
       // Check owner balance
@@ -130,8 +131,6 @@ export async function POST(req: Request) {
         },
       });
 
-      const batchId = randomUUID();
-
       // Bulk insert outbox messages with normalized E.164 phone numbers
       const bulkData = recipientList.map((e164Phone) => {
         const contactName = contactsMap.get(e164Phone) || '';
@@ -158,6 +157,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       message: `Enqueued ${recipientList.length} messages. Credits deducted: ${totalCreditsNeeded}.`,
+      batch_id: batchId,
       batch_size: recipientList.length,
       credits_deducted: totalCreditsNeeded
     }, { status: 202 });

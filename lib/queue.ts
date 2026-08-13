@@ -44,6 +44,8 @@ async function processQueue() {
       timestamp: Date.now()
     });
 
+    await broadcastBatchProgress(pendingLogs);
+
     // Process next batch if pending messages remain
     const remainingCount = await prisma.smsLog.count({ where: { status: 'pending' } });
     if (remainingCount > 0) {
@@ -54,6 +56,39 @@ async function processQueue() {
   } catch (error) {
     console.error('[Queue Worker] Error processing queue:', error);
     globalForQueue.queueActive = false;
+  }
+}
+
+/**
+ * Emits a BROADCAST_PROGRESS telemetry event per distinct batchId touched in this chunk,
+ * with cumulative counts across the whole batch (not just this chunk) — a batch can span
+ * many chunks since the worker only processes 100 rows per pass.
+ */
+async function broadcastBatchProgress(processedLogs: { batchId: string | null }[]) {
+  const batchIds = [...new Set(processedLogs.map((l) => l.batchId).filter((id): id is string => !!id))];
+  if (batchIds.length === 0) return;
+
+  for (const batchId of batchIds) {
+    const statusCounts = await prisma.smsLog.groupBy({
+      by: ['status'],
+      where: { batchId },
+      _count: { _all: true },
+    });
+
+    let sent = 0;
+    let failed = 0;
+    let pending = 0;
+    let total = 0;
+
+    for (const s of statusCounts) {
+      const count = s._count._all || 0;
+      total += count;
+      if (s.status === 'sent' || s.status === 'submitted' || s.status === 'delivered') sent += count;
+      else if (s.status === 'failed') failed += count;
+      else if (s.status === 'pending') pending += count;
+    }
+
+    broadcastMessage({ type: 'BROADCAST_PROGRESS', batchId, sent, failed, pending, total });
   }
 }
 

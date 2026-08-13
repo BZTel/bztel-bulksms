@@ -1,4 +1,4 @@
-import { apiFetch, showToast, navigateTo, fetchUserProfile } from '../app.js';
+import { apiFetch, showToast, navigateTo, fetchUserProfile, trackBroadcastProgress } from '../app.js';
 import { SYSTEM_TEMPLATES } from '../templates-data.js';
 import { SUGGESTED_SENDER_IDS } from '../suggested-sender-ids.js';
 
@@ -501,6 +501,13 @@ function setupInlineComposerListeners() {
 
       if (res.ok) {
         showToast(isScheduled ? 'Broadcast scheduled successfully' : 'SMS Broadcast dispatched!', 'success');
+        if (!isScheduled) {
+          const data = await res.json().catch(() => null);
+          // batch_size is the server's actual enqueued count, not recipients.length —
+          // invalid numbers get filtered out server-side before smsLog rows are created,
+          // so the two can differ and the progress bar would never reach 100%.
+          if (data?.batch_id) trackBroadcastProgress(data.batch_id, data.batch_size);
+        }
         form.reset();
         updateInlineCounters();
         navigateTo('campaign-history');
@@ -1373,7 +1380,8 @@ async function handleBroadcastComposerSubmit(e) {
       const data = await response.json();
       if (response.ok) {
         showToast(data.message || 'SMS broadcast dispatched successfully!', 'success');
-        
+        if (data.batch_id) trackBroadcastProgress(data.batch_id, data.batch_size);
+
         // If it was sent from a draft, delete the draft
         if (viewState.currentDraftId) {
           try {

@@ -71,6 +71,7 @@ model SmsLog {
   batchId    String?  @map("batch_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([batchId])
   @@map("sms_logs")
 }
 

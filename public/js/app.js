@@ -31,7 +31,8 @@ const state = {
   currentChannel: 'sms',
   previousBalance: null,
   viewAbortController: null,
-  viewCache: {}
+  viewCache: {},
+  activeBroadcasts: new Map() // batchId -> { total, el }
 };
 
 // Initialize Application
@@ -822,13 +823,15 @@ function connectTelemetry() {
       
       if (data.type === 'SMS_UPDATED') {
         showToast('SMS statuses updated in real-time!', 'success');
-        
+
         // Auto-refresh active campaign views
         if (state.currentView === 'campaign-history') {
           navigateTo('campaign-history');
         } else if (state.currentView === 'dashboard') {
           navigateTo('dashboard');
         }
+      } else if (data.type === 'BROADCAST_PROGRESS') {
+        updateBroadcastProgress(data);
       }
     } catch (e) {
       console.error('[Telemetry] Event parsing error:', e);
@@ -838,6 +841,66 @@ function connectTelemetry() {
   state.telemetrySource.onerror = () => {
     console.warn('[Telemetry] Connection lost. EventSource reconnecting...');
   };
+}
+
+// ─── Active Broadcast Progress ─────────────────────────────────
+// Called right after a bulk SMS send is enqueued. The actual dispatch happens
+// asynchronously in the background queue worker, potentially over many chunks, so this
+// card lives in the global app chrome (not the composer, which closes immediately) and
+// tracks progress purely from BROADCAST_PROGRESS telemetry events matching this batchId.
+export function trackBroadcastProgress(batchId, total) {
+  if (!batchId || !total) return;
+
+  const container = document.getElementById('broadcast-progress-container');
+  if (!container) return;
+
+  const card = document.createElement('div');
+  card.className = 'broadcast-progress-card';
+  card.dataset.batchId = batchId;
+  card.innerHTML = `
+    <div class="broadcast-progress-header">
+      <span>Broadcasting SMS</span>
+      <button class="broadcast-progress-dismiss" title="Dismiss">&times;</button>
+    </div>
+    <div class="broadcast-progress-bar-track">
+      <div class="broadcast-progress-bar-fill" style="width: 0%;"></div>
+    </div>
+    <div class="broadcast-progress-status">0 of ${total.toLocaleString()} processed</div>
+  `;
+
+  card.querySelector('.broadcast-progress-dismiss').addEventListener('click', () => {
+    card.remove();
+    state.activeBroadcasts.delete(batchId);
+  });
+
+  container.appendChild(card);
+  state.activeBroadcasts.set(batchId, { total, el: card });
+}
+
+function updateBroadcastProgress(data) {
+  const tracked = state.activeBroadcasts.get(data.batchId);
+  if (!tracked) return; // Not a batch this tab is watching — ignore.
+
+  const { el, total } = tracked;
+  const processed = Math.min(total, data.sent + data.failed);
+  const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+  const fill = el.querySelector('.broadcast-progress-bar-fill');
+  const status = el.querySelector('.broadcast-progress-status');
+  if (fill) fill.style.width = `${pct}%`;
+  if (status) {
+    status.textContent = data.failed > 0
+      ? `${processed.toLocaleString()} of ${total.toLocaleString()} processed (${data.failed.toLocaleString()} failed)`
+      : `${processed.toLocaleString()} of ${total.toLocaleString()} processed`;
+  }
+
+  if (processed >= total) {
+    el.classList.add('complete');
+    const header = el.querySelector('.broadcast-progress-header span');
+    if (header) header.textContent = 'Broadcast Complete';
+    state.activeBroadcasts.delete(data.batchId);
+    setTimeout(() => el.remove(), 5000);
+  }
 }
 
 function disconnectTelemetry() {
