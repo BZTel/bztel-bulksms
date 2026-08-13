@@ -6,14 +6,14 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
 
-  // 1. Admin route protection
-  if (pathname.startsWith('/api/admin') || pathname.startsWith('/admin')) {
+  // 1. Admin API route protection. The /admin page itself is a static shell
+  // (public/admin.html) with its own login form, so it must stay reachable
+  // without a token; actual admin data is gated per-route via
+  // getUserFromRequest + is_admin checks in app/api/admin/*.
+  if (pathname.startsWith('/api/admin')) {
     const token = getTokenFromRequest(req);
     if (!token) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Unauthorized: Authentication token missing' }, { status: 401 });
-      }
-      return NextResponse.redirect(new URL('/', req.url));
+      return NextResponse.json({ error: 'Unauthorized: Authentication token missing' }, { status: 401 });
     }
   }
 
