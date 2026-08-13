@@ -613,6 +613,22 @@ textarea.form-control {
   color: var(--text-muted);
 }
 
+.kpi-delta {
+  display: inline-block;
+  margin-left: 4px;
+}
+
+.kpi-delta-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kpi-delta-badge.up { color: var(--success-color); }
+.kpi-delta-badge.down { color: var(--error-color); }
+.kpi-delta-badge.flat { color: var(--text-muted); }
+
 /* Panels */
 .panel {
   border-radius: var(--border-radius-md);

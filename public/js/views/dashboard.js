@@ -29,7 +29,7 @@ export function renderDashboardView(container, state) {
           </svg>
         </div>
         <div class="kpi-value" id="kpi-campaigns">0</div>
-        <div class="kpi-desc">SMS batches sent</div>
+        <div class="kpi-desc">SMS batches sent <span class="kpi-delta" id="kpi-campaigns-delta"></span></div>
       </div>
 
       <div class="kpi-card glass clickable" id="kpi-card-contacts">
@@ -40,7 +40,7 @@ export function renderDashboardView(container, state) {
           </svg>
         </div>
         <div class="kpi-value" id="kpi-contacts">0</div>
-        <div class="kpi-desc">Saved contacts</div>
+        <div class="kpi-desc">Saved contacts <span class="kpi-delta" id="kpi-contacts-delta"></span></div>
       </div>
 
       <div class="kpi-card glass clickable" id="kpi-card-credits">
@@ -51,7 +51,7 @@ export function renderDashboardView(container, state) {
           </svg>
         </div>
         <div class="kpi-value" id="kpi-credits-used">0</div>
-        <div class="kpi-desc">Credits consumed</div>
+        <div class="kpi-desc">Credits consumed <span class="kpi-delta" id="kpi-credits-used-delta"></span></div>
       </div>
     </div>
 
@@ -285,12 +285,25 @@ async function loadDashboardData(state, silent = false) {
       // Campaign count — count as 1 per batch of activity days
       const dayCount = stats.chart_data ? stats.chart_data.filter(d => d.count > 0).length : 0;
       document.getElementById('kpi-campaigns').innerText = dayCount.toLocaleString();
+
+      // Day-over-day trend badges, derived from the last 2 days of the existing 7-day
+      // chart_data — today's messages/credits vs yesterday's, not the headline totals
+      // above (which are lifetime/windowed figures with no natural "yesterday" to diff).
+      if (stats.chart_data && stats.chart_data.length >= 2) {
+        const today = stats.chart_data[stats.chart_data.length - 1];
+        const yesterday = stats.chart_data[stats.chart_data.length - 2];
+        renderDeltaBadge('kpi-campaigns-delta', today.count, yesterday.count);
+        renderDeltaBadge('kpi-credits-used-delta', today.credits, yesterday.credits);
+      }
     }
 
     if (contactsRes.ok) {
-      const { contacts } = await contactsRes.json();
+      const { contacts, total_yesterday } = await contactsRes.json();
 
       document.getElementById('kpi-contacts').innerText = contacts.length.toLocaleString();
+      if (typeof total_yesterday === 'number') {
+        renderDeltaBadge('kpi-contacts-delta', contacts.length, total_yesterday);
+      }
 
       if (contacts.length > 0) markStepDone('step-contacts');
     }
@@ -339,6 +352,31 @@ async function loadDashboardData(state, silent = false) {
 
   } catch (error) {
     if (!silent) showToast('Error loading dashboard data', 'error');
+  }
+}
+
+// Renders a "↑12% vs yesterday" / "↓5% vs yesterday" badge. Handles the zero-yesterday
+// case explicitly since (current - 0) / 0 is not a meaningful percentage.
+function renderDeltaBadge(elId, current, previous) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+
+  if (previous === 0) {
+    if (current === 0) {
+      el.innerHTML = '';
+    } else {
+      el.innerHTML = `<span class="kpi-delta-badge up">New today</span>`;
+    }
+    return;
+  }
+
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) {
+    el.innerHTML = `<span class="kpi-delta-badge flat">No change</span>`;
+  } else if (pct > 0) {
+    el.innerHTML = `<span class="kpi-delta-badge up">&uarr; ${pct}% vs yesterday</span>`;
+  } else {
+    el.innerHTML = `<span class="kpi-delta-badge down">&darr; ${Math.abs(pct)}% vs yesterday</span>`;
   }
 }
 

@@ -68,20 +68,21 @@ export async function GET(req: Request) {
       select: {
         sentAt: true,
         status: true,
+        credits: true,
       },
       orderBy: {
         sentAt: 'asc',
       },
     });
 
-    const chartMap = new Map<string, { date: string; count: number; delivered: number }>();
-    
+    const chartMap = new Map<string, { date: string; count: number; delivered: number; credits: number }>();
+
     // Initialize last 7 days with zero counts
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().slice(0, 10);
-      chartMap.set(dateStr, { date: dateStr, count: 0, delivered: 0 });
+      chartMap.set(dateStr, { date: dateStr, count: 0, delivered: 0, credits: 0 });
     }
 
     for (const log of logsForChart) {
@@ -90,8 +91,12 @@ export async function GET(req: Request) {
       if (chartMap.has(dateStr)) {
         const entry = chartMap.get(dateStr)!;
         entry.count++;
+        // Mirrors totalCreditsUsed above: failed sends don't consume credits.
         if (log.status === 'sent' || log.status === 'delivered' || log.status === 'submitted') {
           entry.delivered++;
+          entry.credits += log.credits;
+        } else if (log.status === 'pending') {
+          entry.credits += log.credits;
         }
       }
     }

@@ -35,7 +35,15 @@ export async function GET(req: Request) {
       created_at: c.createdAt,
     }));
 
-    return NextResponse.json({ contacts: legacyContacts });
+    // Snapshot count as of this time yesterday, so the dashboard can show
+    // day-over-day growth without a separate endpoint.
+    const yesterdayCutoff = new Date();
+    yesterdayCutoff.setDate(yesterdayCutoff.getDate() - 1);
+    const totalYesterday = await prisma.contact.count({
+      where: { userId: ownerId, createdAt: { lt: yesterdayCutoff } },
+    });
+
+    return NextResponse.json({ contacts: legacyContacts, total_yesterday: totalYesterday });
   } catch (error) {
     console.error('Fetch contacts error:', error);
     return NextResponse.json({ error: 'Failed to fetch contacts' }, { status: 500 });
