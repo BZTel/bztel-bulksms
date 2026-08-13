@@ -9,8 +9,19 @@ export function escapeHtml(str) {
 export const state = {
   // In-memory only — the session itself lives in the httpOnly auth_token cookie set by
   // /api/auth/login, which the browser sends automatically on same-origin requests.
-  adminUser: null
+  adminUser: null,
+  // Set immediately before navigating to the 'customer-profile' view; read by
+  // admin-customer-profile.js once rendered. { id, email }
+  customerProfileTarget: null
 };
+
+// ─── Cross-view navigation ─────────────────────────────────────
+// View files don't import admin.js's router directly (that would create a static import
+// cycle with admin.js, which statically imports every view). Dispatching a DOM event keeps
+// the dependency one-way: admin.js listens for this and drives the actual view switch.
+export function openCustomerProfile(id, email) {
+  document.dispatchEvent(new CustomEvent('admin:open-customer-profile', { detail: { id, email } }));
+}
 
 // ─── Admin Fetch Helper ───────────────────────────────────────
 export async function adminFetch(url, options = {}) {

@@ -1,4 +1,4 @@
-import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin-utils.js';
 
 let allCustomers = [];
 let platformStats = {};
@@ -278,13 +278,13 @@ function renderTable(customers) {
           <input type="checkbox" class="user-select-checkbox" data-id="${c.id}">
         </td>
         <td>
-          <div class="user-avatar-cell">
+          <button class="user-avatar-cell customer-link-btn" data-id="${c.id}" data-email="${safeEmail}" title="View customer profile">
             <div class="user-avatar-sm">${initials}</div>
             <div>
               <div style="font-weight: 600; font-size: 0.85rem;">${displayName}</div>
               <div style="font-size: 0.72rem; color: var(--text-muted);">${safeEmail} (ID #${c.id})</div>
             </div>
-          </div>
+          </button>
         </td>
         <td>
           <strong style="color: var(--accent-color);">${c.balance?.toLocaleString() ?? 0}</strong>
@@ -317,6 +317,13 @@ function attachTableHandlers() {
   // Row selection checkboxes
   document.querySelectorAll('.user-select-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
+  });
+
+  // Customer identity → drill-down profile
+  document.querySelectorAll('.customer-link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openCustomerProfile(btn.getAttribute('data-id'), btn.getAttribute('data-email'));
+    });
   });
 
   // Credits buttons

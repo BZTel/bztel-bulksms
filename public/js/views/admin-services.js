@@ -1,4 +1,4 @@
-import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin-utils.js';
 
 let allServices = [];
 let activeFilter = 'all';
@@ -238,8 +238,10 @@ function renderTable(services) {
           <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(s.service_type)}</div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
-          <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
+          <button class="customer-link-btn" data-id="${s.user_id}" data-email="${escapeHtml(s.email)}" title="View customer profile">
+            <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
+          </button>
         </td>
         <td>
           <div style="font-weight: 500; font-size: 0.82rem;">${escapeHtml(s.rep_name)}</div>
@@ -267,6 +269,12 @@ function renderTable(services) {
 function attachTableHandlers() {
   document.querySelectorAll('.service-select-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
+  });
+
+  document.querySelectorAll('.customer-link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openCustomerProfile(btn.getAttribute('data-id'), btn.getAttribute('data-email'));
+    });
   });
 
   const updateStatus = async (id, status) => {

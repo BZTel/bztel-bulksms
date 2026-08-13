@@ -1,4 +1,4 @@
-import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin-utils.js';
 
 let allSenderIds = [];
 let senderIdStats = { total: 0, pending: 0, approved: 0, rejected: 0 };
@@ -306,8 +306,10 @@ function renderTable(senderIds) {
           </div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
-          <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
+          <button class="customer-link-btn" data-id="${s.user_id}" data-email="${escapeHtml(s.email)}" title="View customer profile">
+            <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
+          </button>
         </td>
         <td>
           <div style="font-size: 0.8rem; color: var(--text-primary); max-width: 300px; white-space: normal; word-break: break-word; line-height: 1.4;">
@@ -339,6 +341,12 @@ function attachTableHandlers() {
   // Row selection checkboxes
   document.querySelectorAll('.sender-select-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
+  });
+
+  document.querySelectorAll('.customer-link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openCustomerProfile(btn.getAttribute('data-id'), btn.getAttribute('data-email'));
+    });
   });
 
   // Approve request

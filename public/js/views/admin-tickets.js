@@ -1,4 +1,4 @@
-import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin-utils.js';
 
 let allTickets = [];
 let ticketStats = { total: 0, active: 0, resolved: 0, high: 0 };
@@ -294,8 +294,10 @@ function renderTable(tickets) {
           <div style="font-size: 0.72rem; color: var(--text-muted);">Ticket ID #${t.id}</div>
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(t.email)}</div>
-          <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${t.user_id}</div>
+          <button class="customer-link-btn" data-id="${t.user_id}" data-email="${escapeHtml(t.email)}" title="View customer profile">
+            <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(t.email)}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${t.user_id}</div>
+          </button>
         </td>
         <td>
           <div style="font-size: 0.78rem; max-width: 320px; white-space: normal; word-break: break-word; line-height: 1.4;">
@@ -320,6 +322,12 @@ function renderTable(tickets) {
 function attachTableHandlers() {
   document.querySelectorAll('.ticket-select-checkbox').forEach(cb => {
     cb.addEventListener('change', updateBulkActionsBar);
+  });
+
+  document.querySelectorAll('.customer-link-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openCustomerProfile(btn.getAttribute('data-id'), btn.getAttribute('data-email'));
+    });
   });
 
   document.querySelectorAll('.action-ticket-status').forEach(select => {

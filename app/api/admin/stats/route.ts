@@ -32,7 +32,8 @@ export async function GET(req: Request) {
       pendingSenderIds,
       pendingServices,
       openTickets,
-      totalScamWords
+      totalScamWords,
+      pendingContactMessages
     ] = await Promise.all([
       safe(() => prisma.user.count(), 0),
       safe(() => prisma.smsLog.count(), 0),
@@ -41,9 +42,13 @@ export async function GET(req: Request) {
       safe(() => prisma.smsLog.aggregate({ _sum: { credits: true } }), { _sum: { credits: null } }),
       safe(() => prisma.transaction.aggregate({ _sum: { amount: true }, where: { type: 'topup' } }), { _sum: { amount: null } }),
       safe(() => prisma.senderId.count({ where: { status: 'pending' } }), 0),
-      safe(() => prisma.serviceRequest.count({ where: { status: 'pending' } }), 0),
+      // ServiceRequest rows are created with status 'Reviewing', never 'pending' — this
+      // previously filtered on the wrong value and always returned 0.
+      safe(() => prisma.serviceRequest.count({ where: { status: 'Reviewing' } }), 0),
       safe(() => prisma.supportTicket.count({ where: { status: { in: ['open', 'Open'] } } }), 0),
-      safe(() => prisma.scamWord.count(), 0)
+      safe(() => prisma.scamWord.count(), 0),
+      // ContactMessage has no read/unread state, so "pending" here is just total inbox volume.
+      safe(() => prisma.contactMessage.count(), 0)
     ]);
 
     const totalCreditsUsed = smsCreditsSum._sum.credits || 0;
@@ -74,7 +79,8 @@ export async function GET(req: Request) {
         pendingSenderIds,
         pendingServices,
         openTickets,
-        totalScamWords
+        totalScamWords,
+        pendingContactMessages
       },
       recentSms: recentSms.map((s) => ({
         id: s.id,

@@ -9,6 +9,7 @@ import { renderAdminTicketsView } from './views/admin-tickets.js';
 import { renderAdminContactMessagesView } from './views/admin-contact-messages.js';
 import { renderAdminAuditLogsView } from './views/admin-audit-logs.js';
 import { renderAdminScamWordsView } from './views/admin-scam-words.js';
+import { renderAdminCustomerProfileView } from './views/admin-customer-profile.js';
 
 
 
@@ -25,6 +26,7 @@ async function initAdmin() {
     setupLoginForm();
     setupLogout();
     setupModals();
+    setupCustomerProfileNav();
 
     // No client-readable token to check — the session (if any) lives in the httpOnly
     // auth_token cookie, which the browser sends automatically. Ask the server directly.
@@ -168,7 +170,10 @@ function renderView(viewName) {
     tickets: 'Support Tickets',
     'contact-messages': 'Website Inquiries',
     'audit-logs': 'System Audit & Security Logs',
-    'scam-words': 'Scam Words & Content Filters'
+    'scam-words': 'Scam Words & Content Filters',
+    'customer-profile': state.customerProfileTarget?.email
+      ? `Customer Profile — ${state.customerProfileTarget.email}`
+      : 'Customer Profile'
   };
   const titleEl = document.getElementById('admin-view-title');
   if (titleEl) titleEl.textContent = titles[viewName] || 'Admin Portal';
@@ -205,6 +210,9 @@ function renderView(viewName) {
       case 'scam-words':
         renderAdminScamWordsView(root, state);
         break;
+      case 'customer-profile':
+        renderAdminCustomerProfileView(root, state);
+        break;
       default:
         renderAdminDashboardView(root, state);
     }
@@ -212,6 +220,10 @@ function renderView(viewName) {
     console.error(`Error rendering view ${viewName}:`, err);
     showToast(`Error loading view ${viewName}`, 'error');
   }
+
+  // Refresh badges on navigation too, so resolving a pending item (e.g. approving a
+  // sender ID) reflects immediately rather than waiting for the next 60s poll.
+  updateNavBadges();
 }
 
 function setupNavButtons() {
@@ -225,6 +237,49 @@ function setupNavButtons() {
       });
     }
   });
+}
+
+// ─── Customer Profile Drill-Down ───────────────────────────────
+function setupCustomerProfileNav() {
+  document.addEventListener('admin:open-customer-profile', (e) => {
+    const { id, email } = e.detail || {};
+    if (!id) return;
+    state.customerProfileTarget = { id, email };
+    renderView('customer-profile');
+  });
+}
+
+// ─── Sidebar Pending-Count Badges ──────────────────────────────
+let badgePollStarted = false;
+
+function setBadge(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = count > 99 ? '99+' : String(count);
+  el.classList.toggle('hidden', count <= 0);
+}
+
+async function updateNavBadges() {
+  try {
+    const res = await adminFetch('/api/admin/stats');
+    if (!res.ok) return;
+    const data = await res.json();
+    const stats = data.stats || {};
+
+    setBadge('nav-badge-sender-ids', stats.pendingSenderIds || 0);
+    setBadge('nav-badge-services', stats.pendingServices || 0);
+    setBadge('nav-badge-tickets', stats.openTickets || 0);
+    setBadge('nav-badge-contact-messages', stats.pendingContactMessages || 0);
+  } catch (_) {
+    // Silent — badges just keep their last known value until the next successful poll.
+  }
+}
+
+function startBadgePolling() {
+  if (badgePollStarted) return;
+  badgePollStarted = true;
+  updateNavBadges();
+  setInterval(updateNavBadges, 60000);
 }
 
 // ─── UI Toggles ───────────────────────────────────────────────
@@ -245,6 +300,7 @@ function showAdminApp() {
   if (initialsEl) initialsEl.textContent = email.substring(0, 2).toUpperCase();
 
   setupNavButtons();
+  startBadgePolling();
 
   // Sidebar responsive mobile toggling
   const sidebar = document.querySelector('.sidebar');
