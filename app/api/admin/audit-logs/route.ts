@@ -25,6 +25,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search')?.trim() || '';
     const category = searchParams.get('category')?.trim() || '';
+    const dateFrom = searchParams.get('dateFrom')?.trim() || '';
+    const dateTo = searchParams.get('dateTo')?.trim() || '';
+    const userIdParam = searchParams.get('userId')?.trim() || '';
+    const ip = searchParams.get('ip')?.trim() || '';
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(200, Math.max(10, parseInt(searchParams.get('limit') || '50', 10)));
     const skip = (page - 1) * limit;
@@ -67,6 +71,36 @@ export async function GET(req: Request) {
 
     if (category === 'security' || category === 'admin' || category === 'system') {
       where.action = { in: actionsByCategory[category] };
+    }
+
+    if (dateFrom || dateTo) {
+      const createdAt: Prisma.DateTimeFilter = {};
+      if (dateFrom) {
+        const from = new Date(dateFrom);
+        if (!isNaN(from.getTime())) createdAt.gte = from;
+      }
+      if (dateTo) {
+        // Plain <input type="date"> values are midnight — push to end-of-day so the
+        // selected day is inclusive rather than silently excluding everything on it.
+        const to = new Date(dateTo);
+        if (!isNaN(to.getTime())) {
+          // Plain YYYY-MM-DD strings parse as UTC midnight, so the end-of-day bump must
+          // also be in UTC — setHours() would use the server's local timezone instead and
+          // shift the cutoff by that offset.
+          to.setUTCHours(23, 59, 59, 999);
+          createdAt.lte = to;
+        }
+      }
+      if (Object.keys(createdAt).length > 0) where.createdAt = createdAt;
+    }
+
+    if (userIdParam) {
+      const userId = parseInt(userIdParam, 10);
+      if (!isNaN(userId)) where.userId = userId;
+    }
+
+    if (ip) {
+      where.ipAddress = { contains: ip, mode: 'insensitive' };
     }
 
     const [total, logs] = await Promise.all([

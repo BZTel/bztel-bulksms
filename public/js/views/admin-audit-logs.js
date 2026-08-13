@@ -6,6 +6,10 @@ let currentPage = 1;
 let currentLimit = 50;
 let activeFilter = 'all';
 let searchQuery = '';
+let dateFrom = '';
+let dateTo = '';
+let filterUserId = '';
+let filterIp = '';
 
 export function renderAdminAuditLogsView(root, state) {
   root.innerHTML = `
@@ -56,6 +60,27 @@ export function renderAdminAuditLogsView(root, state) {
         </div>
       </div>
 
+      <!-- Advanced Filters Toolbar -->
+      <div class="admin-toolbar" style="flex-wrap: wrap; margin-top: -4px;">
+        <div style="display: flex; flex-direction: column; gap: 3px; flex: 0 1 150px;">
+          <label for="audit-date-from" style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">From</label>
+          <input type="date" id="audit-date-from" class="form-control" style="padding: 7px 10px; font-size: 0.8rem; flex: none;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex: 0 1 150px;">
+          <label for="audit-date-to" style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">To</label>
+          <input type="date" id="audit-date-to" class="form-control" style="padding: 7px 10px; font-size: 0.8rem; flex: none;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex: 0 1 120px;">
+          <label for="audit-user-id" style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">User ID</label>
+          <input type="text" id="audit-user-id" class="form-control" placeholder="e.g. 42" style="padding: 7px 10px; font-size: 0.8rem; flex: none;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 3px; flex: 0 1 160px;">
+          <label for="audit-ip" style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">IP Address</label>
+          <input type="text" id="audit-ip" class="form-control" placeholder="e.g. 197.210" style="padding: 7px 10px; font-size: 0.8rem; flex: none;">
+        </div>
+        <button id="audit-clear-filters-btn" class="btn btn-secondary btn-sm" style="align-self: flex-end; padding: 7px 14px; font-size: 0.78rem;">Clear Filters</button>
+      </div>
+
       <div class="table-container">
         <table class="custom-table">
           <thead>
@@ -94,6 +119,7 @@ export function renderAdminAuditLogsView(root, state) {
 async function initView(state) {
   setupFilters();
   setupSearch();
+  setupAdvancedFilters();
 
   document.getElementById('refresh-audit-logs-btn').addEventListener('click', () => {
     currentPage = 1;
@@ -121,7 +147,11 @@ async function loadData() {
       page: currentPage.toString(),
       limit: currentLimit.toString(),
       category: activeFilter,
-      search: searchQuery
+      search: searchQuery,
+      dateFrom,
+      dateTo,
+      userId: filterUserId,
+      ip: filterIp
     });
 
     const res = await adminFetch(`/api/admin/audit-logs?${params.toString()}`);
@@ -234,6 +264,58 @@ function setupSearch() {
       currentPage = 1;
       loadData();
     }, 300);
+  });
+}
+
+function setupAdvancedFilters() {
+  const dateFromInput = document.getElementById('audit-date-from');
+  const dateToInput = document.getElementById('audit-date-to');
+  const userIdInput = document.getElementById('audit-user-id');
+  const ipInput = document.getElementById('audit-ip');
+
+  dateFromInput.addEventListener('change', (e) => {
+    dateFrom = e.target.value;
+    currentPage = 1;
+    loadData();
+  });
+
+  dateToInput.addEventListener('change', (e) => {
+    dateTo = e.target.value;
+    currentPage = 1;
+    loadData();
+  });
+
+  let userIdTimeout;
+  userIdInput.addEventListener('input', (e) => {
+    clearTimeout(userIdTimeout);
+    userIdTimeout = setTimeout(() => {
+      filterUserId = e.target.value.trim();
+      currentPage = 1;
+      loadData();
+    }, 300);
+  });
+
+  let ipTimeout;
+  ipInput.addEventListener('input', (e) => {
+    clearTimeout(ipTimeout);
+    ipTimeout = setTimeout(() => {
+      filterIp = e.target.value.trim();
+      currentPage = 1;
+      loadData();
+    }, 300);
+  });
+
+  document.getElementById('audit-clear-filters-btn').addEventListener('click', () => {
+    dateFrom = '';
+    dateTo = '';
+    filterUserId = '';
+    filterIp = '';
+    dateFromInput.value = '';
+    dateToInput.value = '';
+    userIdInput.value = '';
+    ipInput.value = '';
+    currentPage = 1;
+    loadData();
   });
 }
 
