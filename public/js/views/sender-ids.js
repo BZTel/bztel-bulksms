@@ -189,10 +189,18 @@ function renderList(query = '') {
 
   if (allList.length === 0) {
     container.innerHTML = `
-      <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
-        No Sender IDs found matching "${query}".
+      <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:40px 20px;">
+        <div class="empty-state-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div class="empty-state-title">No Sender IDs Found</div>
+        <div class="empty-state-desc">${query ? `No Sender IDs match "${query}".` : "You haven't registered a Sender ID yet — register one to start sending branded SMS."}</div>
+        <button id="empty-state-register-sender-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Register Sender ID</button>
       </div>
     `;
+    document.getElementById('empty-state-register-sender-btn')?.addEventListener('click', () => document.getElementById('register-sender-id-btn')?.click());
     return;
   }
 

@@ -64,7 +64,7 @@ export function renderDashboardView(container, state) {
           <button class="btn btn-secondary btn-sm" onclick="document.querySelector('.nav-item[data-view=wallet]').click()" style="padding:4px 12px;font-size:0.75rem;">View All</button>
         </div>
         <div id="billing-summary-body">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div class="dashboard-billing-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
             <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:16px;text-align:center;">
               <div style="font-size:0.7rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Total Credited</div>
               <div id="billing-credited" style="font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;color:#10b981;">—</div>
@@ -90,7 +90,7 @@ export function renderDashboardView(container, state) {
           <button class="btn btn-secondary btn-sm" onclick="document.querySelector('.nav-item[data-view=campaign-history]').click()" style="padding:4px 12px;font-size:0.75rem;">View Sent Messages</button>
         </div>
         <div id="delivery-summary-body">
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+          <div class="dashboard-delivery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
             <div style="background:rgba(15,23,42,0.03);border:1px solid var(--glass-border);border-radius:10px;padding:12px;text-align:center;">
               <div style="font-size:0.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Sent / Delivered</div>
               <div id="del-sent" style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;color:#10b981;">0</div>

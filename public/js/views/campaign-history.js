@@ -214,11 +214,21 @@ function renderCampaignsTable(campaigns) {
   if (campaigns.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center" style="color: var(--text-muted); padding: 30px;">
-          No message logs match your criteria.
+        <td colspan="9">
+          <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:40px 20px;">
+            <div class="empty-state-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </div>
+            <div class="empty-state-title">No Sent Messages Found</div>
+            <div class="empty-state-desc">No campaigns match your current filters, or you haven't sent a broadcast yet.</div>
+            <button id="empty-state-compose-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Compose Broadcast</button>
+          </div>
         </td>
       </tr>
     `;
+    document.getElementById('empty-state-compose-btn')?.addEventListener('click', () => openComposeModal());
     return;
   }
 

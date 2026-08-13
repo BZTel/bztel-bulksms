@@ -750,7 +750,7 @@ async function loadTemplates(query = '') {
                   <span class="badge" style="background:${badgeBg};color:${badgeColor};border:1px solid ${badgeColor}33;font-size:0.68rem;padding:3px 8px;border-radius:10px;">
                     ${t.category}
                   </span>
-                  ${t.isCustom ? `<button class="delete-template-btn" data-id="${t.originalId}" title="Delete template" style="background:none;border:none;color:var(--error-color);cursor:pointer;padding:2px 6px;font-size:0.8rem;">✕</button>` : ''}
+                  ${t.isCustom ? `<button class="btn btn-danger btn-sm delete-template-btn" data-id="${t.originalId}" title="Delete template" style="padding: 4px 10px; font-size: 0.75rem;">Delete</button>` : ''}
                 </div>
                 <h4 style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:700;margin:0 0 10px 0;color:var(--text-primary);">
                   ${t.title}
@@ -847,6 +847,7 @@ function bindCategoryChipEvents() {
 }
 
 async function handleDeleteTemplateClick(e) {
+  if (!confirm('Delete this template? This cannot be undone.')) return;
   const id = e.currentTarget.getAttribute('data-id');
   e.currentTarget.disabled = true;
   e.currentTarget.innerText = '...';
@@ -944,6 +945,7 @@ function loadScheduled(query = '') {
   // Bind cancel action
   document.querySelectorAll('.cancel-scheduled-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
+      if (!confirm('Cancel this scheduled broadcast?')) return;
       const index = parseInt(e.currentTarget.getAttribute('data-index'));
       const list = JSON.parse(localStorage.getItem('bztel_scheduled') || '[]');
       list.splice(index, 1);
@@ -1395,9 +1397,12 @@ async function handleBroadcastComposerSubmit(e) {
         }, 1200);
       } else {
         if (data.missing_contacts && data.missing_contacts.length > 0) {
-          alert(`⚠️ Personalization Error\n\nThe following recipient number(s) were not found in your Contacts Directory:\n• ${data.missing_contacts.join('\n• ')}\n\nPlease save them to your Contacts Directory first or remove [Name] to proceed.`);
+          const preview = data.missing_contacts.slice(0, 3).join(', ');
+          const more = data.missing_contacts.length > 3 ? ` and ${data.missing_contacts.length - 3} more` : '';
+          showToast(`Personalization error: ${preview}${more} not found in your Contacts Directory. Save them first or remove [Name] to proceed.`, 'error');
+        } else {
+          showToast(data.error || 'Failed to send bulk SMS', 'error');
         }
-        showToast(data.error || 'Failed to send bulk SMS', 'error');
       }
     } catch (error) {
       showToast('Connection error sending broadcast', 'error');
@@ -1612,6 +1617,7 @@ async function loadDrafts(query = '') {
 }
 
 async function handleDeleteDraftClick(e) {
+  if (!confirm('Delete this draft? This cannot be undone.')) return;
   const id = e.currentTarget.getAttribute('data-id');
   e.currentTarget.disabled = true;
   e.currentTarget.innerText = '...';

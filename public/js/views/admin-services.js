@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allServices = [];
 let activeFilter = 'all';
@@ -52,10 +52,24 @@ export function renderAdminServicesView(root, state) {
         </div>
       </div>
 
+      <!-- Bulk Actions Bar -->
+      <div id="bulk-actions-bar" style="display: none; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; margin-bottom: 12px;">
+        <span style="font-size: 0.8rem; font-weight: 500;"><span id="selected-count">0</span> selected</span>
+        <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+          <select id="bulk-service-status" class="form-control" style="padding: 4px 8px; font-size: 0.8rem; height: auto; width: 140px;">
+            <option value="Reviewing">Reviewing</option>
+            <option value="Approved">Approved</option>
+            <option value="Declined">Declined</option>
+          </select>
+          <button id="apply-bulk-status-btn" class="btn btn-primary" style="padding: 4px 10px; font-size: 0.75rem;">Apply</button>
+        </div>
+      </div>
+
       <div class="table-container">
         <table class="custom-table">
           <thead>
             <tr>
+              <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-services" style="cursor: pointer;"></th>
               <th>Service Category</th>
               <th>Customer / Account</th>
               <th>Representative / Phone</th>
@@ -67,7 +81,7 @@ export function renderAdminServicesView(root, state) {
           </thead>
           <tbody id="services-tbody">
             <tr>
-              <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+              <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
                 Loading requests...
               </td>
             </tr>
@@ -83,9 +97,64 @@ export function renderAdminServicesView(root, state) {
 async function initView(state) {
   setupFilters();
   setupSearch();
+  setupBulkActions();
 
   document.getElementById('refresh-services-btn').addEventListener('click', () => loadData(state));
   await loadData(state);
+}
+
+// ─── Bulk Actions ─────────────────────────────────────────────
+function setupBulkActions() {
+  const selectAll = document.getElementById('select-all-services');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      const checked = e.currentTarget.checked;
+      document.querySelectorAll('.service-select-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkActionsBar();
+    });
+  }
+
+  document.getElementById('apply-bulk-status-btn')?.addEventListener('click', async (e) => {
+    const ids = Array.from(document.querySelectorAll('.service-select-checkbox:checked')).map(cb => cb.dataset.id);
+    if (ids.length === 0) return showToast('Select at least one request first', 'error');
+
+    const status = document.getElementById('bulk-service-status').value;
+    if (!confirm(`Change status to "${status}" for ${ids.length} selected service request(s)?${status === 'Approved' ? ' Pending Bank Transfer requests will be credited.' : ''}`)) return;
+
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      const res = await adminFetch('/api/admin/services/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify({ ids, status })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        await reloadData();
+      } else {
+        showToast(data.error || 'Failed to update requests', 'error');
+      }
+    } catch (err) {
+      showToast('Connection error', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function updateBulkActionsBar() {
+  const checkboxes = document.querySelectorAll('.service-select-checkbox:checked');
+  const bar = document.getElementById('bulk-actions-bar');
+  const countSpan = document.getElementById('selected-count');
+  if (bar && countSpan) {
+    if (checkboxes.length > 0) {
+      bar.style.display = 'flex';
+      countSpan.innerText = checkboxes.length;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
 }
 
 async function loadData(state) {
@@ -117,10 +186,14 @@ function renderStats() {
 function renderTable(services) {
   const tbody = document.getElementById('services-tbody');
 
+  const selectAllHeader = document.getElementById('select-all-services');
+  if (selectAllHeader) selectAllHeader.checked = false;
+  updateBulkActionsBar();
+
   if (!services || services.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+        <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
           No custom service requests found.
         </td>
       </tr>
@@ -158,20 +231,23 @@ function renderTable(services) {
 
     return `
       <tr data-service-id="${s.id}">
-        <td>
-          <div style="font-weight: 700; color: var(--text-primary);">${s.service_type}</div>
+        <td style="text-align: center; vertical-align: middle;">
+          <input type="checkbox" class="service-select-checkbox" data-id="${s.id}">
         </td>
         <td>
-          <div style="font-weight: 600; font-size: 0.85rem;">${s.email}</div>
+          <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(s.service_type)}</div>
+        </td>
+        <td>
+          <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(s.email)}</div>
           <div style="font-size: 0.72rem; color: var(--text-muted);">User ID #${s.user_id}</div>
         </td>
         <td>
-          <div style="font-weight: 500; font-size: 0.82rem;">${s.rep_name}</div>
-          <div style="font-size: 0.76rem; color: var(--text-muted); font-family: monospace;">${s.phone}</div>
+          <div style="font-weight: 500; font-size: 0.82rem;">${escapeHtml(s.rep_name)}</div>
+          <div style="font-size: 0.76rem; color: var(--text-muted); font-family: monospace;">${escapeHtml(s.phone)}</div>
         </td>
         <td>
           <div style="font-size: 0.78rem; max-width: 280px; white-space: normal; word-break: break-word; line-height: 1.4;">
-            ${s.description}
+            ${escapeHtml(s.description)}
           </div>
         </td>
         <td style="color: var(--text-muted); font-size: 0.8rem;">${submittedDate}</td>
@@ -189,6 +265,10 @@ function renderTable(services) {
 }
 
 function attachTableHandlers() {
+  document.querySelectorAll('.service-select-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkActionsBar);
+  });
+
   const updateStatus = async (id, status) => {
     try {
       const res = await adminFetch(`/api/admin/services/${id}`, {
@@ -228,7 +308,9 @@ function attachTableHandlers() {
   document.querySelectorAll('.action-review-service').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      updateStatus(id, 'Reviewing');
+      if (confirm('Revert this service request to Reviewing status?')) {
+        updateStatus(id, 'Reviewing');
+      }
     });
   });
 }

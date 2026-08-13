@@ -328,11 +328,21 @@ function renderContactsTable(contacts) {
   if (contacts.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="3" class="text-center" style="color: var(--text-muted); padding: 40px;">
-          No contacts found. Use the forms to create some!
+        <td colspan="3">
+          <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:40px 20px;">
+            <div class="empty-state-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 3c0 2.21-3.582 4-8 4s-8-1.79-8-4 3.582-4 8-4 8 1.79 8 4z" />
+              </svg>
+            </div>
+            <div class="empty-state-title">No Contacts Yet</div>
+            <div class="empty-state-desc">Import a CSV file or add contacts manually using the form to build your recipient directory.</div>
+            <button id="empty-state-import-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Import CSV</button>
+          </div>
         </td>
       </tr>
     `;
+    document.getElementById('empty-state-import-btn')?.addEventListener('click', () => navigateTo('import-contacts'));
     return;
   }
 
@@ -594,6 +604,78 @@ function setupBulkActions() {
       const checked = e.currentTarget.checked;
       document.querySelectorAll('.contact-select-checkbox').forEach(cb => cb.checked = checked);
       updateBulkActionsBar();
+    });
+  }
+
+  const getSelectedIds = () =>
+    Array.from(document.querySelectorAll('.contact-select-checkbox:checked')).map(cb => cb.dataset.id);
+
+  const applyGroupBtn = document.getElementById('apply-bulk-group-btn');
+  if (applyGroupBtn) {
+    applyGroupBtn.addEventListener('click', async () => {
+      const contactIds = getSelectedIds();
+      if (contactIds.length === 0) {
+        return showToast('Select at least one contact first', 'error');
+      }
+
+      const groupSelect = document.getElementById('bulk-group-select');
+      let groupName = groupSelect?.value;
+      if (!groupName) {
+        return showToast('Choose a group to move contacts to', 'error');
+      }
+      if (groupName === '__NEW__') {
+        groupName = (prompt('Enter a name for the new group:') || '').trim();
+        if (!groupName) return;
+      }
+
+      applyGroupBtn.disabled = true;
+      try {
+        const res = await apiFetch('/api/contacts/bulk', {
+          method: 'PATCH',
+          body: JSON.stringify({ contactIds, group_name: groupName })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || `Moved ${contactIds.length} contact(s)`, 'success');
+          await loadContactsData('contacts');
+        } else {
+          showToast(data.error || 'Failed to move contacts', 'error');
+        }
+      } catch (err) {
+        showToast('Failed to move contacts', 'error');
+      } finally {
+        applyGroupBtn.disabled = false;
+      }
+    });
+  }
+
+  const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+  if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', async () => {
+      const contactIds = getSelectedIds();
+      if (contactIds.length === 0) {
+        return showToast('Select at least one contact first', 'error');
+      }
+      if (!confirm(`Delete ${contactIds.length} selected contact(s)? This cannot be undone.`)) return;
+
+      bulkDeleteBtn.disabled = true;
+      try {
+        const res = await apiFetch('/api/contacts/bulk', {
+          method: 'DELETE',
+          body: JSON.stringify({ contactIds })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message || `Deleted ${contactIds.length} contact(s)`, 'success');
+          await loadContactsData('contacts');
+        } else {
+          showToast(data.error || 'Failed to delete contacts', 'error');
+        }
+      } catch (err) {
+        showToast('Failed to delete contacts', 'error');
+      } finally {
+        bulkDeleteBtn.disabled = false;
+      }
     });
   }
 }

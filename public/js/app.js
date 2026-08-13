@@ -574,7 +574,7 @@ export function navigateTo(viewName) {
     'api-keys': 'Developer API Keys & Webhooks',
     'request-service': 'Request Custom Service',
     help: 'Support Desk & FAQs',
-    more: 'More Settings & Resources'
+    more: 'Account Settings'
   };
   document.getElementById('view-title').innerText = titleMap[viewName] || 'Bztel App';
 

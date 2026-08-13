@@ -1,7 +1,11 @@
 import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allSenderIds = [];
-let activeFilter = 'all';
+let senderIdStats = { total: 0, pending: 0, approved: 0, rejected: 0 };
+let currentPage = 1;
+let currentLimit = 50;
+let activeStatus = 'all';
+let searchQuery = '';
 
 export function renderAdminSenderIdsView(root, state) {
   root.innerHTML = `
@@ -52,10 +56,20 @@ export function renderAdminSenderIdsView(root, state) {
         </div>
       </div>
 
+      <!-- Bulk Actions Bar -->
+      <div id="bulk-actions-bar" style="display: none; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; margin-bottom: 12px;">
+        <span style="font-size: 0.8rem; font-weight: 500;"><span id="selected-count">0</span> selected</span>
+        <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+          <button id="bulk-approve-btn" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">Approve</button>
+          <button id="bulk-reject-btn" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Reject</button>
+        </div>
+      </div>
+
       <div class="table-container">
         <table class="custom-table">
           <thead>
             <tr>
+              <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-sender-ids" style="cursor: pointer;"></th>
               <th>Sender ID</th>
               <th>Customer</th>
               <th>Use Case / Description</th>
@@ -67,12 +81,21 @@ export function renderAdminSenderIdsView(root, state) {
           </thead>
           <tbody id="sender-ids-tbody">
             <tr>
-              <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+              <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
                 Loading requests...
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="panel-footer" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="sender-ids-pagination-info">Showing 0 requests</div>
+        <div style="display: flex; gap: 8px;">
+          <button id="sender-ids-prev-btn" class="btn btn-secondary btn-sm" disabled>Previous</button>
+          <button id="sender-ids-next-btn" class="btn btn-secondary btn-sm" disabled>Next</button>
+        </div>
       </div>
     </div>
   `;
@@ -83,23 +106,106 @@ export function renderAdminSenderIdsView(root, state) {
 async function initView(state) {
   setupFilters();
   setupSearch();
+  setupBulkActions();
 
-  document.getElementById('refresh-sender-ids-btn').addEventListener('click', () => loadData(state));
+  document.getElementById('refresh-sender-ids-btn').addEventListener('click', () => {
+    currentPage = 1;
+    loadData();
+  });
 
-  await loadData(state);
+  document.getElementById('sender-ids-prev-btn').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      loadData();
+    }
+  });
+
+  document.getElementById('sender-ids-next-btn').addEventListener('click', () => {
+    currentPage++;
+    loadData();
+  });
+
+  await loadData();
+}
+
+// ─── Bulk Actions ─────────────────────────────────────────────
+function setupBulkActions() {
+  const selectAll = document.getElementById('select-all-sender-ids');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      const checked = e.currentTarget.checked;
+      document.querySelectorAll('.sender-select-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkActionsBar();
+    });
+  }
+
+  const getSelectedIds = () =>
+    Array.from(document.querySelectorAll('.sender-select-checkbox:checked')).map(cb => cb.dataset.id);
+
+  const runBulkStatus = async (status, btn) => {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return showToast('Select at least one request first', 'error');
+    if (!confirm(`${status === 'approved' ? 'Approve' : 'Reject'} ${ids.length} selected Sender ID request(s)?`)) return;
+
+    btn.disabled = true;
+    try {
+      const res = await adminFetch('/api/admin/sender-ids/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify({ ids, status })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        await reloadData();
+      } else {
+        showToast(data.error || 'Failed to update requests', 'error');
+      }
+    } catch (err) {
+      showToast('Connection error', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('bulk-approve-btn')?.addEventListener('click', (e) => runBulkStatus('approved', e.currentTarget));
+  document.getElementById('bulk-reject-btn')?.addEventListener('click', (e) => runBulkStatus('rejected', e.currentTarget));
+}
+
+function updateBulkActionsBar() {
+  const checkboxes = document.querySelectorAll('.sender-select-checkbox:checked');
+  const bar = document.getElementById('bulk-actions-bar');
+  const countSpan = document.getElementById('selected-count');
+  if (bar && countSpan) {
+    if (checkboxes.length > 0) {
+      bar.style.display = 'flex';
+      countSpan.innerText = checkboxes.length;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
 }
 
 // ─── Load Data ────────────────────────────────────────────────
-async function loadData(state) {
+async function loadData() {
   try {
-    const res = await adminFetch('/api/admin/sender-ids');
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: currentLimit.toString(),
+      status: activeStatus,
+      search: searchQuery
+    });
+
+    const res = await adminFetch(`/api/admin/sender-ids?${params.toString()}`);
     if (!res.ok) return;
     const data = await res.json();
 
     allSenderIds = data.sender_ids || [];
+    senderIdStats = data.stats || { total: 0, pending: 0, approved: 0, rejected: 0 };
+    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
-    renderTable(getFilteredSenderIds());
+    renderTable(allSenderIds);
+    renderPagination(pagination);
   } catch (err) {
     showToast('Failed to load Sender ID requests', 'error');
   }
@@ -107,25 +213,38 @@ async function loadData(state) {
 
 // ─── Render Stats ─────────────────────────────────────────────
 function renderStats() {
-  const total = allSenderIds.length;
-  const pending = allSenderIds.filter(s => s.status === 'pending').length;
-  const approved = allSenderIds.filter(s => s.status === 'approved').length;
-  const rejected = allSenderIds.filter(s => s.status === 'rejected').length;
+  document.getElementById('stat-sender-total').textContent = senderIdStats.total.toLocaleString();
+  document.getElementById('stat-sender-pending').textContent = senderIdStats.pending.toLocaleString();
+  document.getElementById('stat-sender-approved').textContent = senderIdStats.approved.toLocaleString();
+  document.getElementById('stat-sender-rejected').textContent = senderIdStats.rejected.toLocaleString();
+}
 
-  document.getElementById('stat-sender-total').textContent = total.toLocaleString();
-  document.getElementById('stat-sender-pending').textContent = pending.toLocaleString();
-  document.getElementById('stat-sender-approved').textContent = approved.toLocaleString();
-  document.getElementById('stat-sender-rejected').textContent = rejected.toLocaleString();
+function renderPagination(p) {
+  const info = document.getElementById('sender-ids-pagination-info');
+  const prevBtn = document.getElementById('sender-ids-prev-btn');
+  const nextBtn = document.getElementById('sender-ids-next-btn');
+  if (!info || !prevBtn || !nextBtn) return;
+
+  const start = p.total === 0 ? 0 : (p.page - 1) * p.limit + 1;
+  const end = Math.min(p.page * p.limit, p.total);
+
+  info.textContent = `Showing ${start}-${end} of ${p.total.toLocaleString()} requests (Page ${p.page} of ${p.totalPages})`;
+  prevBtn.disabled = p.page <= 1;
+  nextBtn.disabled = p.page >= p.totalPages;
 }
 
 // ─── Render Table ─────────────────────────────────────────────
 function renderTable(senderIds) {
   const tbody = document.getElementById('sender-ids-tbody');
 
+  const selectAllHeader = document.getElementById('select-all-sender-ids');
+  if (selectAllHeader) selectAllHeader.checked = false;
+  updateBulkActionsBar();
+
   if (!senderIds || senderIds.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+        <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
           No Sender ID requests found.
         </td>
       </tr>
@@ -178,6 +297,9 @@ function renderTable(senderIds) {
 
     return `
       <tr data-sender-id="${s.id}">
+        <td style="text-align: center; vertical-align: middle;">
+          <input type="checkbox" class="sender-select-checkbox" data-id="${s.id}">
+        </td>
         <td>
           <div style="font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.05em; color: var(--text-primary); text-transform: uppercase;">
             ${safeName}
@@ -214,6 +336,11 @@ function renderTable(senderIds) {
 
 // ─── Table Action Handlers ────────────────────────────────────
 function attachTableHandlers() {
+  // Row selection checkboxes
+  document.querySelectorAll('.sender-select-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkActionsBar);
+  });
+
   // Approve request
   document.querySelectorAll('.action-approve-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -284,45 +411,27 @@ function setupFilters() {
     chip.addEventListener('click', () => {
       document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
-      activeFilter = chip.getAttribute('data-filter');
-      renderTable(getFilteredSenderIds());
+      activeStatus = chip.getAttribute('data-filter');
+      currentPage = 1;
+      loadData();
     });
   });
 }
 
 // ─── Search ───────────────────────────────────────────────────
 function setupSearch() {
-  document.getElementById('sender-search').addEventListener('input', () => {
-    renderTable(getFilteredSenderIds());
+  let timeout;
+  document.getElementById('sender-search').addEventListener('input', (e) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      currentPage = 1;
+      loadData();
+    }, 300);
   });
-}
-
-function getFilteredSenderIds() {
-  const query = document.getElementById('sender-search')?.value?.toLowerCase().trim() || '';
-  let list = allSenderIds;
-
-  if (activeFilter !== 'all') {
-    list = list.filter(s => s.status === activeFilter);
-  }
-
-  if (query) {
-    list = list.filter(s => 
-      s.name.toLowerCase().includes(query) || 
-      s.email.toLowerCase().includes(query)
-    );
-  }
-
-  return list;
 }
 
 // ─── Reload Helper ────────────────────────────────────────────
 async function reloadData() {
-  try {
-    const res = await adminFetch('/api/admin/sender-ids');
-    if (!res.ok) return;
-    const data = await res.json();
-    allSenderIds = data.sender_ids || [];
-    renderStats();
-    renderTable(getFilteredSenderIds());
-  } catch (_) {}
+  await loadData();
 }

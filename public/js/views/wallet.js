@@ -296,11 +296,21 @@ function renderTable(transactions) {
   if (transactions.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center" style="color:var(--text-muted);padding:40px;">
-          No transactions recorded.
+        <td colspan="5">
+          <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:40px 20px;">
+            <div class="empty-state-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div class="empty-state-title">No Transactions Yet</div>
+            <div class="empty-state-desc">Your wallet activity will show up here once you top up credits or send your first campaign.</div>
+            <button id="empty-state-buycredits-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Buy Credits</button>
+          </div>
         </td>
       </tr>
     `;
+    document.getElementById('empty-state-buycredits-btn')?.addEventListener('click', () => navigateTo('buy-credits'));
     return;
   }
 

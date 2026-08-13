@@ -2,6 +2,10 @@ import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allCustomers = [];
 let platformStats = {};
+let currentPage = 1;
+let currentLimit = 50;
+let activeStatus = 'all';
+let searchQuery = '';
 
 // Active credit modal state
 let creditTarget = null; // { id, email }
@@ -58,10 +62,20 @@ export function renderAdminUsersView(root, state) {
         </div>
       </div>
 
+      <!-- Bulk Actions Bar -->
+      <div id="bulk-actions-bar" style="display: none; align-items: center; gap: 12px; padding: 8px 12px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; margin-bottom: 12px;">
+        <span style="font-size: 0.8rem; font-weight: 500;"><span id="selected-count">0</span> selected</span>
+        <div style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+          <button id="bulk-activate-btn" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;">Activate</button>
+          <button id="bulk-suspend-btn" class="btn btn-danger" style="padding: 4px 10px; font-size: 0.75rem;">Suspend</button>
+        </div>
+      </div>
+
       <div class="table-container">
         <table class="custom-table">
           <thead>
             <tr>
+              <th style="width: 40px; text-align: center;"><input type="checkbox" id="select-all-users" style="cursor: pointer;"></th>
               <th>Customer</th>
               <th>Balance</th>
               <th>Status</th>
@@ -73,12 +87,21 @@ export function renderAdminUsersView(root, state) {
           </thead>
           <tbody id="customers-tbody">
             <tr>
-              <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+              <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
                 Loading customers...
               </td>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="panel-footer" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="users-pagination-info">Showing 0 customers</div>
+        <div style="display: flex; gap: 8px;">
+          <button id="users-prev-btn" class="btn btn-secondary btn-sm" disabled>Previous</button>
+          <button id="users-next-btn" class="btn btn-secondary btn-sm" disabled>Next</button>
+        </div>
       </div>
     </div>
   `;
@@ -90,27 +113,123 @@ async function initView(state) {
   setupFilters();
   setupSearch();
   setupModals(state);
+  setupBulkActions();
 
-  document.getElementById('refresh-customers-btn').addEventListener('click', () => loadData(state));
+  document.getElementById('refresh-customers-btn').addEventListener('click', () => {
+    currentPage = 1;
+    loadData();
+  });
 
-  await loadData(state);
+  document.getElementById('users-prev-btn').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      loadData();
+    }
+  });
+
+  document.getElementById('users-next-btn').addEventListener('click', () => {
+    currentPage++;
+    loadData();
+  });
+
+  await loadData();
+}
+
+// ─── Bulk Actions ─────────────────────────────────────────────
+function setupBulkActions() {
+  const selectAll = document.getElementById('select-all-users');
+  if (selectAll) {
+    selectAll.addEventListener('change', (e) => {
+      const checked = e.currentTarget.checked;
+      document.querySelectorAll('.user-select-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkActionsBar();
+    });
+  }
+
+  const getSelectedIds = () =>
+    Array.from(document.querySelectorAll('.user-select-checkbox:checked')).map(cb => cb.dataset.id);
+
+  const runBulkStatus = async (status, btn) => {
+    const ids = getSelectedIds();
+    if (ids.length === 0) return showToast('Select at least one customer first', 'error');
+    if (!confirm(`${status === 'suspended' ? 'Suspend' : 'Activate'} ${ids.length} selected account(s)?`)) return;
+
+    btn.disabled = true;
+    try {
+      const res = await adminFetch('/api/admin/users/bulk', {
+        method: 'PATCH',
+        body: JSON.stringify({ ids, status })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        await reloadData();
+      } else {
+        showToast(data.error || 'Failed to update accounts', 'error');
+      }
+    } catch (err) {
+      showToast('Connection error', 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  document.getElementById('bulk-suspend-btn')?.addEventListener('click', (e) => runBulkStatus('suspended', e.currentTarget));
+  document.getElementById('bulk-activate-btn')?.addEventListener('click', (e) => runBulkStatus('active', e.currentTarget));
+}
+
+function updateBulkActionsBar() {
+  const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
+  const bar = document.getElementById('bulk-actions-bar');
+  const countSpan = document.getElementById('selected-count');
+  if (bar && countSpan) {
+    if (checkboxes.length > 0) {
+      bar.style.display = 'flex';
+      countSpan.innerText = checkboxes.length;
+    } else {
+      bar.style.display = 'none';
+    }
+  }
 }
 
 // ─── Load Data ────────────────────────────────────────────────
-async function loadData(state) {
+async function loadData() {
   try {
-    const res = await adminFetch('/api/admin/users');
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: currentLimit.toString(),
+      status: activeStatus,
+      search: searchQuery
+    });
+
+    const res = await adminFetch(`/api/admin/users?${params.toString()}`);
     if (!res.ok) return;
     const data = await res.json();
 
     allCustomers = data.customers;
     platformStats = data.platform_stats;
+    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
-    renderTable(getFilteredCustomers());
+    renderTable(allCustomers);
+    renderPagination(pagination);
   } catch (err) {
     showToast('Failed to load customer data', 'error');
   }
+}
+
+function renderPagination(p) {
+  const info = document.getElementById('users-pagination-info');
+  const prevBtn = document.getElementById('users-prev-btn');
+  const nextBtn = document.getElementById('users-next-btn');
+  if (!info || !prevBtn || !nextBtn) return;
+
+  const start = p.total === 0 ? 0 : (p.page - 1) * p.limit + 1;
+  const end = Math.min(p.page * p.limit, p.total);
+
+  info.textContent = `Showing ${start}-${end} of ${p.total.toLocaleString()} customers (Page ${p.page} of ${p.totalPages})`;
+  prevBtn.disabled = p.page <= 1;
+  nextBtn.disabled = p.page >= p.totalPages;
 }
 
 // ─── Platform Stats ───────────────────────────────────────────
@@ -125,10 +244,14 @@ function renderStats() {
 function renderTable(customers) {
   const tbody = document.getElementById('customers-tbody');
 
+  const selectAllHeader = document.getElementById('select-all-users');
+  if (selectAllHeader) selectAllHeader.checked = false;
+  updateBulkActionsBar();
+
   if (!customers || customers.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+        <td colspan="8" class="text-center" style="color: var(--text-muted); padding: 40px;">
           No customers found.
         </td>
       </tr>
@@ -151,6 +274,9 @@ function renderTable(customers) {
 
     return `
       <tr data-customer-id="${c.id}">
+        <td style="text-align: center; vertical-align: middle;">
+          <input type="checkbox" class="user-select-checkbox" data-id="${c.id}">
+        </td>
         <td>
           <div class="user-avatar-cell">
             <div class="user-avatar-sm">${initials}</div>
@@ -188,6 +314,11 @@ function renderTable(customers) {
 
 // ─── Table Action Handlers ────────────────────────────────────
 function attachTableHandlers() {
+  // Row selection checkboxes
+  document.querySelectorAll('.user-select-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateBulkActionsBar);
+  });
+
   // Credits buttons
   document.querySelectorAll('.action-credits-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -240,38 +371,28 @@ function attachTableHandlers() {
 }
 
 // ─── Filtering & Searching ────────────────────────────────────
-let activeFilter = 'all';
-
 function setupFilters() {
   document.querySelectorAll('.filter-chip[data-filter]').forEach(chip => {
     chip.addEventListener('click', () => {
       document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
-      activeFilter = chip.getAttribute('data-filter');
-      renderTable(getFilteredCustomers());
+      activeStatus = chip.getAttribute('data-filter');
+      currentPage = 1;
+      loadData();
     });
   });
 }
 
 function setupSearch() {
-  document.getElementById('customer-search').addEventListener('input', () => {
-    renderTable(getFilteredCustomers());
+  let timeout;
+  document.getElementById('customer-search').addEventListener('input', (e) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      currentPage = 1;
+      loadData();
+    }, 300);
   });
-}
-
-function getFilteredCustomers() {
-  const query = document.getElementById('customer-search')?.value?.toLowerCase().trim() || '';
-  let list = allCustomers;
-
-  if (activeFilter !== 'all') {
-    list = list.filter(c => c.status === activeFilter);
-  }
-
-  if (query) {
-    list = list.filter(c => c.email.toLowerCase().includes(query));
-  }
-
-  return list;
 }
 
 // ─── Credits Modal ────────────────────────────────────────────
@@ -308,6 +429,8 @@ function setupModals(state) {
     }
 
     const amount = creditSign * rawAmount;
+    if (!confirm(`Apply ${amount > 0 ? '+' : ''}${amount} credits to this account?`)) return;
+
     const btn = document.getElementById('credits-confirm-btn');
     btn.disabled = true;
     btn.textContent = 'Applying...';
@@ -370,13 +493,5 @@ function openDeleteModal({ id, email }) {
 
 // ─── Reload Helper ────────────────────────────────────────────
 async function reloadData() {
-  try {
-    const res = await adminFetch('/api/admin/users');
-    if (!res.ok) return;
-    const data = await res.json();
-    allCustomers = data.customers;
-    platformStats = data.platform_stats;
-    renderStats();
-    renderTable(getFilteredCustomers());
-  } catch (_) {}
+  await loadData();
 }

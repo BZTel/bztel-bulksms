@@ -1,7 +1,11 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allLogs = [];
+let auditStats = { total: 0, security: 0, admin: 0, system: 0 };
+let currentPage = 1;
+let currentLimit = 50;
 let activeFilter = 'all';
+let searchQuery = '';
 
 export function renderAdminAuditLogsView(root, state) {
   root.innerHTML = `
@@ -72,6 +76,15 @@ export function renderAdminAuditLogsView(root, state) {
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination Footer -->
+      <div class="panel-footer" style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-top: 1px solid var(--border-color);">
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="audit-pagination-info">Showing 0 events</div>
+        <div style="display: flex; gap: 8px;">
+          <button id="audit-prev-btn" class="btn btn-secondary btn-sm" disabled>Previous</button>
+          <button id="audit-next-btn" class="btn btn-secondary btn-sm" disabled>Next</button>
+        </div>
+      </div>
     </div>
   `;
 
@@ -82,34 +95,69 @@ async function initView(state) {
   setupFilters();
   setupSearch();
 
-  document.getElementById('refresh-audit-logs-btn').addEventListener('click', () => loadData(state));
-  await loadData(state);
+  document.getElementById('refresh-audit-logs-btn').addEventListener('click', () => {
+    currentPage = 1;
+    loadData();
+  });
+
+  document.getElementById('audit-prev-btn').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      loadData();
+    }
+  });
+
+  document.getElementById('audit-next-btn').addEventListener('click', () => {
+    currentPage++;
+    loadData();
+  });
+
+  await loadData();
 }
 
-async function loadData(state) {
+async function loadData() {
   try {
-    const res = await adminFetch('/api/admin/audit-logs');
+    const params = new URLSearchParams({
+      page: currentPage.toString(),
+      limit: currentLimit.toString(),
+      category: activeFilter,
+      search: searchQuery
+    });
+
+    const res = await adminFetch(`/api/admin/audit-logs?${params.toString()}`);
     if (!res.ok) return;
     const data = await res.json();
     allLogs = data.logs || [];
+    auditStats = data.stats || { total: 0, security: 0, admin: 0, system: 0 };
+    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
-    renderTable(getFilteredLogs());
+    renderTable(allLogs);
+    renderPagination(pagination);
   } catch (err) {
     showToast('Failed to load system audit trail', 'error');
   }
 }
 
 function renderStats() {
-  const total = allLogs.length;
-  const security = allLogs.filter(l => isSecurityAction(l.action)).length;
-  const admin = allLogs.filter(l => isAdminAction(l.action)).length;
-  const system = total - security - admin;
+  document.getElementById('stat-audit-total').textContent = auditStats.total.toLocaleString();
+  document.getElementById('stat-audit-alerts').textContent = auditStats.security.toLocaleString();
+  document.getElementById('stat-audit-admin').textContent = auditStats.admin.toLocaleString();
+  document.getElementById('stat-audit-system').textContent = auditStats.system.toLocaleString();
+}
 
-  document.getElementById('stat-audit-total').textContent = total.toLocaleString();
-  document.getElementById('stat-audit-alerts').textContent = security.toLocaleString();
-  document.getElementById('stat-audit-admin').textContent = admin.toLocaleString();
-  document.getElementById('stat-audit-system').textContent = system.toLocaleString();
+function renderPagination(p) {
+  const info = document.getElementById('audit-pagination-info');
+  const prevBtn = document.getElementById('audit-prev-btn');
+  const nextBtn = document.getElementById('audit-next-btn');
+  if (!info || !prevBtn || !nextBtn) return;
+
+  const start = p.total === 0 ? 0 : (p.page - 1) * p.limit + 1;
+  const end = Math.min(p.page * p.limit, p.total);
+
+  info.textContent = `Showing ${start}-${end} of ${p.total.toLocaleString()} events (Page ${p.page} of ${p.totalPages})`;
+  prevBtn.disabled = p.page <= 1;
+  nextBtn.disabled = p.page >= p.totalPages;
 }
 
 function renderTable(logs) {
@@ -146,7 +194,7 @@ function renderTable(logs) {
       <tr>
         <td style="color: var(--text-muted); font-size: 0.8rem; font-family: monospace;">${timestamp}</td>
         <td>
-          <div style="font-weight: 600; font-size: 0.84rem;">${l.email}</div>
+          <div style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(l.email)}</div>
           <div style="font-size: 0.7rem; color: var(--text-muted);">${l.user_id ? `User ID #${l.user_id}` : 'System Agent'}</div>
         </td>
         <td>
@@ -156,10 +204,10 @@ function renderTable(logs) {
         </td>
         <td>
           <div style="font-size: 0.8rem; color: var(--text-primary); max-width: 420px; white-space: normal; word-break: break-word; line-height: 1.45;">
-            ${l.details}
+            ${escapeHtml(l.details)}
           </div>
         </td>
-        <td style="font-size: 0.78rem; font-family: monospace; color: var(--text-muted);">${l.ip_address}</td>
+        <td style="font-size: 0.78rem; font-family: monospace; color: var(--text-muted);">${escapeHtml(l.ip_address)}</td>
       </tr>
     `;
   }).join('');
@@ -171,38 +219,22 @@ function setupFilters() {
       document.querySelectorAll('.filter-chip[data-filter]').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       activeFilter = chip.getAttribute('data-filter');
-      renderTable(getFilteredLogs());
+      currentPage = 1;
+      loadData();
     });
   });
 }
 
 function setupSearch() {
-  document.getElementById('audit-search').addEventListener('input', () => {
-    renderTable(getFilteredLogs());
+  let timeout;
+  document.getElementById('audit-search').addEventListener('input', (e) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      currentPage = 1;
+      loadData();
+    }, 300);
   });
-}
-
-function getFilteredLogs() {
-  const query = document.getElementById('audit-search')?.value?.toLowerCase().trim() || '';
-  let list = allLogs;
-
-  if (activeFilter === 'security') {
-    list = list.filter(l => isSecurityAction(l.action));
-  } else if (activeFilter === 'admin') {
-    list = list.filter(l => isAdminAction(l.action));
-  } else if (activeFilter === 'system') {
-    list = list.filter(l => !isSecurityAction(l.action) && !isAdminAction(l.action));
-  }
-
-  if (query) {
-    list = list.filter(l =>
-      l.email.toLowerCase().includes(query) ||
-      l.action.toLowerCase().includes(query) ||
-      l.details.toLowerCase().includes(query)
-    );
-  }
-
-  return list;
 }
 
 function isSecurityAction(action) {

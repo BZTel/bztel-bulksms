@@ -139,7 +139,7 @@ function renderKeysList() {
           Created: ${new Date(k.created_at).toLocaleDateString()}
         </span>
       </div>
-      <button class="btn btn-secondary btn-sm revoke-key-btn" data-key-id="${k.id}" style="color: #ef4444; border-color: rgba(239,68,68,0.3); font-size: 0.78rem;">
+      <button class="btn btn-danger btn-sm revoke-key-btn" data-key-id="${k.id}" style="font-size: 0.78rem;">
         Revoke Key
       </button>
     </div>

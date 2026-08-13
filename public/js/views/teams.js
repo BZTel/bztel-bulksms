@@ -96,9 +96,21 @@ function renderTeamTable(members, state) {
   if (members.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="text-center" style="color: var(--text-muted); padding: 20px;">No other team members found.</td>
+        <td colspan="4">
+          <div class="empty-state-container" style="animation: scaleUp 0.2s ease-out; padding:32px 20px;">
+            <div class="empty-state-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <div class="empty-state-title">No Coworkers Yet</div>
+            <div class="empty-state-desc">Invite a coworker using the form to share access to your account.</div>
+            <button id="empty-state-invite-btn" class="btn btn-primary" style="background: var(--accent-color); border-color: var(--accent-color); padding: 10px 24px;">Invite Coworker</button>
+          </div>
+        </td>
       </tr>
     `;
+    document.getElementById('empty-state-invite-btn')?.addEventListener('click', () => document.getElementById('invite-email')?.focus());
     return;
   }
 
@@ -132,7 +144,8 @@ function renderTeamTable(members, state) {
     btn.addEventListener('click', async (e) => {
       const memberId = e.target.getAttribute('data-id');
       const memberEmail = e.target.getAttribute('data-email');
-      
+      if (!confirm(`Remove ${memberEmail} from your team?`)) return;
+
       e.target.disabled = true;
       e.target.innerText = '...';
 

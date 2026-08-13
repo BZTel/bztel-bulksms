@@ -26,3 +26,6 @@ Thumbs.db
 
 # SSH Keys
 *.pem
+
+.vercel
+.env*
