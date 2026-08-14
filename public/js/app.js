@@ -700,19 +700,12 @@ export function loginSuccess(token, user) {
 }
 
 // Logout handler
-export function logout(showMsg = true) {
+export async function logout(showMsg = true) {
   console.log('[logout] Logging out user...');
   const wasLoggedIn = !!state.token;
   state.token = null;
   state.user = null;
   localStorage.removeItem('token');
-
-  // Revoke the httpOnly auth_token cookie server-side; fire-and-forget since we're
-  // navigating to the auth screen regardless of the outcome. Every login (password or
-  // OAuth) sets this cookie, so without clearing it here, fetchUserProfile() on the next
-  // visit succeeds via the cookie even though localStorage's token was removed — logging
-  // the user straight back in.
-  fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
 
   if (state.statsInterval) {
     clearInterval(state.statsInterval);
@@ -720,9 +713,23 @@ export function logout(showMsg = true) {
   }
   disconnectTelemetry();
 
-  showAuthContainer();
+  // Revoke the httpOnly auth_token cookie server-side, then hard-reload the page.
+  // Every login (password or OAuth) sets this cookie, so it must be revoked or
+  // fetchUserProfile() on the next visit logs the user straight back in. The reload
+  // (rather than just showAuthContainer()) is deliberate too: the module-level view
+  // caches added for instant tab repaint (contacts, wallet, sender IDs, admin tables,
+  // etc.) live in JS memory for the page's lifetime and are never explicitly cleared —
+  // without a reload, a different account signing into the same tab afterward would
+  // briefly see the previous user's cached data before fresh fetches overwrite it.
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch (_) {}
+
   if (showMsg && wasLoggedIn) {
     showToast('Logged out successfully', 'info');
+    setTimeout(() => window.location.reload(), 400);
+  } else {
+    window.location.reload();
   }
 }
 

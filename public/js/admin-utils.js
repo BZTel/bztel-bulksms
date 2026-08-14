@@ -88,13 +88,25 @@ export function showToast(message, type = 'info') {
 }
 
 // ─── Logout Helper ────────────────────────────────────────────
-export function adminLogout(showMsg = true) {
+export async function adminLogout(showMsg = true) {
   state.adminUser = null;
-  // Revoke the httpOnly session cookie server-side; fire-and-forget since we're navigating to
-  // the login screen regardless of the outcome.
-  fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
-  showAdminLoginUI();
-  if (showMsg) showToast('Signed out successfully', 'info');
+
+  // Revoke the httpOnly session cookie server-side, then hard-reload the page. The
+  // reload (rather than just showAdminLoginUI()) is deliberate: every admin view's
+  // module-level cache added for instant tab repaint (users, transactions, tickets,
+  // sender IDs, etc.) lives in JS memory for the page's lifetime and is never
+  // explicitly cleared — without a reload, a different admin signing into the same tab
+  // afterward would briefly see the previous admin's cached data.
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } catch (_) {}
+
+  if (showMsg) {
+    showToast('Signed out successfully', 'info');
+    setTimeout(() => window.location.reload(), 400);
+  } else {
+    window.location.reload();
+  }
 }
 
 export function showAdminLoginUI() {
