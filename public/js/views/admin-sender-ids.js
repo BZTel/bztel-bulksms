@@ -2,6 +2,7 @@ import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin
 
 let allSenderIds = [];
 let senderIdStats = { total: 0, pending: 0, approved: 0, rejected: 0 };
+let lastPagination = null;
 let currentPage = 1;
 let currentLimit = 50;
 let activeStatus = 'all';
@@ -125,6 +126,13 @@ async function initView(state) {
     loadData();
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allSenderIds.length > 0 && lastPagination) {
+    renderStats();
+    renderTable(allSenderIds);
+    renderPagination(lastPagination);
+  }
   await loadData();
 }
 
@@ -201,11 +209,11 @@ async function loadData() {
 
     allSenderIds = data.sender_ids || [];
     senderIdStats = data.stats || { total: 0, pending: 0, approved: 0, rejected: 0 };
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
     renderTable(allSenderIds);
-    renderPagination(pagination);
+    renderPagination(lastPagination);
   } catch (err) {
     showToast('Failed to load Sender ID requests', 'error');
   }

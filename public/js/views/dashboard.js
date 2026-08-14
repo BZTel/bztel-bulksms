@@ -1,4 +1,4 @@
-import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView, escapeHtml } from '../app.js';
+import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView, escapeHtml, getViewCache, setViewCache } from '../app.js';
 
 export function renderDashboardView(container, state) {
   const dismissedUpdate = localStorage.getItem('dismissed-banner-update') === 'true';
@@ -225,7 +225,15 @@ async function initDashboard(state) {
     });
   }
 
-  await loadDashboardData(state);
+  // Paint instantly from the last-known data (if still fresh) instead of showing the
+  // "0"/"—" placeholders while the network round-trip completes, then silently revalidate.
+  const cached = getViewCache('dashboard');
+  if (cached) {
+    paintDashboard(state, cached);
+    loadDashboardData(state, true);
+  } else {
+    await loadDashboardData(state);
+  }
 
   // Poll every 5s silently
   state.statsInterval = setInterval(() => {
@@ -244,115 +252,125 @@ async function loadDashboardData(state, silent = false) {
 
     if (!isCurrentView('dashboard')) return;
 
-    // ── SMS Stats ──────────────────────────────────────────────────
-    if (statsRes.ok) {
-      const stats = await statsRes.json();
-      if (!isCurrentView('dashboard')) return;
-      state.user.balance = stats.balance;
-      updateUIHeader();
+    const data = {};
+    if (statsRes.ok) data.stats = await statsRes.json();
+    if (contactsRes.ok) data.contactsPayload = await contactsRes.json();
+    if (txRes.ok) data.txPayload = await txRes.json();
 
-      // KPIs
-      document.getElementById('kpi-campaigns').innerText = (stats.total_sent + stats.total_failed + stats.total_pending) > 0 ? '1' : '0';
-      document.getElementById('kpi-credits-used').innerText = stats.total_credits_used?.toLocaleString() ?? '0';
+    if (!isCurrentView('dashboard')) return;
 
-      // Delivery summary mini-stats
-      document.getElementById('del-sent').innerText = stats.total_sent.toLocaleString();
-      document.getElementById('del-failed').innerText = stats.total_failed.toLocaleString();
-      document.getElementById('del-pending').innerText = stats.total_pending.toLocaleString();
-
-      // Delivery recent logs
-      const logsEl = document.getElementById('delivery-recent-logs');
-      if (stats.total_sent + stats.total_failed + stats.total_pending === 0) {
-        logsEl.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:12px 0;">No data available</p>`;
-      } else {
-        logsEl.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:var(--text-muted);padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
-            <span>Delivery Rate</span>
-            <span style="font-weight:700;color:var(--text-primary);">${
-              (stats.total_sent + stats.total_failed) > 0
-                ? Math.round((stats.total_sent / (stats.total_sent + stats.total_failed)) * 100)
-                : 100
-            }%</span>
-          </div>
-        `;
-      }
-
-      // Onboarding: mark SMS step done if any sent
-      if (stats.total_sent > 0 || stats.total_pending > 0) {
-        markStepDone('step-sms');
-      }
-
-      // Campaign count — count as 1 per batch of activity days
-      const dayCount = stats.chart_data ? stats.chart_data.filter(d => d.count > 0).length : 0;
-      document.getElementById('kpi-campaigns').innerText = dayCount.toLocaleString();
-
-      // Day-over-day trend badges, derived from the last 2 days of the existing 7-day
-      // chart_data — today's messages/credits vs yesterday's, not the headline totals
-      // above (which are lifetime/windowed figures with no natural "yesterday" to diff).
-      if (stats.chart_data && stats.chart_data.length >= 2) {
-        const today = stats.chart_data[stats.chart_data.length - 1];
-        const yesterday = stats.chart_data[stats.chart_data.length - 2];
-        renderDeltaBadge('kpi-campaigns-delta', today.count, yesterday.count);
-        renderDeltaBadge('kpi-credits-used-delta', today.credits, yesterday.credits);
-      }
-    }
-
-    if (contactsRes.ok) {
-      const { contacts, total_yesterday } = await contactsRes.json();
-
-      document.getElementById('kpi-contacts').innerText = contacts.length.toLocaleString();
-      if (typeof total_yesterday === 'number') {
-        renderDeltaBadge('kpi-contacts-delta', contacts.length, total_yesterday);
-      }
-
-      if (contacts.length > 0) markStepDone('step-contacts');
-    }
-
-    // ── Billing / Transactions ─────────────────────────────────────
-    if (txRes.ok) {
-      const { transactions, summary } = await txRes.json();
-
-      document.getElementById('billing-credited').innerText = summary.total_credited.toLocaleString();
-      document.getElementById('billing-spent').innerText = summary.total_debited.toLocaleString();
-
-      const recentEl = document.getElementById('billing-recent-tx');
-      const purchases = transactions.filter(t => t.amount > 0).slice(0, 3);
-      if (purchases.length === 0) {
-        recentEl.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:12px 0;">No data available</p>`;
-      } else {
-        recentEl.innerHTML = `
-          <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;">
-            <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Recent Transactions</div>
-            ${purchases.map(tx => {
-              const date = new Date(tx.created_at);
-              const label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-              const amt = tx.amount > 0 ? `<span style="color:#10b981;font-weight:700;">+${tx.amount.toLocaleString()}</span>` : `<span style="color:#ef4444;font-weight:700;">${tx.amount.toLocaleString()}</span>`;
-              return `
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;">
-                  <span style="color:var(--text-secondary);">${escapeHtml(tx.description)}</span>
-                  <div style="display:flex;gap:12px;align-items:center;">
-                    <span style="color:var(--text-muted);font-size:0.72rem;">${label}</span>
-                    ${amt}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-      }
-
-      // Onboarding: top-up done if any credits purchased
-      if (summary.total_credited > 10) { // >10 means they topped up beyond signup bonus
-        markStepDone('step-topup');
-      }
-    }
-
-    // Update onboarding progress
-    updateOnboardingProgress();
-
+    setViewCache('dashboard', data);
+    paintDashboard(state, data);
   } catch (error) {
     if (!silent) showToast('Error loading dashboard data', 'error');
   }
+}
+
+function paintDashboard(state, data) {
+  // ── SMS Stats ──────────────────────────────────────────────────
+  if (data.stats) {
+    const stats = data.stats;
+    state.user.balance = stats.balance;
+    updateUIHeader();
+
+    // KPIs
+    document.getElementById('kpi-campaigns').innerText = (stats.total_sent + stats.total_failed + stats.total_pending) > 0 ? '1' : '0';
+    document.getElementById('kpi-credits-used').innerText = stats.total_credits_used?.toLocaleString() ?? '0';
+
+    // Delivery summary mini-stats
+    document.getElementById('del-sent').innerText = stats.total_sent.toLocaleString();
+    document.getElementById('del-failed').innerText = stats.total_failed.toLocaleString();
+    document.getElementById('del-pending').innerText = stats.total_pending.toLocaleString();
+
+    // Delivery recent logs
+    const logsEl = document.getElementById('delivery-recent-logs');
+    if (stats.total_sent + stats.total_failed + stats.total_pending === 0) {
+      logsEl.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:12px 0;">No data available</p>`;
+    } else {
+      logsEl.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.8rem;color:var(--text-muted);padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
+          <span>Delivery Rate</span>
+          <span style="font-weight:700;color:var(--text-primary);">${
+            (stats.total_sent + stats.total_failed) > 0
+              ? Math.round((stats.total_sent / (stats.total_sent + stats.total_failed)) * 100)
+              : 100
+          }%</span>
+        </div>
+      `;
+    }
+
+    // Onboarding: mark SMS step done if any sent
+    if (stats.total_sent > 0 || stats.total_pending > 0) {
+      markStepDone('step-sms');
+    }
+
+    // Campaign count — count as 1 per batch of activity days
+    const dayCount = stats.chart_data ? stats.chart_data.filter(d => d.count > 0).length : 0;
+    document.getElementById('kpi-campaigns').innerText = dayCount.toLocaleString();
+
+    // Day-over-day trend badges, derived from the last 2 days of the existing 7-day
+    // chart_data — today's messages/credits vs yesterday's, not the headline totals
+    // above (which are lifetime/windowed figures with no natural "yesterday" to diff).
+    if (stats.chart_data && stats.chart_data.length >= 2) {
+      const today = stats.chart_data[stats.chart_data.length - 1];
+      const yesterday = stats.chart_data[stats.chart_data.length - 2];
+      renderDeltaBadge('kpi-campaigns-delta', today.count, yesterday.count);
+      renderDeltaBadge('kpi-credits-used-delta', today.credits, yesterday.credits);
+    }
+  }
+
+  if (data.contactsPayload) {
+    const { contacts, total_yesterday } = data.contactsPayload;
+
+    document.getElementById('kpi-contacts').innerText = contacts.length.toLocaleString();
+    if (typeof total_yesterday === 'number') {
+      renderDeltaBadge('kpi-contacts-delta', contacts.length, total_yesterday);
+    }
+
+    if (contacts.length > 0) markStepDone('step-contacts');
+  }
+
+  // ── Billing / Transactions ─────────────────────────────────────
+  if (data.txPayload) {
+    const { transactions, summary } = data.txPayload;
+
+    document.getElementById('billing-credited').innerText = summary.total_credited.toLocaleString();
+    document.getElementById('billing-spent').innerText = summary.total_debited.toLocaleString();
+
+    const recentEl = document.getElementById('billing-recent-tx');
+    const purchases = transactions.filter(t => t.amount > 0).slice(0, 3);
+    if (purchases.length === 0) {
+      recentEl.innerHTML = `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:12px 0;">No data available</p>`;
+    } else {
+      recentEl.innerHTML = `
+        <div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:10px;">
+          <div style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Recent Transactions</div>
+          ${purchases.map(tx => {
+            const date = new Date(tx.created_at);
+            const label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            const amt = tx.amount > 0 ? `<span style="color:#10b981;font-weight:700;">+${tx.amount.toLocaleString()}</span>` : `<span style="color:#ef4444;font-weight:700;">${tx.amount.toLocaleString()}</span>`;
+            return `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;">
+                <span style="color:var(--text-secondary);">${escapeHtml(tx.description)}</span>
+                <div style="display:flex;gap:12px;align-items:center;">
+                  <span style="color:var(--text-muted);font-size:0.72rem;">${label}</span>
+                  ${amt}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // Onboarding: top-up done if any credits purchased
+    if (summary.total_credited > 10) { // >10 means they topped up beyond signup bonus
+      markStepDone('step-topup');
+    }
+  }
+
+  // Update onboarding progress
+  updateOnboardingProgress();
 }
 
 // Renders a "↑12% vs yesterday" / "↓5% vs yesterday" badge. Handles the zero-yesterday

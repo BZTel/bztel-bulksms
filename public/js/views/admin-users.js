@@ -2,6 +2,7 @@ import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin
 
 let allCustomers = [];
 let platformStats = {};
+let lastPagination = null;
 let currentPage = 1;
 let currentLimit = 50;
 let activeStatus = 'all';
@@ -132,6 +133,13 @@ async function initView(state) {
     loadData();
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allCustomers.length > 0 && lastPagination) {
+    renderStats();
+    renderTable(allCustomers);
+    renderPagination(lastPagination);
+  }
   await loadData();
 }
 
@@ -208,11 +216,11 @@ async function loadData() {
 
     allCustomers = data.customers;
     platformStats = data.platform_stats;
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
     renderTable(allCustomers);
-    renderPagination(pagination);
+    renderPagination(lastPagination);
   } catch (err) {
     showToast('Failed to load customer data', 'error');
   }

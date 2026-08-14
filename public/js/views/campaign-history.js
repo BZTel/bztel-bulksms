@@ -479,6 +479,10 @@ async function initVoiceHistoryView() {
   const searchInput = document.getElementById('voice-log-search');
   const statusSelect = document.getElementById('voice-log-status');
 
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (voiceLogsCache.length > 0) renderVoiceLogsTable(voiceLogsCache);
+
   try {
     const res = await apiFetch('/api/voice/history');
     if (!res.ok) {

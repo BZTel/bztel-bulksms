@@ -624,9 +624,18 @@ function setupGlobalViewListeners() {
 }
 
 // ── SMS Templates Tab Loader ──────────────────────────────────────────
+let cachedUserTemplates = null; // null = never successfully fetched yet
+
 async function loadTemplates(query = '') {
   const container = document.getElementById('sms-tab-content');
-  container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--text-muted);">Loading message templates library...</div>`;
+
+  if (cachedUserTemplates === null) {
+    container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--text-muted);">Loading message templates library...</div>`;
+  } else {
+    // Paint instantly from the last-known list instead of a loading flash, then
+    // silently revalidate below.
+    renderTemplatesGrid(cachedUserTemplates, query);
+  }
 
   try {
     let userTemplates = [];
@@ -648,8 +657,21 @@ async function loadTemplates(query = '') {
       console.warn('Failed to load custom user templates:', err);
     }
 
-    // Format system templates
-    const sysTemplates = SYSTEM_TEMPLATES.map(t => ({
+    cachedUserTemplates = userTemplates;
+    renderTemplatesGrid(userTemplates, query);
+  } catch (error) {
+    console.error('Load templates error:', error);
+    if (cachedUserTemplates === null) {
+      container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Error loading templates.</div>`;
+    }
+  }
+}
+
+function renderTemplatesGrid(userTemplates, query) {
+  const container = document.getElementById('sms-tab-content');
+
+  // Format system templates
+  const sysTemplates = SYSTEM_TEMPLATES.map(t => ({
       id: t.id,
       category: t.category,
       title: t.title,
@@ -836,11 +858,6 @@ async function loadTemplates(query = '') {
     document.querySelectorAll('.delete-template-btn').forEach(btn => {
       btn.addEventListener('click', handleDeleteTemplateClick);
     });
-
-  } catch (error) {
-    console.error('Load templates error:', error);
-    container.innerHTML = `<div class="text-center" style="padding: 40px; color: var(--error-color);">Error loading templates.</div>`;
-  }
 }
 
 function bindCategoryChipEvents() {

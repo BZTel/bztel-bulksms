@@ -1,5 +1,7 @@
 import { apiFetch, showToast, escapeHtml } from '../app.js';
 
+let cachedMembers = [];
+
 export function renderTeamsView(root, state) {
   root.innerHTML = `
     <div class="composer-layout">
@@ -66,6 +68,10 @@ export function renderTeamsView(root, state) {
 }
 
 async function initTeamsView(state) {
+  // Paint instantly from the last-known member list (if any) instead of showing the
+  // loading placeholder every time this view is revisited, then silently revalidate.
+  if (cachedMembers.length > 0) renderTeamTable(cachedMembers, state);
+
   await loadTeamMembers(state);
   setupInviteForm(state);
 }
@@ -74,18 +80,21 @@ async function loadTeamMembers(state) {
   try {
     const res = await apiFetch('/api/teams');
     if (!res.ok) {
-      document.getElementById('team-members-tbody').innerHTML = `
-        <tr>
-          <td colspan="4" class="text-center" style="color: var(--error-color); padding: 20px;">Error loading team members.</td>
-        </tr>
-      `;
+      if (cachedMembers.length === 0) {
+        document.getElementById('team-members-tbody').innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center" style="color: var(--error-color); padding: 20px;">Error loading team members.</td>
+          </tr>
+        `;
+      }
       return;
     }
 
     const data = await res.json();
-    renderTeamTable(data.members || [], state);
+    cachedMembers = data.members || [];
+    renderTeamTable(cachedMembers, state);
   } catch (err) {
-    showToast('Connection error loading team', 'error');
+    if (cachedMembers.length === 0) showToast('Connection error loading team', 'error');
   }
 }
 

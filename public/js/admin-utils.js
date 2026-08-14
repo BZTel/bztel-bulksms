@@ -12,8 +12,25 @@ export const state = {
   adminUser: null,
   // Set immediately before navigating to the 'customer-profile' view; read by
   // admin-customer-profile.js once rendered. { id, email }
-  customerProfileTarget: null
+  customerProfileTarget: null,
+  viewCache: {}
 };
+
+// ─── View Data Cache ────────────────────────────────────────────
+// Lets a view paint instantly from the last-known data when the admin navigates back to it,
+// instead of showing a loading state and re-fetching from scratch every time. Callers should
+// still kick off a background refetch to keep the cached entry from going stale.
+const VIEW_CACHE_TTL_MS = 20000;
+
+export function getViewCache(key) {
+  const entry = state.viewCache[key];
+  if (!entry || (Date.now() - entry.timestamp) > VIEW_CACHE_TTL_MS) return null;
+  return entry.data;
+}
+
+export function setViewCache(key, data) {
+  state.viewCache[key] = { data, timestamp: Date.now() };
+}
 
 // ─── Cross-view navigation ─────────────────────────────────────
 // View files don't import admin.js's router directly (that would create a static import

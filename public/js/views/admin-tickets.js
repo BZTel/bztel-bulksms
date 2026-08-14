@@ -2,6 +2,7 @@ import { adminFetch, showToast, escapeHtml, openCustomerProfile } from '../admin
 
 let allTickets = [];
 let ticketStats = { total: 0, active: 0, resolved: 0, high: 0 };
+let lastPagination = null;
 let currentPage = 1;
 let currentLimit = 50;
 let activeStatus = 'all';
@@ -131,6 +132,13 @@ async function initView(state) {
     loadData();
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allTickets.length > 0 && lastPagination) {
+    renderStats();
+    renderTable(allTickets);
+    renderPagination(lastPagination);
+  }
   await loadData();
 }
 
@@ -202,11 +210,11 @@ async function loadData() {
     const data = await res.json();
     allTickets = data.tickets || [];
     ticketStats = data.stats || { total: 0, active: 0, resolved: 0, high: 0 };
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
     renderTable(allTickets);
-    renderPagination(pagination);
+    renderPagination(lastPagination);
   } catch (err) {
     showToast('Failed to load support tickets', 'error');
   }

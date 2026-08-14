@@ -2,6 +2,7 @@ import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allMessages = [];
 let messageStats = { total: 0 };
+let lastPagination = null;
 let currentPage = 1;
 let currentLimit = 50;
 let searchQuery = '';
@@ -99,6 +100,13 @@ async function initView(state) {
     loadData();
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allMessages.length > 0 && lastPagination) {
+    renderStats();
+    renderTable(allMessages);
+    renderPagination(lastPagination);
+  }
   await loadData();
 }
 
@@ -167,11 +175,11 @@ async function loadData() {
     const data = await res.json();
     allMessages = data.contact_messages || [];
     messageStats = data.stats || { total: 0 };
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
     renderTable(allMessages);
-    renderPagination(pagination);
+    renderPagination(lastPagination);
   } catch (err) {
     showToast('Failed to load website inquiries', 'error');
   }

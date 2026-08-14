@@ -4,6 +4,8 @@ let currentPage = 1;
 let currentLimit = 50;
 let activeType = 'all';
 let searchQuery = '';
+let cachedTransactions = [];
+let lastPagination = null;
 
 export function renderAdminTransactionsView(root, state) {
   root.innerHTML = `
@@ -116,6 +118,13 @@ async function initView(state) {
     loadData(state);
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (cachedTransactions.length > 0 && lastPagination) {
+    renderTable(cachedTransactions);
+    renderPagination(lastPagination);
+    updateStats(cachedTransactions);
+  }
   await loadData(state);
 }
 
@@ -132,12 +141,12 @@ async function loadData(state) {
     if (!res.ok) return;
     const data = await res.json();
 
-    const transactions = data.transactions || [];
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    cachedTransactions = data.transactions || [];
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
-    renderTable(transactions);
-    renderPagination(pagination);
-    updateStats(transactions);
+    renderTable(cachedTransactions);
+    renderPagination(lastPagination);
+    updateStats(cachedTransactions);
   } catch (err) {
     showToast('Failed to load transaction ledger', 'error');
   }

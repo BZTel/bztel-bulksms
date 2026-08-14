@@ -1,5 +1,7 @@
 import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
+let cachedProfile = null; // { targetId, customer, logs, transactions, tickets, senderIds }
+
 export function renderAdminCustomerProfileView(root, state) {
   const target = state.customerProfileTarget;
 
@@ -85,6 +87,16 @@ export function renderAdminCustomerProfileView(root, state) {
     document.querySelector('.nav-item[data-view="users"]')?.click();
   });
 
+  // Paint instantly from the last-known snapshot (if it's the same customer) instead of
+  // showing the loading placeholders every time this profile is revisited, then revalidate.
+  if (cachedProfile && cachedProfile.targetId === target.id) {
+    renderHeader(cachedProfile.customer);
+    renderSmsTable(cachedProfile.logs);
+    renderTxTable(cachedProfile.transactions);
+    renderTicketsTable(cachedProfile.tickets);
+    renderSenderIdsTable(cachedProfile.senderIds);
+  }
+
   loadProfile(target);
 }
 
@@ -96,10 +108,14 @@ async function loadProfile(target) {
     adminFetch(`/api/admin/sender-ids?search=${encodeURIComponent(target.email)}&limit=20`),
   ]);
 
+  const snapshot = { targetId: target.id, customer: null, logs: [], transactions: [], tickets: [], senderIds: [] };
+
   if (userRes.status === 'fulfilled' && userRes.value.ok) {
     const data = await userRes.value.json();
-    renderHeader(data.customer);
-    renderSmsTable(data.recent_logs || []);
+    snapshot.customer = data.customer;
+    snapshot.logs = data.recent_logs || [];
+    renderHeader(snapshot.customer);
+    renderSmsTable(snapshot.logs);
   } else {
     document.getElementById('profile-header-panel').innerHTML = `
       <div style="text-align: center; color: var(--error-color); padding: 20px;">Failed to load customer profile.</div>
@@ -108,22 +124,27 @@ async function loadProfile(target) {
   }
 
   if (txRes.status === 'fulfilled' && txRes.value.ok) {
-    renderTxTable((await txRes.value.json()).transactions || []);
+    snapshot.transactions = (await txRes.value.json()).transactions || [];
+    renderTxTable(snapshot.transactions);
   } else {
     renderTableError('profile-tx-tbody', 5, 'Failed to load transactions');
   }
 
   if (ticketRes.status === 'fulfilled' && ticketRes.value.ok) {
-    renderTicketsTable((await ticketRes.value.json()).tickets || []);
+    snapshot.tickets = (await ticketRes.value.json()).tickets || [];
+    renderTicketsTable(snapshot.tickets);
   } else {
     renderTableError('profile-tickets-tbody', 4, 'Failed to load support tickets');
   }
 
   if (senderRes.status === 'fulfilled' && senderRes.value.ok) {
-    renderSenderIdsTable((await senderRes.value.json()).sender_ids || []);
+    snapshot.senderIds = (await senderRes.value.json()).sender_ids || [];
+    renderSenderIdsTable(snapshot.senderIds);
   } else {
     renderTableError('profile-sender-ids-tbody', 3, 'Failed to load Sender ID requests');
   }
+
+  if (snapshot.customer) cachedProfile = snapshot;
 }
 
 function renderTableError(tbodyId, colspan, message) {

@@ -2,6 +2,7 @@ import { apiFetch, showToast, updateUIHeader, navigateTo, isCurrentView, escapeH
 
 let allTransactions = [];
 let activeFilter = 'all';
+let lastWalletPayload = null;
 
 // ── Wallet Overview Dashboard View ──────────────────────────────────────
 export function renderWalletView(root, state) {
@@ -137,6 +138,10 @@ export function renderWalletView(root, state) {
   document.getElementById('wallet-topup-btn')?.addEventListener('click', () => navigateTo('buy-credits'));
   document.getElementById('view-full-statement-btn')?.addEventListener('click', () => navigateTo('transactions'));
 
+  // Paint instantly from the last-known data (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (lastWalletPayload) applyWalletData(lastWalletPayload);
+
   loadWalletData();
 }
 
@@ -183,6 +188,25 @@ export function renderTransactionsView(root, state) {
   `;
 
   document.getElementById('tx-topup-btn')?.addEventListener('click', () => navigateTo('buy-credits'));
+
+  // Filter chip listeners — bound once per mount (this is fresh DOM from the innerHTML
+  // above), reading allTransactions/activeFilter at click time rather than at fetch time.
+  const filterBar = document.getElementById('tx-filter-bar');
+  if (filterBar) {
+    filterBar.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', (e) => {
+        filterBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+        activeFilter = e.currentTarget.getAttribute('data-filter');
+        renderTable(getFiltered());
+      });
+    });
+  }
+
+  // Paint instantly from the last-known data (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (lastWalletPayload) applyWalletData(lastWalletPayload);
+
   loadWalletData();
 }
 
@@ -193,6 +217,15 @@ async function loadWalletData(silent = false) {
     if (!res.ok) throw new Error();
 
     const data = await res.json();
+    lastWalletPayload = data;
+    applyWalletData(data);
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    if (!silent && !lastWalletPayload) showToast('Failed to load wallet data', 'error');
+  }
+}
+
+function applyWalletData(data) {
     const balance = data.balance !== undefined ? data.balance : (state.user?.balance || 0);
     const credited = data.credited !== undefined ? data.credited : (data.summary?.total_credited || 0);
     const debited = data.debited !== undefined ? data.debited : (data.summary?.total_debited || 0);
@@ -263,24 +296,7 @@ async function loadWalletData(silent = false) {
 
     allTransactions = transactions;
 
-    // Filter Listeners
-    const filterBar = document.getElementById('tx-filter-bar');
-    if (filterBar) {
-      filterBar.querySelectorAll('.filter-chip').forEach(chip => {
-        chip.addEventListener('click', (e) => {
-          filterBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-          e.currentTarget.classList.add('active');
-          activeFilter = e.currentTarget.getAttribute('data-filter');
-          renderTable(getFiltered());
-        });
-      });
-    }
-
     renderTable(getFiltered());
-  } catch (err) {
-    if (err.name === 'AbortError') return;
-    if (!silent) showToast('Failed to load wallet data', 'error');
-  }
 }
 
 function getFiltered() {

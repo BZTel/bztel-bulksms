@@ -1,5 +1,7 @@
 import { apiFetch, showToast, escapeHtml } from '../app.js';
 
+let cachedTickets = [];
+
 export function renderHelpView(root, state) {
   root.innerHTML = `
     <div class="composer-layout">
@@ -117,6 +119,11 @@ export function renderHelpView(root, state) {
 async function initHelpView() {
   setupTicketForm();
   setupChatSimulation();
+
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (cachedTickets.length > 0) renderTicketsList(cachedTickets);
+
   await loadSupportTickets();
 }
 
@@ -127,19 +134,32 @@ async function loadSupportTickets() {
   try {
     const res = await apiFetch('/api/support/tickets');
     if (!res.ok) {
-      container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 15px;">Error loading tickets</div>`;
+      if (cachedTickets.length === 0) {
+        container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 15px;">Error loading tickets</div>`;
+      }
       return;
     }
 
     const data = await res.json();
-    const tickets = data.tickets || [];
-
-    if (tickets.length === 0) {
-      container.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 15px; font-size: 0.8rem;">You have no open tickets.</div>`;
-      return;
+    cachedTickets = data.tickets || [];
+    renderTicketsList(cachedTickets);
+  } catch (err) {
+    if (cachedTickets.length === 0) {
+      container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 15px;">Connection error</div>`;
     }
+  }
+}
 
-    container.innerHTML = tickets.map(t => {
+function renderTicketsList(tickets) {
+  const container = document.getElementById('support-tickets-list');
+  if (!container) return;
+
+  if (tickets.length === 0) {
+    container.innerHTML = `<div class="text-center" style="color: var(--text-muted); padding: 15px; font-size: 0.8rem;">You have no open tickets.</div>`;
+    return;
+  }
+
+  container.innerHTML = tickets.map(t => {
       let badgeClass = 'badge-pending';
       if (t.status.toLowerCase() === 'closed') {
         badgeClass = 'badge-failed';
@@ -168,9 +188,6 @@ async function loadSupportTickets() {
         </div>
       `;
     }).join('');
-  } catch (err) {
-    container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 15px;">Connection error</div>`;
-  }
 }
 
 function setupTicketForm() {

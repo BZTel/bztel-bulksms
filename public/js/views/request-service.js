@@ -1,5 +1,7 @@
 import { apiFetch, showToast, escapeHtml } from '../app.js';
 
+let cachedRequests = [];
+
 export function renderRequestServiceView(root, state) {
   root.innerHTML = `
     <div class="composer-layout">
@@ -64,6 +66,11 @@ export function renderRequestServiceView(root, state) {
 
 async function initRequestServiceView(state) {
   setupRequestForm(state);
+
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (cachedRequests.length > 0) renderRequestsList(cachedRequests);
+
   await loadServiceRequests();
 }
 
@@ -74,40 +81,49 @@ async function loadServiceRequests() {
   try {
     const res = await apiFetch('/api/support/services');
     if (!res.ok) {
-      container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 20px;">Error loading requests</div>`;
+      if (cachedRequests.length === 0) {
+        container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 20px;">Error loading requests</div>`;
+      }
       return;
     }
 
     const data = await res.json();
-    const requests = data.requests || [];
-
-    if (requests.length === 0) {
-      container.innerHTML = `
-        <div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.85rem;">
-          You have no active custom service requests.
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = requests.map(r => {
-      return `
-        <div class="activity-item" style="padding: 12px; flex-direction: column; align-items: flex-start; gap: 6px;">
-          <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-            <strong style="font-size: 0.88rem; max-width:180px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(r.service_type)}</strong>
-            <span class="badge badge-pending" style="font-size: 0.65rem;">${escapeHtml(r.status)}</span>
-          </div>
-          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
-            Representative: ${escapeHtml(r.rep_name)} (${escapeHtml(r.phone)})
-          </p>
-          <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(r.created_at).toLocaleDateString()}</span>
-        </div>
-      `;
-    }).join('');
-
+    cachedRequests = data.requests || [];
+    renderRequestsList(cachedRequests);
   } catch (err) {
-    container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 20px;">Connection error</div>`;
+    if (cachedRequests.length === 0) {
+      container.innerHTML = `<div class="text-center" style="color: var(--error-color); padding: 20px;">Connection error</div>`;
+    }
   }
+}
+
+function renderRequestsList(requests) {
+  const container = document.getElementById('service-requests-list');
+  if (!container) return;
+
+  if (requests.length === 0) {
+    container.innerHTML = `
+      <div class="text-center" style="color: var(--text-muted); padding: 20px; font-size: 0.85rem;">
+        You have no active custom service requests.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = requests.map(r => {
+    return `
+      <div class="activity-item" style="padding: 12px; flex-direction: column; align-items: flex-start; gap: 6px;">
+        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+          <strong style="font-size: 0.88rem; max-width:180px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(r.service_type)}</strong>
+          <span class="badge badge-pending" style="font-size: 0.65rem;">${escapeHtml(r.status)}</span>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 2px;">
+          Representative: ${escapeHtml(r.rep_name)} (${escapeHtml(r.phone)})
+        </p>
+        <span style="font-size: 0.7rem; color: var(--text-muted);">${new Date(r.created_at).toLocaleDateString()}</span>
+      </div>
+    `;
+  }).join('');
 }
 
 function setupRequestForm(state) {

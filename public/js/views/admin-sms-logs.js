@@ -1,4 +1,4 @@
-import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
+import { adminFetch, showToast, escapeHtml, getViewCache, setViewCache } from '../admin-utils.js';
 
 let currentPage = 1;
 let currentLimit = 50;
@@ -96,26 +96,44 @@ async function initView(state) {
   await loadData(state);
 }
 
-async function loadData(state) {
-  try {
-    const params = new URLSearchParams({
-      page: currentPage.toString(),
-      limit: currentLimit.toString(),
-      status: activeStatus,
-      search: searchQuery
-    });
+function currentParamsKey() {
+  return new URLSearchParams({
+    page: currentPage.toString(),
+    limit: currentLimit.toString(),
+    status: activeStatus,
+    search: searchQuery
+  }).toString();
+}
 
-    const res = await adminFetch(`/api/admin/sms-logs?${params.toString()}`);
+function applyData(data) {
+  currentLogs = data.logs || [];
+  const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+
+  renderTable(currentLogs);
+  renderPagination(pagination);
+}
+
+async function loadData(state) {
+  const paramsKey = currentParamsKey();
+  const cacheKey = `admin-sms-logs:${paramsKey}`;
+
+  // Paint instantly from the last-known page of results (if still fresh), then silently
+  // revalidate, instead of showing "Loading..." every time this page is revisited.
+  const cached = getViewCache(cacheKey);
+  if (cached) applyData(cached);
+
+  try {
+    const res = await adminFetch(`/api/admin/sms-logs?${paramsKey}`);
     if (!res.ok) return;
     const data = await res.json();
 
-    currentLogs = data.logs || [];
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    // Filters/page changed while this request was in flight — discard the stale response.
+    if (currentParamsKey() !== paramsKey) return;
 
-    renderTable(currentLogs);
-    renderPagination(pagination);
+    setViewCache(cacheKey, data);
+    applyData(data);
   } catch (err) {
-    showToast('Failed to load SMS dispatch logs', 'error');
+    if (!cached) showToast('Failed to load SMS dispatch logs', 'error');
   }
 }
 

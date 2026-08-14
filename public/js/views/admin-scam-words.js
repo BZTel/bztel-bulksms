@@ -154,6 +154,12 @@ export function renderAdminScamWordsView(root, state) {
   `;
 
   setupEventListeners();
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (scamWordsState.length > 0) {
+    document.getElementById('stat-scam-count').textContent = scamWordsState.length.toLocaleString();
+    renderTable(scamWordsState);
+  }
   loadScamWords();
 }
 

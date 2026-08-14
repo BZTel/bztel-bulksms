@@ -1,4 +1,4 @@
-import { adminFetch, showToast } from '../admin-utils.js';
+import { adminFetch, showToast, getViewCache, setViewCache } from '../admin-utils.js';
 
 export function renderAdminDashboardView(root, state) {
   root.innerHTML = `
@@ -130,89 +130,102 @@ async function initView(state) {
     document.querySelector('.nav-item[data-view="scam-words"]')?.click();
   });
 
-  await loadData(state);
+  // Paint instantly from the last-known stats (if still fresh), then silently revalidate,
+  // instead of showing placeholders every time this page is revisited.
+  const cached = getViewCache('admin-dashboard');
+  if (cached) {
+    applyData(cached);
+    loadData(state, true);
+  } else {
+    await loadData(state);
+  }
 }
 
-async function loadData(state) {
+async function loadData(state, silent = false) {
   try {
     const res = await adminFetch('/api/admin/stats');
     if (!res.ok) {
-      showToast('Could not load dashboard stats', 'error');
-      const tbody = document.getElementById('dash-recent-sms-tbody');
-      if (tbody) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
-              No SMS dispatches recorded yet.
-            </td>
-          </tr>
-        `;
+      if (!silent) {
+        showToast('Could not load dashboard stats', 'error');
+        const tbody = document.getElementById('dash-recent-sms-tbody');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+                No SMS dispatches recorded yet.
+              </td>
+            </tr>
+          `;
+        }
       }
       return;
     }
     const data = await res.json();
-
-    const stats = data.stats || {};
-    const recentSms = data.recentSms || [];
-
-    // Render Stats
-    document.getElementById('stat-dash-sms').textContent = (stats.totalSms || 0).toLocaleString();
-    document.getElementById('stat-dash-sms-sub').textContent = `${(stats.deliveredSms || 0).toLocaleString()} delivered, ${(stats.failedSms || 0).toLocaleString()} failed`;
-
-    document.getElementById('stat-dash-credits').textContent = (stats.totalCreditsUsed || 0).toLocaleString();
-    document.getElementById('stat-dash-success').textContent = `${stats.successRate ?? 100}%`;
-    document.getElementById('stat-dash-users').textContent = (stats.totalUsers || 0).toLocaleString();
-
-    document.getElementById('dash-pending-sender-ids').textContent = (stats.pendingSenderIds || 0).toLocaleString();
-    document.getElementById('dash-pending-services').textContent = (stats.pendingServices || 0).toLocaleString();
-    document.getElementById('dash-open-tickets').textContent = (stats.openTickets || 0).toLocaleString();
-    if (document.getElementById('dash-scam-words')) {
-      document.getElementById('dash-scam-words').textContent = (stats.totalScamWords || 0).toLocaleString();
-    }
-
-    // Render Table
-    const tbody = document.getElementById('dash-recent-sms-tbody');
-    if (recentSms.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
-            No SMS dispatches recorded yet.
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = recentSms.map((s) => {
-      const time = new Date(s.sent_at).toLocaleString([], {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      let statusBadge = 'status-pending';
-      if (s.status === 'delivered' || s.status === 'sent') statusBadge = 'status-active';
-      if (s.status === 'failed') statusBadge = 'status-suspended';
-
-      return `
-        <tr>
-          <td style="color: var(--text-muted); font-size: 0.78rem; font-family: monospace;">${time}</td>
-          <td style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(s.user_email)}</td>
-          <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${escapeHtml(s.sender_id)}</span></td>
-          <td style="font-family: monospace; font-size: 0.82rem;">${s.recipient}</td>
-          <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            ${escapeHtml(s.message)}
-          </td>
-          <td style="font-weight: 700;">${s.credits}</td>
-          <td><span class="status-badge ${statusBadge}">${s.status}</span></td>
-        </tr>
-      `;
-    }).join('');
-
+    setViewCache('admin-dashboard', data);
+    applyData(data);
   } catch (err) {
-    showToast('Failed to load platform overview stats', 'error');
+    if (!silent) showToast('Failed to load platform overview stats', 'error');
   }
+}
+
+function applyData(data) {
+  const stats = data.stats || {};
+  const recentSms = data.recentSms || [];
+
+  // Render Stats
+  document.getElementById('stat-dash-sms').textContent = (stats.totalSms || 0).toLocaleString();
+  document.getElementById('stat-dash-sms-sub').textContent = `${(stats.deliveredSms || 0).toLocaleString()} delivered, ${(stats.failedSms || 0).toLocaleString()} failed`;
+
+  document.getElementById('stat-dash-credits').textContent = (stats.totalCreditsUsed || 0).toLocaleString();
+  document.getElementById('stat-dash-success').textContent = `${stats.successRate ?? 100}%`;
+  document.getElementById('stat-dash-users').textContent = (stats.totalUsers || 0).toLocaleString();
+
+  document.getElementById('dash-pending-sender-ids').textContent = (stats.pendingSenderIds || 0).toLocaleString();
+  document.getElementById('dash-pending-services').textContent = (stats.pendingServices || 0).toLocaleString();
+  document.getElementById('dash-open-tickets').textContent = (stats.openTickets || 0).toLocaleString();
+  if (document.getElementById('dash-scam-words')) {
+    document.getElementById('dash-scam-words').textContent = (stats.totalScamWords || 0).toLocaleString();
+  }
+
+  // Render Table
+  const tbody = document.getElementById('dash-recent-sms-tbody');
+  if (recentSms.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center" style="color: var(--text-muted); padding: 40px;">
+          No SMS dispatches recorded yet.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = recentSms.map((s) => {
+    const time = new Date(s.sent_at).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    let statusBadge = 'status-pending';
+    if (s.status === 'delivered' || s.status === 'sent') statusBadge = 'status-active';
+    if (s.status === 'failed') statusBadge = 'status-suspended';
+
+    return `
+      <tr>
+        <td style="color: var(--text-muted); font-size: 0.78rem; font-family: monospace;">${time}</td>
+        <td style="font-weight: 600; font-size: 0.84rem;">${escapeHtml(s.user_email)}</td>
+        <td><span style="font-family: monospace; font-weight: 700; color: var(--accent-color);">${escapeHtml(s.sender_id)}</span></td>
+        <td style="font-family: monospace; font-size: 0.82rem;">${s.recipient}</td>
+        <td style="font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          ${escapeHtml(s.message)}
+        </td>
+        <td style="font-weight: 700;">${s.credits}</td>
+        <td><span class="status-badge ${statusBadge}">${s.status}</span></td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function escapeHtml(str) {

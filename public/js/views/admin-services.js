@@ -100,6 +100,13 @@ async function initView(state) {
   setupBulkActions();
 
   document.getElementById('refresh-services-btn').addEventListener('click', () => loadData(state));
+
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allServices.length > 0) {
+    renderStats();
+    renderTable(getFilteredServices());
+  }
   await loadData(state);
 }
 

@@ -55,6 +55,7 @@ model Contact {
   email     String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("contacts")
 }
 
@@ -72,6 +73,8 @@ model SmsLog {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([batchId])
+  @@index([userId, sentAt])
+  @@index([status])
   @@map("sms_logs")
 }
 
@@ -119,6 +122,7 @@ model Transaction {
   createdAt     DateTime @default(now()) @map("created_at")
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
   @@map("transactions")
 }
 

@@ -94,6 +94,9 @@ function initApiKeysView(state) {
     });
   }
 
+  // Paint instantly from the last-known list (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (cachedApiKeys.length > 0) renderKeysList();
   loadApiKeys();
 }
 

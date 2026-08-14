@@ -189,6 +189,7 @@ export function renderImportContactsView(root, state) {
   setupGroupNewInputToggles();
   setupCSVImporter();
   setupDownloadSampleCSV();
+  if (cachedContacts.length > 0) populateGroupSelectors();
   loadContactsData('import');
 }
 
@@ -199,6 +200,17 @@ async function initContactsView(targetMode = 'contacts') {
   setupSearch();
   setupBulkActions();
   setupGroupNewInputToggles();
+
+  // Paint instantly from the last-known contacts list (if any) instead of showing the
+  // loading placeholder every time this view is revisited, then silently revalidate.
+  if (cachedContacts.length > 0) {
+    populateGroupSelectors();
+    if (targetMode === 'contacts') {
+      renderContactsTable(getFilteredContacts());
+    } else if (targetMode === 'groups') {
+      renderGroupsGrid();
+    }
+  }
 
   await loadContactsData(targetMode);
 }

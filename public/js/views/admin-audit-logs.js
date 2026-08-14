@@ -2,6 +2,7 @@ import { adminFetch, showToast, escapeHtml } from '../admin-utils.js';
 
 let allLogs = [];
 let auditStats = { total: 0, security: 0, admin: 0, system: 0 };
+let lastPagination = null;
 let currentPage = 1;
 let currentLimit = 50;
 let activeFilter = 'all';
@@ -138,6 +139,13 @@ async function initView(state) {
     loadData();
   });
 
+  // Paint instantly from the last-known page (if any) instead of showing the loading
+  // placeholder every time this view is revisited, then silently revalidate.
+  if (allLogs.length > 0 && lastPagination) {
+    renderStats();
+    renderTable(allLogs);
+    renderPagination(lastPagination);
+  }
   await loadData();
 }
 
@@ -159,11 +167,11 @@ async function loadData() {
     const data = await res.json();
     allLogs = data.logs || [];
     auditStats = data.stats || { total: 0, security: 0, admin: 0, system: 0 };
-    const pagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
+    lastPagination = data.pagination || { page: 1, limit: 50, total: 0, totalPages: 1 };
 
     renderStats();
     renderTable(allLogs);
-    renderPagination(pagination);
+    renderPagination(lastPagination);
   } catch (err) {
     showToast('Failed to load system audit trail', 'error');
   }
