@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import { logAuditEvent } from '@/lib/audit';
+import { escapeHtml } from '@/lib/html';
 
 const ALLOWED_INVITE_ROLES = ['Owner', 'Administrator'];
 const COWORKER_ROLES = ['Administrator', 'Dispatcher', 'Marketing Agent', 'Reporter'];
@@ -38,11 +39,11 @@ async function sendInviteEmail(email: string, role: string, tempPassword: string
 
     const html = `
       <h2>Welcome to Bztel Bulk SMS Dashboard</h2>
-      <p>You have been invited to join Bztel with the role: <strong>${role}</strong>.</p>
+      <p>You have been invited to join Bztel with the role: <strong>${escapeHtml(role)}</strong>.</p>
       <p>Your login credentials are:</p>
       <ul>
-        <li><strong>Email:</strong> ${email}</li>
-        <li><strong>Temporary Password:</strong> ${tempPassword}</li>
+        <li><strong>Email:</strong> ${escapeHtml(email)}</li>
+        <li><strong>Temporary Password:</strong> ${escapeHtml(tempPassword)}</li>
       </ul>
       <p>For security, please login and update your password immediately.</p>
       <br>

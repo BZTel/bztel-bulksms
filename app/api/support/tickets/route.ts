@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import nodemailer from 'nodemailer';
+import { escapeHtml } from '@/lib/html';
 
 // GET tickets
 export async function GET(req: Request) {
@@ -88,13 +89,13 @@ export async function POST(req: Request) {
           subject: `[New Ticket - ${cleanPriority.toUpperCase()}] ${subject.trim()}`,
           html: `
             <h2>New Support Ticket Created</h2>
-            <p><strong>From User Email:</strong> ${authUser.email} (User ID: ${ownerId})</p>
-            <p><strong>Subject:</strong> ${subject.trim()}</p>
-            <p><strong>Priority Level:</strong> ${cleanPriority.toUpperCase()}</p>
+            <p><strong>From User Email:</strong> ${escapeHtml(authUser.email)} (User ID: ${ownerId})</p>
+            <p><strong>Subject:</strong> ${escapeHtml(subject.trim())}</p>
+            <p><strong>Priority Level:</strong> ${escapeHtml(cleanPriority.toUpperCase())}</p>
             <hr style="border: 0; border-top: 1px solid #eee;" />
             <p><strong>Ticket Description:</strong></p>
             <div style="background: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: pre-wrap; font-family: sans-serif; font-size: 0.95rem; line-height: 1.5; color: #334155;">
-              ${description.trim()}
+              ${escapeHtml(description.trim())}
             </div>
           `
         });

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
 
     await prisma.user.update({
       where: { id: authUser.id },
-      data: { passwordHash: newHash },
+      data: { passwordHash: newHash, mustChangePassword: false },
     });
 
     const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';

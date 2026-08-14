@@ -3,96 +3,26 @@ import { prisma } from '@/lib/prisma';
 import { getUserFromRequest } from '@/lib/auth';
 import { logAuditEvent } from '@/lib/audit';
 
-// Approving a service request can trigger a real balance credit (manual Bank Transfer
-// requests), so "Approved" cannot be a blanket updateMany — each row is processed
-// individually, replicating the exact logic in app/api/admin/services/[id]/route.ts.
+// Approving a Bank Transfer service request credits real money based on an amount the
+// admin must independently verify against their bank statement (see the [id] route for
+// why — the customer-submitted figure is never independently verified). That
+// confirmation step doesn't fit a batch action, so Bank Transfer rows are deliberately
+// excluded from bulk-approve entirely and must go through the individual-approval route
+// instead. Every other service type is a plain status flip with no money involved.
 async function approveOne(requestId: number, clientIp: string) {
   const existing = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
   if (!existing) return { requestId, ok: false, error: 'Service request not found' };
   if (existing.status === 'Approved') return { requestId, ok: true, skipped: true };
 
-  const isBankTransfer = existing.serviceType === 'Bank Transfer';
-
-  let updated;
-  if (isBankTransfer) {
-    const creditsMatch = existing.description.match(/Credits:\s*(\d+)/i);
-    const creditsToLoad = creditsMatch ? parseInt(creditsMatch[1], 10) : 0;
-
-    if (creditsToLoad <= 0) {
-      return { requestId, ok: false, error: 'Could not parse a valid credits amount from the request description' };
-    }
-
-    try {
-      updated = await prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({
-          where: { id: existing.userId },
-          select: { balance: true, loyaltyPoints: true },
-        });
-        if (!user) throw new Error('USER_NOT_FOUND');
-
-        const balanceBefore = user.balance;
-        const balanceAfter = balanceBefore + creditsToLoad;
-        let finalLoyaltyPoints = user.loyaltyPoints;
-
-        const pointsMatch = existing.description.match(/RedeemedPoints:\s*(\d+)/i);
-        const pointsToRedeem = pointsMatch ? parseInt(pointsMatch[1], 10) : 0;
-
-        if (pointsToRedeem > 0) {
-          const actualRedeem = Math.min(finalLoyaltyPoints, pointsToRedeem);
-          finalLoyaltyPoints -= actualRedeem;
-          await tx.loyaltyLedger.create({
-            data: {
-              userId: existing.userId,
-              amount: -actualRedeem,
-              description: `Redeemed points for ₦${(actualRedeem * 100).toLocaleString()} discount on refill (Request ID: ${requestId})`,
-            },
-          });
-        }
-
-        let pointsEarned = 0;
-        if (creditsToLoad === 1000) pointsEarned = 15;
-        else if (creditsToLoad === 5000) pointsEarned = 60;
-        else if (creditsToLoad === 25000) pointsEarned = 225;
-        else pointsEarned = Math.floor((creditsToLoad * 12) / 1000);
-
-        if (pointsEarned > 0) {
-          finalLoyaltyPoints += pointsEarned;
-          await tx.loyaltyLedger.create({
-            data: {
-              userId: existing.userId,
-              amount: pointsEarned,
-              description: `Earned points from Custom Service top-up (Request ID: ${requestId})`,
-            },
-          });
-        }
-
-        await tx.user.update({
-          where: { id: existing.userId },
-          data: { balance: balanceAfter, loyaltyPoints: finalLoyaltyPoints },
-        });
-
-        await tx.transaction.create({
-          data: {
-            userId: existing.userId,
-            type: 'purchase',
-            amount: creditsToLoad,
-            balanceBefore,
-            balanceAfter,
-            description: `Bank Transfer Top-Up — ${creditsToLoad.toLocaleString()} SMS Credits${pointsToRedeem > 0 ? ' (Points Discount Applied)' : ''}`,
-          },
-        });
-
-        return tx.serviceRequest.update({ where: { id: requestId }, data: { status: 'Approved' } });
-      });
-    } catch (err: any) {
-      if (err.message === 'USER_NOT_FOUND') {
-        return { requestId, ok: false, error: 'Customer account not found' };
-      }
-      throw err;
-    }
-  } else {
-    updated = await prisma.serviceRequest.update({ where: { id: requestId }, data: { status: 'Approved' } });
+  if (existing.serviceType === 'Bank Transfer') {
+    return {
+      requestId,
+      ok: false,
+      error: 'Bank Transfer requests must be approved individually with a verified credit amount — use the Approve button on that row.',
+    };
   }
+
+  const updated = await prisma.serviceRequest.update({ where: { id: requestId }, data: { status: 'Approved' } });
 
   await logAuditEvent(
     updated.userId,

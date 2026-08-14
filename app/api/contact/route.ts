@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
+import { publicFormRateLimiter } from '@/lib/rate-limit';
+import { escapeHtml } from '@/lib/html';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -42,13 +44,13 @@ async function sendContactNotificationEmail(
       <h2>New Public Contact Form Submission</h2>
       <p>A new contact inquiry has been received from the Bztel website:</p>
       <ul>
-        <li><strong>Sender Name:</strong> ${senderName}</li>
-        <li><strong>Sender Email:</strong> ${senderEmail}</li>
-        <li><strong>Subject:</strong> ${subject}</li>
+        <li><strong>Sender Name:</strong> ${escapeHtml(senderName)}</li>
+        <li><strong>Sender Email:</strong> ${escapeHtml(senderEmail)}</li>
+        <li><strong>Subject:</strong> ${escapeHtml(subject)}</li>
       </ul>
       <p><strong>Message:</strong></p>
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; white-space: pre-wrap;">
-        ${bodyText}
+        ${escapeHtml(bodyText)}
       </div>
       <br>
       <p>This message has been persisted in the database.</p>
@@ -70,6 +72,21 @@ async function sendContactNotificationEmail(
 
 export async function POST(req: Request) {
   try {
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+
+    const rateLimit = await publicFormRateLimiter(clientIp);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.reset - Math.floor(Date.now() / 1000)),
+          },
+        }
+      );
+    }
+
     const { name, email, subject, message } = await req.json();
 
     if (!name || !email || !subject || !message) {

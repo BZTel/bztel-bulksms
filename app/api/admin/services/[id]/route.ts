@@ -25,7 +25,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid Request ID' }, { status: 400 });
     }
 
-    const { status } = await req.json();
+    const { status, verifiedCredits } = await req.json();
 
     if (!status || !['Reviewing', 'Approved', 'Declined'].includes(status)) {
       return NextResponse.json({ error: 'Status must be one of: "Reviewing", "Approved", "Declined"' }, { status: 400 });
@@ -48,12 +48,19 @@ export async function PATCH(
       existing.status !== 'Approved';
 
     if (isApprovingBankTransfer) {
-      // Parse credits from description: e.g. "Bank Transfer verification request. Credits: 5000 | Reference: BZ-1-168"
-      const creditsMatch = existing.description.match(/Credits:\s*(\d+)/i);
-      const creditsToLoad = creditsMatch ? parseInt(creditsMatch[1], 10) : 0;
+      // The credits figure in the description is whatever the customer typed when
+      // submitting the notification — it's never independently verified against an
+      // actual bank statement (unlike the Flutterwave path, which re-verifies the paid
+      // amount server-side with Flutterwave's own API before crediting). So the amount
+      // actually credited here must come from the admin explicitly confirming what they
+      // saw land in the account, not from trust-parsing the customer's claim back out.
+      const creditsToLoad = Number(verifiedCredits);
 
-      if (creditsToLoad <= 0) {
-        return NextResponse.json({ error: 'Could not parse a valid credits amount from the request description' }, { status: 400 });
+      if (!verifiedCredits || isNaN(creditsToLoad) || !Number.isInteger(creditsToLoad) || creditsToLoad <= 0) {
+        return NextResponse.json({ error: 'A verified credits amount is required to approve a Bank Transfer request — confirm the actual amount received on the bank statement before crediting.' }, { status: 400 });
+      }
+      if (creditsToLoad > 1_000_000) {
+        return NextResponse.json({ error: 'Verified credits amount exceeds the maximum allowed per approval (1,000,000).' }, { status: 400 });
       }
 
       updated = await prisma.$transaction(async (tx) => {

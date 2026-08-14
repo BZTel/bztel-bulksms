@@ -129,3 +129,15 @@ export async function apiRateLimiter(ipOrKey: string): Promise<RateLimitResult> 
   // Max 60 API calls per minute
   return checkRateLimit(`api:${ipOrKey}`, 60, 60);
 }
+
+export async function publicFormRateLimiter(ip: string): Promise<RateLimitResult> {
+  // Max 5 public contact-form submissions per 15 minutes per IP — this endpoint is
+  // unauthenticated, writes to the DB, and sends an email on every hit.
+  return checkRateLimit(`contact:${ip}`, 5, 900);
+}
+
+export async function aiGenerateRateLimiter(userIdOrIp: string): Promise<RateLimitResult> {
+  // Max 15 AI generation calls per minute per user — protects against cost-abuse of the
+  // upstream OpenRouter quota by a single authenticated account.
+  return checkRateLimit(`ai:${userIdOrIp}`, 15, 60);
+}

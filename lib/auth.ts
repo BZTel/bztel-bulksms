@@ -22,7 +22,19 @@ export interface AuthenticatedUser {
   is_admin: boolean;
   role: string;
   owner_id: number;
+  must_change_password: boolean;
 }
+
+// An account still on its invite temp password (teams/invite sets mustChangePassword)
+// may only reach these endpoints until it's changed — mirrors the client-side
+// navigation lock in public/js/app.js's navigateTo(), which restricts a locked account
+// to the account-settings view only. Every other route 401s via getUserFromRequest
+// returning null below, so this is enforced here rather than per-route.
+const PASSWORD_GATE_EXEMPT_PATHS = new Set([
+  '/api/auth/me',
+  '/api/auth/change-password',
+  '/api/auth/logout',
+]);
 
 export function getTokenFromRequest(req: Request): string | null {
   const authHeader = req.headers.get('authorization');
@@ -59,11 +71,21 @@ export async function getUserFromRequest(req: Request): Promise<AuthenticatedUse
     
     const dbUser = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, email: true, isAdmin: true, status: true, role: true, parentUserId: true }
+      select: { id: true, email: true, isAdmin: true, status: true, role: true, parentUserId: true, mustChangePassword: true }
     });
 
     if (!dbUser || dbUser.status === 'suspended') {
       return null;
+    }
+
+    if (dbUser.mustChangePassword) {
+      let pathname = '';
+      try {
+        pathname = new URL(req.url).pathname;
+      } catch (_) {}
+      if (!PASSWORD_GATE_EXEMPT_PATHS.has(pathname)) {
+        return null;
+      }
     }
 
     return {
@@ -72,6 +94,7 @@ export async function getUserFromRequest(req: Request): Promise<AuthenticatedUse
       is_admin: dbUser.isAdmin,
       role: dbUser.role || 'Owner',
       owner_id: dbUser.parentUserId || dbUser.id,
+      must_change_password: dbUser.mustChangePassword,
     };
   } catch (err) {
     return null;

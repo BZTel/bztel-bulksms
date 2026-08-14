@@ -2,12 +2,26 @@ import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { generateOpenRouterCompletion, ChatMessage } from '@/lib/openrouter';
 import { prisma } from '@/lib/prisma';
+import { aiGenerateRateLimiter } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
     const user = await getUserFromRequest(req);
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized. Please sign in to use AI features.' }, { status: 401 });
+    }
+
+    const rateLimit = await aiGenerateRateLimiter(String(user.id));
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many AI requests. Please slow down and try again shortly.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.reset - Math.floor(Date.now() / 1000)),
+          },
+        }
+      );
     }
 
     const body = await req.json();

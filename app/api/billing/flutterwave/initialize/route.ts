@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { computeExpectedNgnAmount } from '@/lib/pricing';
+import { getFlutterwaveSecret } from '@/lib/flutterwave';
 
 export async function POST(req: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
     const pointsToRedeem = 0;
     const discount = 0;
 
-    const flwSecret = process.env.FLW_SECRET_KEY || 'FLWSECK_TEST-mock-secret-key-123';
+    const flwSecret = getFlutterwaveSecret();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.bztel.net';
     const txRef = `bztel-flw-${authUser.owner_id}-${Date.now()}`;
 

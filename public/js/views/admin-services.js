@@ -284,11 +284,14 @@ function attachTableHandlers() {
     });
   });
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, verifiedCredits) => {
     try {
+      const body = { status };
+      if (verifiedCredits !== undefined) body.verifiedCredits = verifiedCredits;
+
       const res = await adminFetch(`/api/admin/services/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status })
+        body: JSON.stringify(body)
       });
       const data = await res.json();
       if (res.ok) {
@@ -305,6 +308,32 @@ function attachTableHandlers() {
   document.querySelectorAll('.action-approve-service').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
+      const record = allServices.find(s => s.id === Number(id));
+
+      // Bank Transfer requests credit real money based on whatever the customer typed
+      // when submitting — it's never independently verified against a bank statement.
+      // Require the admin to confirm the actual amount received instead of silently
+      // trusting the customer's claim.
+      if (record && record.service_type === 'Bank Transfer') {
+        const claimedMatch = record.description.match(/Credits:\s*(\d+)/i);
+        const claimed = claimedMatch ? claimedMatch[1] : '';
+        const input = prompt(
+          `Check your bank statement before approving.\nCustomer claimed: ${claimed || 'unknown'} credits.\n\nEnter the VERIFIED credits amount to apply:`,
+          claimed
+        );
+        if (input === null) return; // cancelled
+
+        const verifiedCredits = parseInt(input, 10);
+        if (!verifiedCredits || verifiedCredits <= 0) {
+          showToast('A valid verified credits amount is required to approve a bank transfer', 'error');
+          return;
+        }
+        if (!confirm(`Credit this customer ${verifiedCredits.toLocaleString()} credits and mark this request Approved?`)) return;
+
+        updateStatus(id, 'Approved', verifiedCredits);
+        return;
+      }
+
       if (confirm('Are you sure you want to APPROVE this service request?')) {
         updateStatus(id, 'Approved');
       }

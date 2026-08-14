@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { computeExpectedNgnAmount } from '@/lib/pricing';
 import { logAuditEvent } from '@/lib/audit';
+import { getFlutterwaveSecret } from '@/lib/flutterwave';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -19,7 +20,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const flwSecret = process.env.FLW_SECRET_KEY || 'FLWSECK_TEST-mock-secret-key-123';
+    const flwSecret = getFlutterwaveSecret();
 
     // Call Flutterwave verification API on the server side
     const response = await fetch(`https://api.flutterwave.com/v3/transactions/${transactionId}/verify`, {
