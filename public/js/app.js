@@ -706,7 +706,14 @@ export function logout(showMsg = true) {
   state.token = null;
   state.user = null;
   localStorage.removeItem('token');
-  
+
+  // Revoke the httpOnly auth_token cookie server-side; fire-and-forget since we're
+  // navigating to the auth screen regardless of the outcome. Every login (password or
+  // OAuth) sets this cookie, so without clearing it here, fetchUserProfile() on the next
+  // visit succeeds via the cookie even though localStorage's token was removed — logging
+  // the user straight back in.
+  fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+
   if (state.statsInterval) {
     clearInterval(state.statsInterval);
     state.statsInterval = null;
