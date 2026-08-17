@@ -6,6 +6,7 @@ import { logAuditEvent } from '@/lib/audit';
 import { authRateLimiter } from '@/lib/rate-limit';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^\+?[0-9\s\-()]{7,20}$/;
 
 export async function POST(req: Request) {
   try {
@@ -26,13 +27,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { email, password, firstName, lastName, acceptedTerms, promotionalConsent } = body;
-    const fullName = (firstName && lastName) 
-      ? `${String(firstName).trim()} ${String(lastName).trim()}` 
+    const { email, password, phone, firstName, lastName, acceptedTerms, promotionalConsent } = body;
+    const fullName = (firstName && lastName)
+      ? `${String(firstName).trim()} ${String(lastName).trim()}`
       : (String(body.name || '').trim());
 
     if (!email || !password || !fullName) {
       return NextResponse.json({ error: 'First name, last name, email, and password are required' }, { status: 400 });
+    }
+
+    const trimmedPhone = String(phone || '').trim();
+    if (!trimmedPhone) {
+      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    }
+    if (!phoneRegex.test(trimmedPhone)) {
+      return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
     }
 
     if (!acceptedTerms) {
@@ -70,6 +79,7 @@ export async function POST(req: Request) {
         data: {
           email: normalizedEmail,
           name: fullName,
+          phone: trimmedPhone,
           termsAcceptedAt: new Date(),
           promotionalConsent: Boolean(promotionalConsent),
           passwordHash,

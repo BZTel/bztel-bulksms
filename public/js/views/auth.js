@@ -47,6 +47,15 @@ export function renderAuthView(container, state, forceSignup = false) {
                   </div>
                 </div>
               </div>
+              <div class="form-group-with-icon">
+                <label for="auth-phone">Phone Number</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <input type="tel" id="auth-phone" class="form-control-input" placeholder="e.g. 0801 234 5678" required>
+                </div>
+              </div>
               ` : ''}
               <div class="form-group-with-icon">
                 <label for="auth-email">Email Address</label>
@@ -179,11 +188,12 @@ export function renderAuthView(container, state, forceSignup = false) {
       const password = document.getElementById('auth-password').value;
       const rememberCheckbox = document.getElementById('remember-me');
 
-      let firstName, lastName, name, acceptedTerms, promotionalConsent = false;
+      let firstName, lastName, name, phone, acceptedTerms, promotionalConsent = false;
       if (!isLogin) {
         firstName = document.getElementById('auth-first-name')?.value?.trim() || '';
         lastName = document.getElementById('auth-last-name')?.value?.trim() || '';
         name = `${firstName} ${lastName}`.trim();
+        phone = document.getElementById('auth-phone')?.value?.trim() || '';
         acceptedTerms = rememberCheckbox.checked;
         const promoCheckbox = document.getElementById('promo-consent');
         if (promoCheckbox) {
@@ -208,7 +218,7 @@ export function renderAuthView(container, state, forceSignup = false) {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(isLogin ? { email, password } : { email, password, firstName, lastName, name, acceptedTerms, promotionalConsent })
+          body: JSON.stringify(isLogin ? { email, password } : { email, password, phone, firstName, lastName, name, acceptedTerms, promotionalConsent })
         });
 
         const data = await response.json();
