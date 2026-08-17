@@ -20,6 +20,7 @@ export async function GET(req: Request) {
         virtualNumbers: true,
         loyaltyPoints: true,
         mustChangePassword: true,
+        isAdmin: true,
       },
     });
 
@@ -47,6 +48,8 @@ export async function GET(req: Request) {
       email: user.email,
       balance,
       role: user.role,
+      is_admin: user.isAdmin ?? authUser.is_admin,
+      isAdmin: user.isAdmin ?? authUser.is_admin,
       parent_user_id: user.parentUserId,
       loyalty_points: loyaltyPoints,
       mustChangePassword: user.mustChangePassword,

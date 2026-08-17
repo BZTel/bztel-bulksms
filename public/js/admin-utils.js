@@ -45,14 +45,16 @@ export async function adminFetch(url, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3500);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
     const res = await fetch(url, { ...options, headers, signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.status === 401 || res.status === 403) {
-      adminLogout(false);
+      state.adminUser = null;
+      state.viewCache = {};
+      showAdminLoginUI();
       showToast('Session expired or unauthorized. Please log in again.', 'error');
       throw new Error('Unauthorized');
     }
@@ -90,23 +92,16 @@ export function showToast(message, type = 'info') {
 // ─── Logout Helper ────────────────────────────────────────────
 export async function adminLogout(showMsg = true) {
   state.adminUser = null;
+  state.viewCache = {};
 
-  // Revoke the httpOnly session cookie server-side, then hard-reload the page. The
-  // reload (rather than just showAdminLoginUI()) is deliberate: every admin view's
-  // module-level cache added for instant tab repaint (users, transactions, tickets,
-  // sender IDs, etc.) lives in JS memory for the page's lifetime and is never
-  // explicitly cleared — without a reload, a different admin signing into the same tab
-  // afterward would briefly see the previous admin's cached data.
   try {
     await fetch('/api/auth/logout', { method: 'POST' });
   } catch (_) {}
 
   if (showMsg) {
     showToast('Signed out successfully', 'info');
-    setTimeout(() => window.location.reload(), 400);
-  } else {
-    window.location.reload();
   }
+  showAdminLoginUI();
 }
 
 export function showAdminLoginUI() {

@@ -46,14 +46,19 @@ async function initAdmin() {
 // ─── Token Verification ───────────────────────────────────────
 async function verifyAdminToken() {
   try {
-    const res = await adminFetch('/api/admin/users');
-    if (res.ok) return true;
-    if (res.status === 401) {
-      adminLogout(false);
-      return false;
+    const res = await fetch('/api/auth/me', {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (data.user && (data.user.is_admin || data.user.isAdmin || data.user.role === 'admin')) {
+      state.adminUser = data.user;
+      return true;
     }
-  } catch (_) {}
-  return false;
+    return false;
+  } catch (_) {
+    return false;
+  }
 }
 
 // ─── Login Form ───────────────────────────────────────────────
